@@ -32,8 +32,8 @@ Either way the Action Button path is unaffected. Do not let this block the week.
 - All entities from `DATA-MODEL.md` with the five universal fields.
 - `SyncScope` enum; `Expense` hardcoded `.localOnly`.
 - `CurrentUser` protocol + `LocalStubUser`.
-- Repository protocols, every query scoped by `ownerID`.
-- Design tokens generated into one Swift file from `design/DESIGN.md`.
+- Generic `Repository<T>`, every query scoped by `ownerID` (decision 42).
+- Design tokens in one hand-written Swift file, checked against `design/DESIGN.md` by a test.
 - Unit tests on: soft delete excluded from queries, ownerID scoping, money arithmetic
   in integer paise.
 

@@ -13,6 +13,8 @@ targets:
     type: application
     platform: iOS
     sources: [TRACE]
+    scheme:
+      testTargets: [TRACETests]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.arnavparmaj.trace
@@ -28,3 +30,14 @@ targets:
         NSLocationAlwaysAndWhenInUseUsageDescription: TRACE keeps recording your ride when the screen is off or the app is in the background.
         NSMotionUsageDescription: TRACE uses the barometer to measure climb during a ride.
         UIBackgroundModes: [location]
+        UIAppFonts: [Oswald.ttf, RobotoCondensed.ttf]
+  TRACETests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [TRACETests]
+    dependencies:
+      - target: TRACE
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.arnavparmaj.trace.tests

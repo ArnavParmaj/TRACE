@@ -45,7 +45,8 @@ needs a paid entitlement without saying so out loud.
 - Swift 6 concurrency. `@Observable` services, not ObservableObject.
 - No third-party dependencies without asking. SwiftData, MapKit, Swift Charts,
   ActivityKit, CoreLocation, CoreMotion and UserNotifications cover v1.
-- Design tokens live in one Swift file generated from `design/DESIGN.md`.
+- Design tokens live in one hand-written Swift file, `TRACE/Design/Tokens.swift`;
+  `TokenTests` fails if it drifts from `design/DESIGN.md` (decision 41).
   Never hardcode a hex in a view.
 - Keep views dumb. Logic belongs in services, data access in repositories.
 

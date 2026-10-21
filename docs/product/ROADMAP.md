@@ -27,9 +27,9 @@ Throwaway widget extension with an App Group; try to sign it on the free account
 - **Exit:** result recorded in `DECISIONS.md` (works, or the exact error). Target deleted.
 - **Decides:** whether the Control Center control and any widget are in v1 at all.
 
-### M1 · Foundation — models, repositories, tokens
+### M1 · Foundation — models, repositories, tokens — DONE (2026-10-21)
 All entities from `DATA-MODEL.md`, `SyncScope`, `CurrentUser` + local stub,
-owner-scoped repositories, the generated design-token Swift file, bundled fonts
+owner-scoped repository, the hand-written token file, bundled fonts
 (Oswald, Roboto Condensed), root tab shell with four empty tabs.
 - **Exit:** unit tests green on soft-delete exclusion, ownerID scoping, paise arithmetic.
   App launches to the empty tab shell on `#000000`.

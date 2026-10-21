@@ -83,10 +83,11 @@ version after.
 
 ## Where things stand
 
-Design frozen. Specs, roadmap and screen inventory written. Day 0 scaffold done: the
-empty app builds and launches on the iPhone 16. App Groups spike passed (they work on
-free signing). Next is M1: models and repositories. The milestone that matters is not a document — it is a ride recorded on a real
-road and still present after a force-kill.
+Done: M0 scaffold, M0.5 App Groups spike (they work), M1 foundation: all models in two
+stores (synced / local-only money), `CurrentUser` stub, generic owner-scoped
+`Repository<T>`, design tokens + bundled fonts, empty 4-tab shell on true black,
+12 tests green. **Next is M2, the recorder** — the milestone that matters: a ride recorded
+on a real road and still present after a force-kill.
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.

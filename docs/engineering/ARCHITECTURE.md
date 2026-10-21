@@ -7,7 +7,8 @@ SwiftUI + SwiftData, iOS 18+, iPhone 16 target. No backend in v1.
 Views (SwiftUI)
   └── @Observable Services        RideRecorder, CaptureService, ServiceScheduler,
                                   DocumentReminder, SummaryBuilder, LocationService
-        └── Repositories          protocol-backed, every query scoped by CurrentUser
+        └── Repository<T>         one generic type, every query scoped by CurrentUser
+                                  (tests use an in-memory container, no mocks: decision 42)
               └── SwiftData models
 ```
 `CurrentUser` is a protocol with a single local stub implementation in v1. Every

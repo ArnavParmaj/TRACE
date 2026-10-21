@@ -4,13 +4,21 @@ SwiftData. Every rule here exists so the v2 sync layer can be added without a re
 
 ## Universal fields — on EVERY model, no exceptions
 ```swift
-@Attribute(.unique) var id: UUID        // never an autoincrement Int
+var id = UUID()                         // never an autoincrement Int; no .unique (decision 40)
 var ownerID: UUID                       // the CurrentUser stub in v1
 var createdAt: Date
 var updatedAt: Date
 var deletedAt: Date?                    // soft delete; sync needs tombstones
 var syncScope: SyncScope                // .syncable or .localOnly
 ```
+Every stored property has a default or is optional and nothing is `.unique`: both are
+CloudKit rules, so v2 sync needs no schema migration (decision 40).
+
+**Two stores.** Syncable models live in the `synced` store; `Expense` and `CaptureDraft`
+live in the `local` store, which never gets a CloudKit database (`TRACE/Data/Store.swift`).
+
+`StopEvent` (decision 30) is added with the recorder in M2.
+
 `SyncScope.localOnly` is set on every money entity at the model level, so no future
 sync pass can pick them up by accident. This is enforced in code, not by discipline.
 
