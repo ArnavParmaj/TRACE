@@ -6,6 +6,9 @@ asking a question it already answers.
 ## Product
 - `product/PRD.md` — the full product requirements document. Start here.
 - `product/SCOPE.md` — pillars, v1/v1.5/v2 phasing, privacy rule, foundation rules.
+- `product/ROADMAP.md` — milestones M0–M8 to v1, then v1.5/v2/v3, each with exit gates.
+- `product/SCREENS.md` — navigation map, every v1 screen, its layout and states, key flows,
+  open UX decisions.
 
 ## Engineering
 - `engineering/ARCHITECTURE.md` — layers, capture path, GPS strategy, build order,
@@ -15,7 +18,11 @@ asking a question it already answers.
 
 ## Design
 - `../design/DESIGN.md` — frozen design language, tokens, type, components.
+- `../design/artboards/` — exported artboards E (Today) and F (Ride mode). Visual source
+  of truth for those screens.
 - `design-notes/` — supporting design rationale and exploration notes.
+- Prototype canvas (private): https://claude.ai/artifact/MTdvxrwvJhGdanmtdvQe9Q — 9 clickable
+  v1 boards. Reference only; `SCREENS.md` is the spec.
 
 ## Cross-cutting
 - `DECISIONS.md` — numbered, append-only decision log with rationale. Every real

@@ -33,3 +33,10 @@
 | 29 | 2026-10-21 | No auto-pause. Stops over 120s count as stopped-time; everything else is moving-time | auto-pause at ~3 km/h produces hundreds of events per Mumbai commute and garbage data |
 | 30 | 2026-10-21 | Stop classification (toll/signal/fuel detection) deferred to v1.5; v1 records raw StopEvents only | thresholds are unguessable from an armchair and must be tuned on 4-6 weeks of real routes |
 | 31 | 2026-10-21 | XcodeGen + project.yml instead of a checked-in .xcodeproj | .xcodeproj is unmergeable binary-ish XML an agent edits badly; project.yml is text |
+| 32 | 2026-10-21 | Navigation: custom 4-tab bar (Today / Rides / Money / Bike), ≥60pt tall | one tab per pillar plus the hub; stock tab bar is 49pt, under the glove rule |
+| 33 | 2026-10-21 | Action Button always writes a CaptureDraft, ride or no ride; rides start only from the app | one predictable behaviour with gloves on; state-dependent press risks phantom rides (decision 22) |
+| 34 | 2026-10-21 | Ride mode is portrait only | matches Info.plist and common mounts; one layout to test on the most safety-critical screen |
+| 35 | 2026-10-21 | Roadmap gated by exit criteria, not dates; 8-week dogfood gate before any v1.5 work | the failure mode is an unused app, and features do not fix a habit that did not form |
+| 36 | 2026-10-21 | Capture button spine is amber, not red (DESIGN.md amended) | red is reserved for overdue/expired/urgent; a red spine on the most-used control taught the eye to ignore red |
+| 37 | 2026-10-21 | Expense categories: Fuel, Food, Parts, Parking, Other. Tolls out of scope | most Indian highways don't toll motorcycles; tolls can land in Other until data says otherwise |
+| 38 | 2026-10-21 | Motion is functional only: press feedback, system sheets/pushes, capture confirm, hold-to-stop. No loops, no stagger, no translucent materials | rider's eyes belong on the road; every animated or blurred pixel is lit on OLED |

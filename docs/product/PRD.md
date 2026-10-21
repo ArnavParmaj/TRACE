@@ -306,7 +306,7 @@ arrive at v2 with accounts and selective sharing.
 | Live Activity | Should | Running ride visible on the lock screen; tap to log. |
 | Manual ride start/stop | **Must** | The reliable path; automatic detection is unproven. |
 | Automatic ride detection | Nice | Motion-triggered start/stop, only if it proves trustworthy. |
-| Auto-pause at stops | Should | Separates moving time from elapsed time honestly. |
+| Moving vs. stopped time | Should | No auto-pause; stops over 120s count as stopped time (decision 29). |
 
 ### Epic C — Money
 | Feature | Priority | Description |
@@ -415,6 +415,8 @@ replaces it with objectivity risk: there is nobody to say the idea is wrong.
 ## 10. Open Questions
 
 Each must be answered before or during the build phase indicated.
+Answered since approval: Q3 (decision 22), Q4 (23), Q5 (24), Q6 (27), Q8 (28), Q9 (26),
+Q10 (25). Still open: Q1, Q2, Q7, Q11, Q12.
 
 | # | Question | Needed by | Why it blocks |
 |---|---|---|---|

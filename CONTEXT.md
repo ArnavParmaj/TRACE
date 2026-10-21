@@ -83,8 +83,10 @@ version after.
 
 ## Where things stand
 
-Design frozen. Specs written. **No code yet.** The next milestone is not a document —
-it is a ride recorded on a real road and still present after a force-kill.
+Design frozen. Specs, roadmap and screen inventory written. Day 0 scaffold done: the
+empty app builds and launches on the iPhone 16. Next is the App Groups spike, then
+models. The milestone that matters is not a document — it is a ride recorded on a real
+road and still present after a force-kill.
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.
@@ -110,9 +112,11 @@ CLAUDE.md                        invariants that must not be violated
 CONTEXT.md                       this file
 design/DESIGN.md                 frozen tokens, type, components
 docs/INDEX.md                    index of all documentation
-docs/DECISIONS.md                numbered, append-only decision log (31 entries)
+docs/DECISIONS.md                numbered, append-only decision log
 docs/product/PRD.md              full product requirements
 docs/product/SCOPE.md            pillars, phasing, privacy rule
+docs/product/ROADMAP.md          milestones to v1 and beyond, with exit gates
+docs/product/SCREENS.md          every v1 screen, navigation, flows
 docs/engineering/ARCHITECTURE.md layers, capture path, GPS strategy, risks
 docs/engineering/DATA-MODEL.md   entities, sync fields, fusion rule
 docs/engineering/BUILD-PLAN.md   week 1, task by task, with checkpoints

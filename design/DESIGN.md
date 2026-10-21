@@ -43,8 +43,9 @@ Text that must be red uses `--alarm-ink`.
 ## Components
 - **Section header**: numbered chip (`01`, inverted, muted ground) + letter-spaced
   caps label + hairline rule filling remaining width.
-- **Capture button**: black fill, 2px amber border, 10px red left spine,
-  min-height 106pt, left-aligned label.
+- **Capture button**: black fill, 2px amber border, 10px amber left spine,
+  min-height 106pt, left-aligned label. (Spine was red until decision 36: red is
+  reserved, so a red spine on the most-used control broke rule 3.)
 - **Gauge**: 4px stroked arc, unlit track `#1E1C1A`, three tick marks. Never filled.
 - **Progress**: 3px bar, unlit track, accent fill.
 - **Alarm rail**: 1px red border with 10px red left spine. Only for expired/overdue.

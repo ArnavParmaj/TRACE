@@ -36,7 +36,8 @@ retention policy later (they are the only thing that grows unboundedly).
 
 ### Expense   (**localOnly — permanent**)
 `occurredAt`, `amountMinor: Int` (paise — **never Double for money**),
-`currencyCode: String`, `category: ExpenseCategory`, `note?`,
+`currencyCode: String`, `category: ExpenseCategory` (fuel, food, parts, parking, other;
+decision 37), `note?`,
 `rideID: UUID?` (set by the fusion rule below), `vehicleID: UUID?`,
 `odometerKm: Int?`
 Fuel-specific, nullable: `litres: Double?`, `pricePerLitreMinor: Int?`,

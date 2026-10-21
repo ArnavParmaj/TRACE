@@ -8,7 +8,8 @@
 ## Phasing
 
 ### v1 — solo, offline, free signing, 2-3 weeks
-- One-tap capture: Action Button, Control Center tile, Live Activity
+- One-tap capture: Action Button, Live Activity; Control Center tile only if the
+  App Groups spike allows it
 - Ride recording: GPS route, distance, duration, speed, barometric climb
 - Ride replay: MapKit polyline, elevation profile, splits
 - Money entries, auto-absorbed by the ride whose time window contains them
