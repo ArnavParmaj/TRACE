@@ -40,3 +40,4 @@
 | 36 | 2026-10-21 | Capture button spine is amber, not red (DESIGN.md amended) | red is reserved for overdue/expired/urgent; a red spine on the most-used control taught the eye to ignore red |
 | 37 | 2026-10-21 | Expense categories: Fuel, Food, Parts, Parking, Other. Tolls out of scope | most Indian highways don't toll motorcycles; tolls can land in Other until data says otherwise |
 | 38 | 2026-10-21 | Motion is functional only: press feedback, system sheets/pushes, capture confirm, hold-to-stop. No loops, no stagger, no translucent materials | rider's eyes belong on the road; every animated or blurred pixel is lit on OLED |
+| 39 | 2026-10-21 | App Groups work on the free Personal Team (spike passed); widget/Control Center are unblocked but not scheduled for v1 | spike: app + widget extension both signed with group.com.arnavparmaj.trace, app got a real shared container on the iPhone 16; spike target removed |

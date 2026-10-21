@@ -59,7 +59,7 @@ section chips, stencil slugs, condensed Oswald numerals.
 ## The constraint that shapes everything
 
 The app ships on a **free Apple Developer account**. That means: no push, no
-iCloud/CloudKit, no HomeKit, App Groups availability unverified, re-sign from Xcode
+iCloud/CloudKit, no HomeKit, re-sign from Xcode
 every 7 days, three sideloaded apps maximum, and no sustainable way to install on
 anyone else's phone.
 
@@ -84,8 +84,8 @@ version after.
 ## Where things stand
 
 Design frozen. Specs, roadmap and screen inventory written. Day 0 scaffold done: the
-empty app builds and launches on the iPhone 16. Next is the App Groups spike, then
-models. The milestone that matters is not a document — it is a ride recorded on a real
+empty app builds and launches on the iPhone 16. App Groups spike passed (they work on
+free signing). Next is M1: models and repositories. The milestone that matters is not a document — it is a ride recorded on a real
 road and still present after a force-kill.
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
@@ -96,8 +96,6 @@ and CRUD does not surprise anyone at 2am; background location does.
 - **The author stops using it within three weeks.** Most likely failure mode. No
   amount of code quality compensates. Success is measured by capture rate and week-8
   retention, not by shipped features.
-- **App Groups may be unavailable** on free signing, blocking widget and Control
-  Centre work. Spike it in week 1. The Action Button path is unaffected either way.
 - **7-day re-signing friction** may kill the habit, or force the $99 purchase early.
 - **Scope creep before v1 ships.** Segments, leaderboards and motion metrics are all
   wanted and all deferred. Building them early is the documented way this project dies.
@@ -128,5 +126,4 @@ reference you read when the task touches it.
 ## Still unanswered
 
 - The app's actual name. "TRACE" is a placeholder; the bundle id is changeable.
-- App Groups on free provisioning (spike pending).
 - Whether $99 gets bought on a date or when the friend trial demands it.

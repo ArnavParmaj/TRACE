@@ -94,7 +94,7 @@ Decision 32: custom four-tab bar, ≥60pt tall (the stock bar is 49pt).
 | S16 | Settings | push | v1 | M8 | ⚙ on Today |
 | S17 | Notifications | system | v1 | M5 | — |
 | S18 | Live Activity | system | v1 | M6 | ride start |
-| — | Control Center control, widget | system | blocked | after M0.5 | — |
+| — | Control Center control, widget | system | unblocked, not scheduled | — | decision 39 |
 
 **Not in v1:** segments, gear/mods, export, sharing, friends, accounts. No screens for
 them, no placeholders, no "coming soon" rows.

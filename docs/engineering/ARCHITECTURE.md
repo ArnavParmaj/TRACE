@@ -34,8 +34,12 @@ call site changes. This is the whole multi-tenant preparation — an afternoon n
 `UNUserNotificationCenter`, local only — service due and document expiry. Local
 notifications need **no push entitlement**, so they work on free signing.
 
-## RISK — verify in week 1 before building extensions
-Free provisioning does not grant App Groups. A WidgetKit or Control Center extension
+## RESOLVED — App Groups on free signing (decision 39, 2026-10-21)
+Spiked on the iPhone 16 with the free Personal Team: a widget extension and the app both
+signed with `group.com.arnavparmaj.trace`, and the app got a real shared container at
+runtime. Extensions can share the store. The original risk note is kept below for history.
+
+~~Free provisioning does not grant App Groups.~~ (Disproved.) A WidgetKit or Control Center extension
 that reads the SwiftData store directly needs a shared container, which may therefore
 be unavailable until the $99 account exists.
 
@@ -49,7 +53,7 @@ the Action Button is the primary capture path anyway.
 ## What free signing costs, in full
 - Re-sign from Xcode every 7 days (app data survives re-deploy)
 - Max 3 sideloaded apps
-- No push, no iCloud/CloudKit, no HomeKit, App Groups uncertain
+- No push, no iCloud/CloudKit, no HomeKit (App Groups do work: decision 39)
 - Cannot install on anyone else's device in any sustainable way
 
 ## Build order

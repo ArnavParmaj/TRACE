@@ -22,7 +22,7 @@ v3   ─ public App Store release
 ### M0 · Scaffold — DONE (2026-10-21, commit f5da8e3)
 XcodeGen project, Info.plist keys, empty app launches on the iPhone 16.
 
-### M0.5 · App Groups spike
+### M0.5 · App Groups spike — DONE (2026-10-21): they work on free signing, decision 39
 Throwaway widget extension with an App Group; try to sign it on the free account.
 - **Exit:** result recorded in `DECISIONS.md` (works, or the exact error). Target deleted.
 - **Decides:** whether the Control Center control and any widget are in v1 at all.
@@ -113,7 +113,6 @@ Trigger is open (PRD Q7): a date, or when the friend trial demands it.
 - CloudKit sync of syncable models only. `Expense` never syncs.
 - TestFlight to 3–5 riding friends
 - Selective ride sharing, home start/end fuzzing, friend leaderboards
-- Widget / Control Center control, if M0.5 showed they need the paid account
 - **Gate to v3:** 3 of 5 friends still logging after 4 weeks
 
 ## v3 — public release
@@ -126,7 +125,7 @@ data-deletion flow, onboarding for people who are not the author, a revenue answ
 ## Open decisions by milestone
 | Needed by | Decision | Where |
 |---|---|---|
-| M0.5 | App Groups on free signing | PRD Q1 |
+| v1 scope | Schedule a Control Center control or widget? (now possible) | decision 39 |
 | M5 | Due-soon threshold (U4) | SCREENS §Open |
 | M6 | Hold-to-stop duration and gesture (U3) | SCREENS §Open |
 | v1 ship | App name (bundle ID, wordmark) | PRD Q2 |

@@ -6,13 +6,17 @@ The specs are `docs/product/PRD.md`, `docs/product/SCOPE.md`,
 `docs/engineering/DATA-MODEL.md`, `docs/engineering/ARCHITECTURE.md` and
 `design/DESIGN.md`. This file is the short list of things that must not be got wrong.
 
+Returning session? Do not re-read everything. Read `CONTEXT.md` § "Where things stand",
+the first milestone not marked DONE in `docs/product/ROADMAP.md`, and
+`git log --oneline -10`. Open other docs only when the task touches them.
+
 ## What this is
 An offline-first iOS motorcycle logger. Three pillars: **route**, **money**,
 **bike ops** (service + documents). SwiftUI + SwiftData, iOS 18+, iPhone 16.
 No backend. Single user today, multi-tenant product later.
 
 Launched on a **free Apple developer account**: no push, no iCloud/CloudKit,
-no HomeKit, App Groups uncertain, 7-day re-sign. Never propose a solution that
+no HomeKit, 7-day re-sign. App Groups DO work (decision 39). Never propose a solution that
 needs a paid entitlement without saying so out loud.
 
 ## Invariants — do not violate these without asking
@@ -53,8 +57,8 @@ Ride recording comes first deliberately: background location is the only part th
 can genuinely surprise us. Everything else is CRUD.
 
 ## Open items — raise these, do not silently decide them
-- **App Groups on free provisioning** (`docs/engineering/ARCHITECTURE.md` RISK section).
-  Spike before building any widget or Control Center extension.
+- Widget / Control Center control: technically unblocked (decision 39) but not in v1
+  scope. Scheduling either is a scope decision; ask first.
 - App name. "TRACE" is a placeholder.
 - v1.5+ features (segments, gear log) are out of scope — do not build ahead.
 
@@ -65,3 +69,5 @@ can genuinely surprise us. Everything else is CRUD.
   that index in the same change.
 - If a doc and the code disagree, the doc is stale — fix the doc in the same change.
 - Push back when something looks wrong. Say so plainly rather than building it.
+- At every checkpoint, update `CONTEXT.md` § "Where things stand" and mark the milestone
+  DONE in `ROADMAP.md`, in the same commit. That is what the next session reads first.

@@ -415,8 +415,10 @@ replaces it with objectivity risk: there is nobody to say the idea is wrong.
 ## 10. Open Questions
 
 Each must be answered before or during the build phase indicated.
-Answered since approval: Q3 (decision 22), Q4 (23), Q5 (24), Q6 (27), Q8 (28), Q9 (26),
-Q10 (25). Still open: Q1, Q2, Q7, Q11, Q12.
+Answered since approval: Q1 (decision 39: App Groups work on free signing), Q3 (22),
+Q4 (23), Q5 (24), Q6 (27), Q8 (28), Q9 (26), Q10 (25). Still open: Q2, Q7, Q11, Q12.
+Widget and Control Center rows below said "blocked on the spike"; they are now unblocked
+but stay out of v1 scope until scheduled.
 
 | # | Question | Needed by | Why it blocks |
 |---|---|---|---|
