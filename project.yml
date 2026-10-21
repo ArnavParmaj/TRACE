@@ -1,0 +1,30 @@
+name: TRACE
+options:
+  bundleIdPrefix: com.arnavparmaj
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 22JFKH2K5D # free Personal Team
+targets:
+  TRACE:
+    type: application
+    platform: iOS
+    sources: [TRACE]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.arnavparmaj.trace
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+    info:
+      path: TRACE/Info.plist
+      properties:
+        CFBundleDisplayName: TRACE
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSLocationWhenInUseUsageDescription: TRACE records your route while you ride.
+        NSLocationAlwaysAndWhenInUseUsageDescription: TRACE keeps recording your ride when the screen is off or the app is in the background.
+        NSMotionUsageDescription: TRACE uses the barometer to measure climb during a ride.
+        UIBackgroundModes: [location]
