@@ -84,7 +84,8 @@ Live Activity (S18) with elapsed time, distance and a log button.
 
 ### M7 · Review — replay, charts, summaries
 Rides tab (S06), ride detail with map replay, offline no-basemap fallback, elevation
-profile and splits (S07), route line coloured by speed slow → moderate → fast (decision 56), trend charts on Rides and Money, weekly summary (S15),
+profile and splits (S07), route line coloured by speed slow → moderate → fast (decision 56),
+top speed marker, speed bands, stops, ride-level personal bests, place names (decision 62), trend charts on Rides and Money, weekly summary (S15),
 per-trip recap (S05).
 - **Exit:** "what did the last trip cost?" answered from a cold open in under 10 seconds.
   Ride detail renders a 200 km ride in under 2 seconds. Replay works in airplane mode.

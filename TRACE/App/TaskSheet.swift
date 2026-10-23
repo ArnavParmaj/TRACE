@@ -15,6 +15,7 @@ struct TaskSheet: View {
     @State private var markingDone = false
     @State private var history: [(event: ServiceEvent, costMinor: Int?)] = []
     @State private var error: String?
+    @State private var confirmRemove = false
     @Environment(\.dismiss) private var dismiss
 
     private var isNew: Bool { task.ownerID == .unowned }
@@ -32,6 +33,8 @@ struct TaskSheet: View {
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+        SheetBar(title: isNew ? "NEW SERVICE TASK" : "SERVICE TASK")
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text(isNew ? "ADD TASK" : label.uppercased())
@@ -57,11 +60,17 @@ struct TaskSheet: View {
                 PrimaryButton(isNew ? "SAVE TASK" : "SAVE CHANGES", enabled: canSave, action: save)
                 if !history.isEmpty { historyList }
                 if !isNew {
-                    TextAction("REMOVE TASK") { run { try garage.remove(task); dismiss() } }
+                    TextAction("REMOVE TASK") { confirmRemove = true }
                 }
             }
             .padding(20)
         }
+        .scrollDismissesKeyboard(.interactively)
+        }
+        .alert("Remove \(label)?", isPresented: $confirmRemove) {
+            Button("Remove") { run { try garage.remove(task); dismiss() } }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Its service history stays.") }
         .background(Color.ground.ignoresSafeArea())
         .presentationBackground(Color.ground)
         .task { loadHistory() }
@@ -134,8 +143,9 @@ private struct MarkDoneSheet: View {
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+        SheetBar(title: "\(task.label.uppercased()) DONE")
         VStack(alignment: .leading, spacing: 14) {
-            Text("\(task.label.uppercased()) DONE").font(.oswald(15, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
             box("ODOMETER", odo.isEmpty ? "—" : "\(odo) KM", .odo)
             box("COST (OPTIONAL)", "₹" + (cost.isEmpty ? "0" : cost), .cost)
             if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
@@ -156,6 +166,7 @@ private struct MarkDoneSheet: View {
             }
         }
         .padding(20)
+        }
         .background(Color.ground.ignoresSafeArea())
         .presentationBackground(Color.ground)
         .sensoryFeedback(.success, trigger: saved)

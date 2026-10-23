@@ -5,6 +5,8 @@ import SwiftUI
 struct RecorderDebugView: View {
     @Environment(RideRecorder.self) private var recorder
     @State private var confirmStop = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.modelContext) private var context
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -18,9 +20,7 @@ struct RecorderDebugView: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .confirmationDialog("Stop this ride?", isPresented: $confirmStop, titleVisibility: .visible) {
-            Button("Stop ride") { recorder.stop() }   // no destructive role: system red is reserved (invariant 9)
-        }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: confirmStop)
         // Haptics fire on the outcome, the same frame the screen changes (decision 52).
         .sensoryFeedback(trigger: recorder.phase) { old, new in
             switch (old, new) {
@@ -93,8 +93,18 @@ struct RecorderDebugView: View {
     @ViewBuilder private var controls: some View {
         switch recorder.phase {
         case .idle:
-            // shortcut: rides log against no vehicle until bike onboarding exists (M5).
-            bigButton("START RIDE", spine: true) { recorder.start(vehicleID: .unowned) }
+            bigButton("START RIDE", spine: true) {
+                recorder.start(vehicleID: (try? Garage(context: context, user: LocalStubUser.load()).bike())?.id ?? .unowned)
+            }
+        case .recording where confirmStop, .paused where confirmStop:
+            // Confirm in place, where the thumb already is: no dialog popping up elsewhere.
+            VStack(alignment: .leading, spacing: 12) {
+                Text("End this ride?").font(.condensed(17, .medium)).foregroundStyle(Color.ink)
+                HStack(spacing: 12) {
+                    bigButton("END RIDE", spine: true) { confirmStop = false; recorder.stop() }
+                    bigButton("KEEP RIDING", spine: false) { confirmStop = false }
+                }
+            }
         case .recording, .paused:
             HStack(spacing: 12) {
                 if recorder.phase == .recording {
@@ -113,6 +123,7 @@ struct RecorderDebugView: View {
         Button(action: action) {
             Text(title)
                 .font(.oswald(28, .bold)).tracking(1.6).foregroundStyle(Color.ink)
+                .lineLimit(1).minimumScaleFactor(0.6)
                 .frame(maxWidth: .infinity, minHeight: 106, alignment: .leading)
                 .padding(.leading, 28)
                 .overlay { Rectangle().stroke(Color.accent, lineWidth: 2) }

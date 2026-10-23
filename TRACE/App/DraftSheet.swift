@@ -42,6 +42,7 @@ private struct DraftForm: View {
     @State private var fullTank = true   // the rider always fills to full
     @State private var note = ""
     @State private var error: String?
+    @Environment(\.dismiss) private var dismiss
 
     private var amountMinor: Int? { Money.paise(fromRupees: amount).flatMap { $0 > 0 ? $0 : nil } }
     private var litresValue: Double? { Double(litres).flatMap { $0 > 0 ? $0 : nil } }
@@ -58,12 +59,18 @@ private struct DraftForm: View {
                 }
                 .padding(20)
             }
+            .scrollDismissesKeyboard(.interactively)
             if category != nil { keypad }
         }
     }
 
     private var topBar: some View {
-        HStack {
+        HStack(spacing: 16) {
+            Button { dismiss() } label: {
+                Text("CLOSE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
+                    .frame(minWidth: minTouch, minHeight: minTouch).contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
             Text(draft.capturedAt.formatted(date: .omitted, time: .shortened) + "  DRAFT")
                 .font(.oswald(15, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
             Spacer()

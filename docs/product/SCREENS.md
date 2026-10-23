@@ -193,8 +193,9 @@ Shown once, right after a ride stops. The fusion moment.
 
 ### S06 · Rides
 - Top: distance chart, last 12 weeks (bars, Swift Charts). Tap a bar to filter to that week.
-- List grouped by month: date, start → end place, km, duration, ₹ total if any.
-- Search by place name and date.
+- PB card: longest ride, top speed, biggest climb, fastest 10 km (decision 62).
+- List grouped by month: date, start → end place, km, duration, ₹ total if any, PB badge.
+- No search in v1 (decision 62): the chart and month groups find a ride.
 - Empty: "No rides yet. Start one from Today."
 
 ### S07 · Ride detail
@@ -207,6 +208,9 @@ Shown once, right after a ride stops. The fusion moment.
   +624 M    38 AVG        92 MAX KM/H
 02 ELEVATION ──────────────────────────
   [ elevation profile chart ]
+   TOP SPEED 92 KM/H (marked on map)   PB
+   <40 ▬▬▬▬ 40–80 ▬▬▬▬▬▬▬ >80 ▬▬  (time in speed bands)
+   7 STOPS · 0:37 STOPPED   (stops marked on map with duration)
 03 SPLITS ─────────────────────────────
   KM 1–10   0:14   avg 43   …
 04 COST ───────────────────── ₹480 ──
@@ -220,7 +224,7 @@ Shown once, right after a ride stops. The fusion moment.
 ```
 - Offline basemap fallback is a designed state, not an error: polyline drawn on
   `--ground` with start/end markers and a small `OFFLINE MAP` slug.
-- Replay animation along the route is optional polish; respects Reduce Motion.
+- No replay animation in v1 (decision 62). Ghat / section timing is v1.5.
 
 ### S08 · Expense editor
 One sheet for three jobs: completing a draft, adding a new expense, editing one.
@@ -365,7 +369,7 @@ interfaces), emil-design-eng (frequency and easing rules).
 **Should it animate?** Decide by how often the user sees it.
 | Thing | Seen | Motion |
 |---|---|---|
-| Tab switch | tens of times a day | none, instant |
+| Tab switch | tens of times a day | 180 ms crossfade + 28pt slide toward the tapped tab; fade only under Reduce Motion (decision 63) |
 | List rows appearing | many times a day | none, no stagger |
 | Live numbers in Ride mode | every second | none; tabular figures so digits don't jitter |
 | Press feedback (every button) | constant | scale 0.97 on touch-down, ~120ms |
@@ -398,9 +402,8 @@ interfaces), emil-design-eng (frequency and easing rules).
 | Any other button or tab, on touch-down | `.impact(weight: .light)` (decision 52; was "none") |
 
 **Action Button confirmation.** The intent runs without the app, so the rider's
-confirmation is the system's own intent result. Return a short dialog ("Logged") from
-`LogEntryIntent`. Verify in M3 what iOS shows on the Action Button path, and that it
-never asks for input.
+confirmation is the system's own intent result. Verified in M3: a dialog adds a Done
+tap, so `LogEntryIntent` returns no dialog and the system ✓ is the confirmation (decision 57).
 
 **Type tracking.** Large Oswald numerals get slightly negative tracking (about −0.02em);
 caps labels get positive tracking (0.1–0.2em); body Roboto Condensed stays at 0.

@@ -5,6 +5,7 @@ import SwiftUI
 struct RidesListView: View {
     @Environment(RideRecorder.self) private var recorder
     @State private var rides: [Ride] = []
+    @State private var deleting: Ride?
 
     var body: some View {
         ScrollView {
@@ -18,12 +19,27 @@ struct RidesListView: View {
                         .font(.condensed(17)).foregroundStyle(Color.inkDim)
                         .padding(.top, 8)
                 }
-                ForEach(rides) { row($0) }
+                ForEach(rides) { ride in
+                    row(ride)
+                        .contextMenu { Button("Delete ride") { deleting = ride } }
+                }
+                if !rides.isEmpty {
+                    Text("Hold a ride to delete it.").font(.condensed(13)).foregroundStyle(Color.inkFaint)
+                        .padding(.top, 12)
+                }
             }
             .padding(20)
         }
         // Reload on open and whenever a ride starts or ends while this tab is showing.
         .task(id: recorder.phase) { rides = recorder.finishedRides() }
+        .animation(.easeOut(duration: 0.2), value: rides.map(\.id))
+        .alert("Delete this ride?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
+            Button("Delete") {
+                if let deleting { recorder.delete(deleting) }
+                rides = recorder.finishedRides()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Its route and stats are removed from TRACE.") }
     }
 
     private func row(_ ride: Ride) -> some View {

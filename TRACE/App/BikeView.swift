@@ -9,6 +9,7 @@ struct BikeView: View {
     @State private var docs: [VehicleDocument] = []
     @State private var trips = (a: 0.0, b: 0.0)
     @State private var editingOdo = false
+    @State private var editingBike = false
     @State private var task: ServiceTask?
     @State private var doc: VehicleDocument?
     @State private var resets = 0
@@ -26,6 +27,8 @@ struct BikeView: View {
         }
         .task { reload() }
         .sheet(isPresented: $editingOdo, onDismiss: reload) { if let bike { OdometerSheet(bike: bike, garage: garage) } }
+        .sheet(isPresented: $editingBike, onDismiss: reload) { if let bike { BikeEditSheet(bike: bike, garage: garage) } }
+        .animation(.easeOut(duration: 0.2), value: tasks.map(\.id) + docs.map(\.id))
         .sheet(item: $task, onDismiss: reload) { TaskSheet(task: $0, bike: bike!, garage: garage) }
         .sheet(item: $doc, onDismiss: reload) { DocumentSheet(doc: $0, garage: garage) }
         .sensoryFeedback(.success, trigger: resets)
@@ -33,8 +36,16 @@ struct BikeView: View {
 
     @ViewBuilder private func content(_ bike: Vehicle) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text([bike.name, bike.registrationNumber].compactMap { $0 }.joined(separator: " · ").uppercased())
-                .font(.oswald(28, .bold, relativeTo: .largeTitle)).tracking(1.6).foregroundStyle(Color.ink)
+            Button { editingBike = true } label: {
+                HStack(alignment: .firstTextBaseline) {
+                    Text([bike.name, bike.registrationNumber].compactMap { $0 }.joined(separator: " · ").uppercased())
+                        .font(.oswald(28, .bold, relativeTo: .largeTitle)).tracking(1.6).foregroundStyle(Color.ink)
+                    Spacer()
+                    Text("EDIT ›").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
+                }
+                .frame(minHeight: minTouch).contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
             Button { editingOdo = true } label: {
                 HStack(alignment: .firstTextBaseline) {
                     Text("ODO").font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
@@ -110,7 +121,7 @@ struct BikeView: View {
             bike = try garage.bike()
             guard let bike else { return }
             tasks = try garage.tasks(bike)
-            docs = try garage.documents().sorted {
+            docs = try garage.documents(bike).sorted {
                 Due.document(expiresOn: $0.expiresOn, now: .now).urgency < Due.document(expiresOn: $1.expiresOn, now: .now).urgency
             }
             trips = (try garage.tripKm(bike, .a), try garage.tripKm(bike, .b))
@@ -185,6 +196,58 @@ private struct AddBikeForm: View {
     }
 }
 
+/// Rename the bike, change its registration, or remove it.
+private struct BikeEditSheet: View {
+    let bike: Vehicle
+    let garage: Garage
+    @State private var name: String
+    @State private var registration: String
+    @State private var confirmRemove = false
+    @State private var error: String?
+    @Environment(\.dismiss) private var dismiss
+
+    init(bike: Vehicle, garage: Garage) {
+        self.bike = bike
+        self.garage = garage
+        _name = State(initialValue: bike.name)
+        _registration = State(initialValue: bike.registrationNumber ?? "")
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SheetBar(title: "EDIT BIKE")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    FieldBox("NAME", text: $name, prompt: "CB350")
+                    FieldBox("REGISTRATION (OPTIONAL)", text: $registration, prompt: "MH 02 AB 1234")
+                    if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
+                    PrimaryButton("SAVE CHANGES", enabled: !name.trimmingCharacters(in: .whitespaces).isEmpty) {
+                        run {
+                            let reg = registration.trimmingCharacters(in: .whitespaces)
+                            try garage.updateBike(bike, name: name.trimmingCharacters(in: .whitespaces),
+                                                  registration: reg.isEmpty ? nil : reg.uppercased())
+                            dismiss()
+                        }
+                    }
+                    TextAction("REMOVE BIKE") { confirmRemove = true }
+                }
+                .padding(20)
+            }
+            .scrollDismissesKeyboard(.interactively)
+        }
+        .background(Color.ground.ignoresSafeArea())
+        .presentationBackground(Color.ground)
+        .alert("Remove \(bike.name)?", isPresented: $confirmRemove) {
+            Button("Remove") { run { try garage.removeBike(bike); dismiss() } }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Its rides stay. Its service tasks and documents stop showing.") }
+    }
+
+    private func run(_ work: () throws -> Void) {
+        do { try work() } catch { self.error = "Couldn't save: \(error.localizedDescription)" }
+    }
+}
+
 /// S14: big number + keypad. A lower reading asks "odometer replaced?" first.
 struct OdometerSheet: View {
     let bike: Vehicle
@@ -196,8 +259,9 @@ struct OdometerSheet: View {
 
     var body: some View {
         let suggestion = (try? garage.odometerSuggestion(bike)) ?? bike.odometerKm
+        VStack(spacing: 0) {
+        SheetBar(title: "ODOMETER")
         VStack(alignment: .leading, spacing: 14) {
-            Text("ODOMETER").font(.oswald(15, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
             Text(text.isEmpty ? "—" : "\(text) KM").font(.oswald(52, .semibold, relativeTo: .largeTitle))
                 .monospacedDigit().foregroundStyle(Color.ink).lineLimit(1).minimumScaleFactor(0.6)
             Text("Last reading \(bike.odometerKm.formatted()) km")
@@ -211,16 +275,20 @@ struct OdometerSheet: View {
             }
             if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
             Spacer(minLength: 0)
-            KeypadGrid { text = Keypad.apply($0, to: text, decimals: 0, maxWhole: 7) }
-            PrimaryButton("SAVE", enabled: Int(text) != nil) { save(allowLower: false) }
+            KeypadGrid { text = Keypad.apply($0, to: text, decimals: 0, maxWhole: 7); confirmLower = false }
+            if confirmLower {
+                Text("Lower than the last reading. Was the odometer replaced?")
+                    .font(.condensed(15)).foregroundStyle(Color.warn)
+                PrimaryButton("YES, IT WAS REPLACED") { save(allowLower: true) }
+            } else {
+                PrimaryButton("SAVE", enabled: Int(text) != nil) { save(allowLower: false) }
+            }
         }
         .padding(20)
+        }
+        .animation(.easeOut(duration: 0.18), value: confirmLower)
         .background(Color.ground.ignoresSafeArea())
         .presentationBackground(Color.ground)
-        .confirmationDialog("Lower than the last reading. Was the odometer replaced?",
-                            isPresented: $confirmLower, titleVisibility: .visible) {
-            Button("Yes, save it") { save(allowLower: true) }
-        }
     }
 
     private func save(allowLower: Bool) {
@@ -242,6 +310,7 @@ struct FieldBox: View {
     @Binding var text: String
     let prompt: String
     var numeric = false
+    @FocusState private var focused: Bool
 
     init(_ label: String, text: Binding<String>, prompt: String, numeric: Bool = false) {
         self.label = label
@@ -256,9 +325,41 @@ struct FieldBox: View {
             TextField("", text: $text, prompt: Text(prompt).foregroundStyle(Color.inkFaint))
                 .font(.oswald(22, .medium)).foregroundStyle(Color.ink)
                 .keyboardType(numeric ? .numberPad : .default)
+                .focused($focused)
+                .submitLabel(.done)
                 .padding(.horizontal, 14).frame(minHeight: minTouch)
-                .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
+                .overlay { Rectangle().stroke(focused ? Color.accent : Color.surfaceRule, lineWidth: focused ? 2 : 1) }
+                .toolbar {
+                    // The number pad has no return key; without this the keyboard can't be closed.
+                    if focused {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("Done") { focused = false }.font(.oswald(17, .semibold)).tint(Color.accent)
+                        }
+                    }
+                }
         }
+    }
+}
+
+/// Top of every sheet: what it is, and a 60pt CLOSE so nobody is trapped in a form.
+struct SheetBar: View {
+    let title: String
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        HStack {
+            Text(title).font(.oswald(15, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
+            Spacer()
+            Button { dismiss() } label: {
+                Text("CLOSE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
+                    .frame(minWidth: minTouch, minHeight: minTouch).contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
+            .accessibilityLabel("Close")
+        }
+        .padding(.horizontal, 20)
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
     }
 }
 

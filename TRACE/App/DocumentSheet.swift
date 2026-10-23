@@ -16,6 +16,7 @@ struct DocumentSheet: View {
     @State private var picking = false
     @State private var preview: URL?
     @State private var error: String?
+    @State private var confirmRemove = false
     @Environment(\.dismiss) private var dismiss
 
     private var isNew: Bool { doc.ownerID == .unowned }
@@ -31,6 +32,8 @@ struct DocumentSheet: View {
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+        SheetBar(title: isNew ? "NEW DOCUMENT" : "DOCUMENT")
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text(isNew ? "ADD DOCUMENT" : kind.label.uppercased())
@@ -59,10 +62,16 @@ struct DocumentSheet: View {
                 attachmentRow
                 if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
                 PrimaryButton(isNew ? "SAVE DOCUMENT" : "SAVE CHANGES", action: save)
-                if !isNew { TextAction("REMOVE DOCUMENT") { run { try garage.remove(doc); dismiss() } } }
+                if !isNew { TextAction("REMOVE DOCUMENT") { confirmRemove = true } }
             }
             .padding(20)
         }
+        .scrollDismissesKeyboard(.interactively)
+        }
+        .alert("Remove \(kind.label)?", isPresented: $confirmRemove) {
+            Button("Remove") { run { try garage.remove(doc); dismiss() } }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Its reminders stop.") }
         .background(Color.ground.ignoresSafeArea())
         .presentationBackground(Color.ground)
         .fileImporter(isPresented: $picking, allowedContentTypes: [.image, .pdf]) { result in

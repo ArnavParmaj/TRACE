@@ -43,6 +43,17 @@ struct Garage {
         return bike
     }
 
+    func updateBike(_ bike: Vehicle, name: String, registration: String?) throws {
+        vehicles.update(bike) { $0.name = name; $0.registrationNumber = registration }
+        try vehicles.save()
+    }
+
+    /// Soft: rides keep their vehicle ID, and its tasks and documents stop showing.
+    func removeBike(_ bike: Vehicle) throws {
+        vehicles.softDelete(bike)
+        try vehicles.save()
+    }
+
     /// Manual and authoritative (decision 24). A lower reading needs `allowLower`
     /// ("odometer replaced?", S14).
     func setOdometer(_ bike: Vehicle, km: Int, allowLower: Bool = false, at time: Date = .now) throws {
@@ -131,9 +142,9 @@ struct Garage {
 
     // MARK: Documents
 
-    /// Soonest expiry first.
-    func documents() throws -> [VehicleDocument] {
-        try docs.all(sortBy: [SortDescriptor(\.expiresOn)])
+    /// This bike's documents plus ones tied to no bike (a licence), soonest expiry first.
+    func documents(_ bike: Vehicle) throws -> [VehicleDocument] {
+        try docs.all(sortBy: [SortDescriptor(\.expiresOn)]).filter { $0.vehicleID == nil || $0.vehicleID == bike.id }
     }
 
     func save(_ doc: VehicleDocument) throws {
@@ -152,7 +163,7 @@ struct Garage {
     func dueItems(now: Date = .now) throws -> [(label: String, status: DueStatus)] {
         guard let bike = try bike() else { return [] }
         let service = try tasks(bike, now: now).map { (label: $0.label, status: due($0, bike, now: now)) }
-        let papers = try documents().map { (label: $0.kind.label, status: Due.document(expiresOn: $0.expiresOn, now: now)) }
+        let papers = try documents(bike).map { (label: $0.kind.label, status: Due.document(expiresOn: $0.expiresOn, now: now)) }
         return (service + papers).filter { $0.status.urgency <= .soon }.sorted { $0.status.urgency < $1.status.urgency }
     }
 }

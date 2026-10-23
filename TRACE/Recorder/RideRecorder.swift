@@ -130,6 +130,13 @@ final class RideRecorder {
     /// Closed rides for the Rides tab, newest first.
     func finishedRides() -> [Ride] { attempt { try rides.finished() } ?? [] }
 
+    /// Soft delete (invariant 5). Its samples stay but are only reachable through the ride.
+    func delete(_ finished: Ride) {
+        guard finished.id != ride?.id else { return }
+        rides.softDelete(finished)
+        attempt { try rides.save() }
+    }
+
     // MARK: - Private
 
     private func begin(_ ride: Ride, stats: RideStats, samples: Int, stops: Int) {

@@ -33,6 +33,7 @@ struct TodayView: View {
                 }
             }
             .padding(20)
+            .animation(.easeOut(duration: 0.2), value: drafts.count + due.count)
         }
         .task(id: scenePhase) { if scenePhase == .active { reload() } }
         .onReceive(NotificationCenter.default.publisher(for: .draftCaptured)) { _ in reload() }

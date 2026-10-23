@@ -1,16 +1,40 @@
 import SwiftUI
 
-enum AppTab: String, CaseIterable {
+enum AppTab: String, CaseIterable, Comparable {
     case today, rides, money, bike
+    static func < (a: AppTab, b: AppTab) -> Bool { allCases.firstIndex(of: a)! < allCases.firstIndex(of: b)! }
     var title: String { rawValue.uppercased() }
 }
 
 /// Four tabs, one per pillar plus the hub (decision 32). Rides is a plain list until M7; Money is empty until M4.
 struct RootView: View {
     @State private var tab = AppTab.today
+    @State private var forward = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: 0) {
+            ZStack { screen.id(tab).transition(slide) }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+            TabBar(selection: tab) { new in
+                forward = new > tab
+                // Short and functional (decision 63): shows which way you moved, never in the way.
+                withAnimation(reduceMotion ? .easeOut(duration: 0.12) : .easeOut(duration: 0.18)) { tab = new }
+            }
+            .ignoresSafeArea(.keyboard)   // stays at the bottom, under the keyboard
+        }
+        .background(Color.ground.ignoresSafeArea())
+    }
+
+    private var slide: AnyTransition {
+        guard !reduceMotion else { return .opacity }
+        let shift: CGFloat = 28
+        return .asymmetric(insertion: .opacity.combined(with: .offset(x: forward ? shift : -shift)),
+                           removal: .opacity.combined(with: .offset(x: forward ? -shift : shift)))
+    }
+
+    @ViewBuilder private var screen: some View {
             if tab == .today {
                 TodayView()
             } else if tab == .rides {
@@ -24,22 +48,19 @@ struct RootView: View {
                     .foregroundStyle(Color.ink)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            TabBar(selection: $tab)
-                .ignoresSafeArea(.keyboard)   // stays at the bottom, under the keyboard
-        }
-        .background(Color.ground.ignoresSafeArea())
     }
 }
 
 /// Custom bar: the stock tab bar is 49pt, under the 60pt glove rule.
 struct TabBar: View {
-    @Binding var selection: AppTab
+    let selection: AppTab
+    let onSelect: (AppTab) -> Void
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach(AppTab.allCases, id: \.self) { tab in
                 let isOn = tab == selection
-                Button { selection = tab } label: {   // instant: tabs switch tens of times a day
+                Button { if tab != selection { onSelect(tab) } } label: {
                     VStack(spacing: 6) {
                         Rectangle().fill(isOn ? Color.accent : .clear).frame(width: 28, height: 2)
                         Text(tab.title)

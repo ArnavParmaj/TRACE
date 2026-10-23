@@ -64,8 +64,11 @@ enum Reminders {
     /// Re-plans from the store. Call after any task or document change, and on launch.
     @MainActor
     static func refresh(_ garage: Garage) {
-        guard let bike = try? garage.bike(),
-              let tasks = try? garage.tasks(bike), let docs = try? garage.documents() else { return }
+        guard let bike = try? garage.bike() else {
+            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()   // bike removed
+            return
+        }
+        guard let tasks = try? garage.tasks(bike), let docs = try? garage.documents(bike) else { return }
         let plan = plan(documents: docs, tasks: tasks, now: .now)
         // Ask for permission only once there is something to remind about.
         guard !plan.isEmpty || !docs.isEmpty else { return }
