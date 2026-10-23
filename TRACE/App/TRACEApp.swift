@@ -8,9 +8,7 @@ struct TRACEApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        // Crash rather than open a fresh empty store: silently losing the log is worse.
-        let store: ModelContainer
-        do { store = try Store.container() } catch { fatalError("Store failed to open: \(error)") }
+        let store = Store.shared
         container = store
         _recorder = State(initialValue: RideRecorder(context: store.mainContext, user: LocalStubUser.load(),
                                                      sensors: LocationService()))

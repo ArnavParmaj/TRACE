@@ -49,7 +49,9 @@ Minimal debug UI only: a start/stop button and live numbers.
   Battery drain per hour measured and written in `DECISIONS.md`.
 - **If this fails, stop.** Nothing later matters until it passes.
 
-### M3 · Today + capture
+### M3 · Today + capture — CODE DONE (2026-10-23), awaiting real-pump exit test
+Built: `TRACE/Capture/` (`Capture` service, `LogEntryIntent`), Today 01 RIDE + 02 DRAFTS,
+S08 draft sheet with keypad and queue walk. Decisions 57–59.
 Today screen (S02), Action Button `LogEntryIntent` → `CaptureDraft`, draft list on
 Today, draft-completion sheet (S08) promoting a draft to an `Expense`.
 - **Exit:** a real fuel fill logged at a real pump, gloves on, phone locked, one press.

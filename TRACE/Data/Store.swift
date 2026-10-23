@@ -12,6 +12,12 @@ enum Store {
         Expense.self, CaptureDraft.self,
     ]
 
+    /// The one on-disk container per process, shared by the app and the capture intent.
+    /// Crash rather than open a fresh empty store: silently losing the log is worse.
+    @MainActor static let shared: ModelContainer = {
+        do { return try container() } catch { fatalError("Store failed to open: \(error)") }
+    }()
+
     static func container(inMemory: Bool = false) throws -> ModelContainer {
         let synced = ModelConfiguration("synced", schema: Schema(syncableModels),
                                         isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none)

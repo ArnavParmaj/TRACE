@@ -5,14 +5,14 @@ enum AppTab: String, CaseIterable {
     var title: String { rawValue.uppercased() }
 }
 
-/// Four tabs, one per pillar plus the hub (decision 32). Today shows the M2 recorder debug screen and Rides a plain list; the rest are empty until M3+.
+/// Four tabs, one per pillar plus the hub (decision 32). Rides is a plain list until M7; Money and Bike are empty until M4/M5.
 struct RootView: View {
     @State private var tab = AppTab.today
 
     var body: some View {
         VStack(spacing: 0) {
             if tab == .today {
-                RecorderDebugView()   // M2 only; the Today screen replaces it in M3
+                TodayView()
             } else if tab == .rides {
                 RidesListView()       // M2 stand-in; the real Rides screen (S06) is M7
             } else {

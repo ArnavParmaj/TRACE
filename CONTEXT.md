@@ -96,7 +96,13 @@ recovery), a debug screen on the TODAY tab with haptics, and a plain ride list o
 force-kill recovered with ≤6 s lost, GPS 1 Hz throughout, battery 6.9%/h (decision 55).
 Known: barometric climb reads high (252 m on a route spanning ~60 m), tune before M7's
 elevation profile. Planned additions: speed-coloured route (M7), trip meters A/B (M5).
-**Next is M3: Today screen + Action Button capture.**
+**M3 code is done; the real-pump exit test is pending.** `TRACE/Capture/`: `Capture` (log a
+draft, list, complete into an `Expense`, discard; tested) and `LogEntryIntent`, an App
+Shortcut for the Action Button (decision 57). Today (S02) shows 01 RIDE and 02 DRAFTS;
+the S08 sheet completes drafts with a 60pt keypad and walks the queue (decisions 58, 59).
+41 tests green; full loop checked in the simulator. **Next: assign the Action Button on
+the iPhone (Settings › Action Button › Shortcut › TRACE › Log entry), log a real fill,
+then M4.**
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.

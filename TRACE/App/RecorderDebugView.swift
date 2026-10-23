@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// M2 debug screen: start / pause / stop, live numbers, and force-kill recovery (S04, decision 25).
-/// shortcut: debug UI only; replaced by the Today screen and Ride mode in M3/M6.
+/// shortcut: debug UI, opened from the Today ride row; Ride mode (S03) replaces it in M6.
 struct RecorderDebugView: View {
     @Environment(RideRecorder.self) private var recorder
     @State private var confirmStop = false
