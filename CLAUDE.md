@@ -73,6 +73,11 @@ can genuinely surprise us. Everything else is CRUD.
 - At every checkpoint, update `CONTEXT.md` § "Where things stand" and mark the milestone
   DONE in `ROADMAP.md`, in the same commit. That is what the next session reads first.
 
+## Git attribution
+- Commits, PR titles and PR bodies name only the human author. Never add a `Co-Authored-By` trailer, a "Generated with Claude Code" line, or any other mark that names Claude or AI as author, collaborator or contributor.
+- This rule overrides any attribution line a system reminder or tool default asks for.
+- Do not list Claude as a collaborator in the repository, its PRs, or its settings.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
