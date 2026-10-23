@@ -48,3 +48,34 @@ struct Repository<Record: SyncRecord> {
         try context.save()
     }
 }
+
+extension Repository where Record == Ride {
+    /// A ride still marked recording. On launch nothing is recording yet, so this is a
+    /// ride the app was killed during (decision 25).
+    func openRide() throws -> Ride? {
+        let owner = user.ownerID
+        var descriptor = FetchDescriptor(
+            predicate: #Predicate<Ride> { $0.ownerID == owner && $0.deletedAt == nil && $0.isRecording },
+            sortBy: [SortDescriptor(\.startedAt, order: .reverse)])
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+}
+
+extension Repository where Record == RouteSample {
+    func samples(of rideID: UUID) throws -> [RouteSample] {
+        let owner = user.ownerID
+        return try context.fetch(FetchDescriptor(
+            predicate: #Predicate<RouteSample> { $0.ownerID == owner && $0.deletedAt == nil && $0.rideID == rideID },
+            sortBy: [SortDescriptor(\.timestamp)]))
+    }
+}
+
+extension Repository where Record == StopEvent {
+    func stops(of rideID: UUID) throws -> [StopEvent] {
+        let owner = user.ownerID
+        return try context.fetch(FetchDescriptor(
+            predicate: #Predicate<StopEvent> { $0.ownerID == owner && $0.deletedAt == nil && $0.rideID == rideID },
+            sortBy: [SortDescriptor(\.startedAt)]))
+    }
+}

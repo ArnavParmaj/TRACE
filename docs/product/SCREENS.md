@@ -34,8 +34,10 @@ These apply to every screen. A screen spec below only notes exceptions.
    so no spinners; if something is slow, show the layout with `--ink-faint` placeholders.
 8. **Soft delete with undo.** Delete hides the row and shows an undo bar for 5s.
    Nothing is hard-deleted from the UI.
-9. **Haptics.** Success haptic on capture and on ride start/stop. Warning haptic on
-   destructive confirm. Nothing else buzzes.
+9. **Haptics** (decision 52). Every button gives a light tap on touch-down, so a gloved
+   press is felt. Ride start / resume / stop and capture give a success haptic, pause a
+   heavy tap, destructive confirm a warning. One haptic per press: a button whose outcome
+   has its own haptic skips the light tap.
 10. **Strings through `String(localized:)`**, units through formatters, from day one.
 11. **No translucent materials.** Bars and sheets are solid `--ground` with a hairline edge.
     Blur over black buys nothing and lights pixels.
@@ -308,7 +310,7 @@ km/L, services done, anything that became due. Previous/next week arrows.
 | Service overdue | "Chain lube overdue" | S12 |
 | Document reminder (lead times) | "PUC expires in 7 days" | S13 |
 | Document expired | "PUC expired today" | S13 |
-| Ride auto-closed (decision 23) | "Ride ended after 10 min stopped. 38.2 km saved." | S05 |
+| Ride auto-closed (decision 50) | "Ride ended after 30 min stopped. 38.2 km saved." | S05 |
 Km-based reminders can only be scheduled when the odometer moves, so they are
 re-evaluated after each ride and each odometer update, not at a fixed time.
 
@@ -335,7 +337,7 @@ odometer prompt → DONE.
 Relaunch → S04 → RESUME or END AT last autosave. Never silently discarded.
 
 **F4 · Forgot to stop.**
-10 min stationary → ride auto-closes at the moment it stopped moving → notification →
+30 min stationary (within 50 m, decision 50) → ride auto-closes at the moment it stopped moving → notification →
 recap on next open.
 
 **F5 · Service due.**
@@ -385,10 +387,11 @@ interfaces), emil-design-eng (frequency and easing rules).
 | Event | Haptic |
 |---|---|
 | Draft logged (Ride mode tap) | `.success` |
-| Ride started / stopped | `.success` (stop: when the hold completes, not when it starts) |
+| Ride started / resumed / stopped | `.success` (stop: when the hold completes, not when it starts) |
+| Ride paused | `.impact(weight: .heavy)` — felt differently from stop |
 | Hold-to-stop begins | `.impact(weight: .light)` once |
-| Destructive confirm (delete ride) | `.warning` |
-| Everything else | none |
+| Destructive confirm (delete ride, stop ride) | `.warning` |
+| Any other button or tab, on touch-down | `.impact(weight: .light)` (decision 52; was "none") |
 
 **Action Button confirmation.** The intent runs without the app, so the rider's
 confirmation is the system's own intent result. Return a short dialog ("Logged") from

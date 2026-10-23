@@ -5,7 +5,7 @@ import SwiftData
 /// which is how money stays on the device by construction, not by convention.
 enum Store {
     static let syncableModels: [any PersistentModel.Type] = [
-        Vehicle.self, Ride.self, RouteSample.self,
+        Vehicle.self, Ride.self, RouteSample.self, StopEvent.self,
         ServiceTask.self, ServiceEvent.self, VehicleDocument.self,
     ]
     static let localOnlyModels: [any PersistentModel.Type] = [

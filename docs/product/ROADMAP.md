@@ -34,9 +34,13 @@ owner-scoped repository, the hand-written token file, bundled fonts
 - **Exit:** unit tests green on soft-delete exclusion, ownerID scoping, paise arithmetic.
   App launches to the empty tab shell on `#000000`.
 
-### M2 · Recorder — the risky one
+### M2 · Recorder — the risky one — CODE DONE (2026-10-23), awaiting the real-ride exit test
+Built: `TRACE/Recorder/` + debug screen on TODAY (start / pause / resume / stop, haptics),
+30 tests green, simulator ride with
+background recording and kill/recovery checked. Exit procedure: `engineering/M2-RIDE-TEST.md`.
+Accuracy tiering deferred until the drain is measured (decision 45).
 `LocationService`, `RideRecorder` (start / stop / 15s autosave / recovery),
-`CMAltimeter`, raw `StopEvent`s, polyline encoding, 10-minute stationary auto-close.
+`CMAltimeter`, raw `StopEvent`s, polyline encoding, stationary auto-close (30 min within 50 m, decision 50; was 10 min).
 Minimal debug UI only: a start/stop button and live numbers.
 - **Exit:** a real ride over an hour, force-killed mid-ride, recovered with ≤15s missing.
   Battery drain per hour measured and written in `DECISIONS.md`.

@@ -17,7 +17,7 @@ CloudKit rules, so v2 sync needs no schema migration (decision 40).
 **Two stores.** Syncable models live in the `synced` store; `Expense` and `CaptureDraft`
 live in the `local` store, which never gets a CloudKit database (`TRACE/Data/Store.swift`).
 
-`StopEvent` (decision 30) is added with the recorder in M2.
+`StopEvent` (decision 30) was added with the recorder in M2.
 
 `SyncScope.localOnly` is set on every money entity at the model level, so no future
 sync pass can pick them up by accident. This is enforced in code, not by discipline.
@@ -34,13 +34,23 @@ Odometer is the spine — service intervals and fuel economy both read from it.
 `elapsedDurationS: Int`, `climbM: Int`, `avgSpeedKph`, `maxSpeedKph`,
 `startPlaceName?`, `endPlaceName?`, `odoStartKm: Int?`, `odoEndKm: Int?`,
 `encodedPolyline: Data` (compressed route for map replay),
-`isRecording: Bool`, `vehicleID: UUID`
+`isRecording: Bool`, `vehicleID: UUID`, `pausedAt: Date?` (set while paused),
+`pausedDurationS: Int` (decision 51). Moving time = elapsed − stops − paused.
 
 ### RouteSample   (syncable, child of Ride)
 `rideID`, `timestamp`, `lat`, `lon`, `altitudeM`, `speedMps`, `horizontalAccuracyM`
 Full-resolution samples for elevation profiles and future segment matching.
-Downsample to the Ride's `encodedPolyline` on save; keep raw samples but allow a
+`encodedPolyline` is Google's encoded-polyline string (UTF-8, 1e-5 degrees) of the
+moving fixes, written when the ride closes (decision 46); keep raw samples but allow a
 retention policy later (they are the only thing that grows unboundedly).
+
+### StopEvent   (syncable, child of Ride)
+`rideID`, `startedAt`, `endedAt`, `lat`, `lon`
+A dwell of 120s or more below ~3.6 km/h (decision 29), raw and unclassified (decision 30).
+Shorter stops count as moving time. A dwell is also broken when the bike drifts more
+than 50 m from where it began, so gridlock creep is moving time, not a stop. A ride that
+auto-closes after 30 minutes still (decision 50) ends at the start of that dwell, and the
+dwell is not stored as a stop.
 
 ### Expense   (**localOnly — permanent**)
 `occurredAt`, `amountMinor: Int` (paise — **never Double for money**),

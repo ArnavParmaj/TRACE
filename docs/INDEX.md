@@ -15,6 +15,8 @@ asking a question it already answers.
   free-signing constraints, the App Groups risk.
 - `engineering/DATA-MODEL.md` — every entity, universal sync fields, the fusion rule.
 - `engineering/BUILD-PLAN.md` — week 1, task by task, with hard checkpoints.
+- `engineering/M2-RIDE-TEST.md` — the real-road exit test for the recorder: steps and
+  what to write down.
 
 ## Design
 - `../design/DESIGN.md` — frozen design language, tokens, type, components.

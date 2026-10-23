@@ -76,7 +76,10 @@ extension Font {
 let minTouch: CGFloat = 60
 
 /// The one button style: feedback on touch-down, no bounce (SCREENS §6).
+/// A light tap haptic on touch-down confirms the press through gloves (decision 52).
+/// Buttons whose outcome has its own haptic pass `haptic: false`, so nothing buzzes twice.
 struct PressStyle: ButtonStyle {
+    var haptic = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
@@ -84,5 +87,8 @@ struct PressStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
             .opacity(configuration.isPressed && reduceMotion ? 0.7 : 1)
             .animation(.spring(response: 0.3, dampingFraction: 1), value: configuration.isPressed)
+            .sensoryFeedback(.impact(weight: .light), trigger: configuration.isPressed) { _, pressed in
+                haptic && pressed
+            }
     }
 }

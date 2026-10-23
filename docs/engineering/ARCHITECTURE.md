@@ -26,10 +26,19 @@ call site changes. This is the whole multi-tenant preparation — an afternoon n
 - `CLLocationManager`, `allowsBackgroundLocationUpdates = true`,
   `activityType = .otherNavigation`, background mode declared in Info.plist.
   This needs **no paid entitlement**.
-- Accuracy tiering: 1 Hz full accuracy while Ride mode is foregrounded, reduced
-  cadence when backgrounded. GPS is the dominant battery cost — far more than screen.
-- `CMAltimeter` for barometric climb (more accurate than GPS altitude).
-- Autosave every 15s so a crash or kill never loses more than a few seconds.
+- 1 Hz, best accuracy, `pausesLocationUpdatesAutomatically = false`, in foreground
+  and background alike. Accuracy tiering is deferred until the M2 ride measures the
+  drain (decision 45). GPS is the dominant battery cost — far more than screen.
+- When-in-use authorization is enough: updates started in the foreground keep running
+  in the background (blue location pill).
+- `CMAltimeter` for barometric climb (more accurate than GPS altitude). Rises under 2 m
+  are treated as noise. The simulator has no barometer, so climb reads 0 there.
+- Autosave every 15s, timed off fix timestamps rather than a timer so it runs in the
+  background, plus a save whenever the app is backgrounded (decision 47).
+- Code: `TRACE/Recorder/` — `RideStats` (pure maths, unit-tested), `LocationService`
+  (CoreLocation + barometer behind the `RideSensors` protocol), `RideRecorder`
+  (start / pause / resume / stop / autosave / auto-close / recovery).
+- Pause turns GPS and the barometer off; the ride stays open (decision 51).
 
 ## Notifications
 `UNUserNotificationCenter`, local only — service due and document expiry. Local

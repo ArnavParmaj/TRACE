@@ -86,8 +86,15 @@ version after.
 Done: M0 scaffold, M0.5 App Groups spike (they work), M1 foundation: all models in two
 stores (synced / local-only money), `CurrentUser` stub, generic owner-scoped
 `Repository<T>`, design tokens + bundled fonts, empty 4-tab shell on true black,
-12 tests green. **Next is M2, the recorder** — the milestone that matters: a ride recorded
-on a real road and still present after a force-kill.
+12 tests green.
+
+**M2, the recorder, is built but not passed.** `TRACE/Recorder/`: `RideStats` (distance,
+stops, climb, polyline; pure and unit-tested), `LocationService` (1 Hz GPS + barometer),
+`RideRecorder` (start / pause / resume / stop / 15s autosave / 30-min auto-close / kill
+recovery), and a debug screen on the TODAY tab with haptics. 30 tests green; a simulator ride recorded in the
+background and recovered after a kill. **Next: the author's real ride**
+(`docs/engineering/M2-RIDE-TEST.md`), then write the battery drain into DECISIONS and
+mark M2 DONE. Do not start M3 before that.
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.
