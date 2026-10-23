@@ -58,6 +58,8 @@ struct RidesListView: View {
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
+        .background(Color.ground)              // the lift preview shows the row, not a hole
+        .contentShape(Rectangle())             // hold anywhere in the row, not just on the text
         .accessibilityElement(children: .combine)
     }
 
