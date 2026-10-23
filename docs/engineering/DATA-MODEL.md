@@ -26,7 +26,8 @@ sync pass can pick them up by accident. This is enforced in code, not by discipl
 
 ### Vehicle
 `name`, `make`, `model`, `year`, `registrationNumber`, `odometerKm: Int`,
-`tankCapacityL: Double?`, `isPrimary: Bool`
+`odometerUpdatedAt: Date?`, `tankCapacityL: Double?`, `isPrimary: Bool`,
+`tripAResetAt: Date?`, `tripBResetAt: Date?` (see Trip meters below)
 Odometer is the spine — service intervals and fuel economy both read from it.
 
 ### Ride   (syncable)
@@ -52,7 +53,7 @@ than 50 m from where it began, so gridlock creep is moving time, not a stop. A r
 auto-closes after 30 minutes still (decision 50) ends at the start of that dwell, and the
 dwell is not stored as a stop.
 
-### Planned for M5: trip meters (decision 56)
+### Trip meters (decision 56, built M5)
 `Vehicle.tripAResetAt: Date?`, `Vehicle.tripBResetAt: Date?`. The trip value is the sum
 of `Ride.distanceM` started since the reset, computed, never stored (same reason as
 invariant 6: a stored total goes stale when a ride is edited or deleted).
@@ -61,7 +62,7 @@ invariant 6: a stored total goes stale when a ride is edited or deleted).
 `occurredAt`, `amountMinor: Int` (paise — **never Double for money**),
 `currencyCode: String`, `category: ExpenseCategory` (fuel, food, parts, parking, other;
 decision 37), `note?`,
-`rideID: UUID?` (set by the fusion rule below), `vehicleID: UUID?`,
+`rideID: UUID?` (set by the fusion rule below), `vehicleID: UUID?`, `serviceEventID: UUID?`,
 `odometerKm: Int?`
 Fuel-specific, nullable: `litres: Double?`, `pricePerLitreMinor: Int?`,
 `isFullTank: Bool?` — full-tank entries are the only ones used for km/L.
@@ -73,9 +74,9 @@ Fuel-specific, nullable: `litres: Double?`, `pricePerLitreMinor: Int?`,
 Due state is **computed, never stored** — stored due-dates go stale silently.
 
 ### ServiceEvent   (syncable)
-`vehicleID`, `taskID?`, `performedAt`, `odometerKm: Int`, `costMinor: Int?`, `notes?`
-If `costMinor` is set, a paired localOnly Expense is created. The event syncs; the
-money does not.
+`vehicleID`, `taskID?`, `performedAt`, `odometerKm: Int`, `notes?`
+No money on a syncable model (invariant 1, decision 60): a cost becomes a localOnly
+Expense with `serviceEventID` set. The event syncs; the money and the link do not.
 
 ### VehicleDocument   (syncable)
 `vehicleID?`, `kind: DocumentKind` (insurance, puc, rc, drivingLicence, other),

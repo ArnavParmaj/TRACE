@@ -1,18 +1,20 @@
 import SwiftData
 import SwiftUI
 
-/// S02 Today, M3 cut: 01 RIDE and 02 DRAFTS. DUE, THIS WEEK and RECENT arrive with
-/// the data behind them (M5, M7); they hide when empty anyway.
+/// S02 Today: 01 RIDE, 02 DRAFTS, 03 DUE. THIS WEEK and RECENT arrive with the data
+/// behind them (M4, M7); they hide when empty anyway.
 struct TodayView: View {
     @Environment(RideRecorder.self) private var recorder
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @State private var drafts: [CaptureDraft] = []
+    @State private var due: [(label: String, status: DueStatus)] = []
     @State private var completing: CaptureDraft?
     @State private var showRide = false
     @State private var error: String?
 
     private var capture: Capture { Capture(context: context, user: LocalStubUser.load()) }
+    private var garage: Garage { Garage(context: context, user: LocalStubUser.load()) }
 
     var body: some View {
         ScrollView {
@@ -20,6 +22,12 @@ struct TodayView: View {
                 header
                 rideSection
                 if !drafts.isEmpty { draftSection }
+                if !due.isEmpty {
+                    VStack(alignment: .leading, spacing: 0) {
+                        SectionHead(number: "03", title: "DUE").padding(.bottom, 4)
+                        ForEach(due.indices, id: \.self) { DueRow(label: due[$0].label, status: due[$0].status) }
+                    }
+                }
                 if let error {
                     Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk)
                 }
@@ -53,8 +61,8 @@ struct TodayView: View {
                 rideRow("UNFINISHED RIDE", detail: "RESOLVE ›")
             } else if recorder.phase == .idle {
                 CaptureButton(title: "START RIDE") {
-                    // shortcut: rides log against no vehicle until bike onboarding exists (M5).
-                    recorder.start(vehicleID: .unowned)
+                    // No bike added yet: the ride still records, against no vehicle.
+                    recorder.start(vehicleID: (try? garage.bike())?.id ?? .unowned)
                 }
                 if drafts.isEmpty {
                     Text("Press the Action Button any time to log. Start a ride here.")
@@ -146,7 +154,12 @@ struct TodayView: View {
     }
 
     private func reload() {
-        do { drafts = try capture.pending(); error = nil } catch { self.error = "Couldn't load drafts: \(error.localizedDescription)" }
+        do {
+            drafts = try capture.pending()
+            due = try garage.dueItems()
+            error = nil
+        } catch { self.error = "Couldn't load Today: \(error.localizedDescription)" }
+        Reminders.refresh(garage)   // dates move on; re-plan whenever the app comes back
     }
 }
 

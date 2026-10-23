@@ -64,7 +64,9 @@ fused expenses on the ride recap.
 - **Exit:** a ride with two logged expenses closes and shows both attached and the
   correct total. Detaching one moves it back to unattached. km/L matches a hand calc.
 
-### M5 · Bike ops — service + documents + notifications
+### M5 · Bike ops — service + documents + notifications — CODE DONE (2026-10-23), awaiting exit test
+Built: `TRACE/Bike/` (`Due`, `Garage`, `Reminders`), Bike tab, S12/S13/S14 sheets, Today 03 DUE.
+Decisions 60–61.
 Bike tab (S11), odometer sheet (S14), service tasks with computed due state (S12),
 mark-done → `ServiceEvent` (+ paired local-only `Expense` if cost given),
 documents with expiry and attachment (S13), local notifications for both.

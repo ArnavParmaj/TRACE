@@ -17,7 +17,12 @@ final class Vehicle: SyncRecord {
     var registrationNumber: String?
     /// Manual and authoritative; GPS only suggests (decision 24).
     var odometerKm = 0
+    /// When `odometerKm` was last typed in; rides after it make the GPS suggestion.
+    var odometerUpdatedAt: Date?
     var tankCapacityL: Double?
+    /// Trip meters store only their reset time; the distance is summed on render (decision 56).
+    var tripAResetAt: Date?
+    var tripBResetAt: Date?
     var isPrimary = false
 
     init(name: String, odometerKm: Int = 0) {
@@ -28,6 +33,16 @@ final class Vehicle: SyncRecord {
 
 enum ServiceKind: String, Codable, CaseIterable, Sendable {
     case chainLube, oilChange, brakePads, tyres, custom
+
+    var label: String {
+        switch self {
+        case .chainLube: "Chain lube"
+        case .oilChange: "Oil change"
+        case .brakePads: "Brake pads"
+        case .tyres: "Tyres"
+        case .custom: "Custom"
+        }
+    }
 }
 
 /// Due state is computed from the odometer and dates, never stored (invariant 6).
@@ -56,7 +71,8 @@ final class ServiceTask: SyncRecord {
     }
 }
 
-/// Syncs. If it has a cost, a paired local-only Expense holds the money.
+/// Syncs, so it holds no money (invariant 1). A cost lives in a local-only Expense
+/// whose `serviceEventID` points here (decision 60).
 @Model
 final class ServiceEvent: SyncRecord {
     var id = UUID()
@@ -70,7 +86,6 @@ final class ServiceEvent: SyncRecord {
     var taskID: UUID?
     var performedAt = Date.now
     var odometerKm = 0
-    var costMinor: Int?
     var notes: String?
 
     init(vehicleID: UUID, odometerKm: Int, performedAt: Date = .now) {
@@ -82,6 +97,16 @@ final class ServiceEvent: SyncRecord {
 
 enum DocumentKind: String, Codable, CaseIterable, Sendable {
     case insurance, puc, rc, drivingLicence, other
+
+    var label: String {
+        switch self {
+        case .insurance: "Insurance"
+        case .puc: "PUC"
+        case .rc: "RC"
+        case .drivingLicence: "Driving licence"
+        case .other: "Document"
+        }
+    }
 }
 
 @Model

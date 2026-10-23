@@ -96,13 +96,17 @@ recovery), a debug screen on the TODAY tab with haptics, and a plain ride list o
 force-kill recovered with ≤6 s lost, GPS 1 Hz throughout, battery 6.9%/h (decision 55).
 Known: barometric climb reads high (252 m on a route spanning ~60 m), tune before M7's
 elevation profile. Planned additions: speed-coloured route (M7), trip meters A/B (M5).
-**M3 code is done; the real-pump exit test is pending.** `TRACE/Capture/`: `Capture` (log a
-draft, list, complete into an `Expense`, discard; tested) and `LogEntryIntent`, an App
-Shortcut for the Action Button (decision 57). Today (S02) shows 01 RIDE and 02 DRAFTS;
-the S08 sheet completes drafts with a 60pt keypad and walks the queue (decisions 58, 59).
-41 tests green; full loop checked in the simulator. **Next: assign the Action Button on
-the iPhone (Settings › Action Button › Shortcut › TRACE › Log entry), log a real fill,
-then M4.**
+**M3 code is done and the Action Button works on the iPhone; the real-pump exit test is
+pending.** `TRACE/Capture/`: `Capture` + `LogEntryIntent` (decisions 57–59).
+
+**M5 code is done (2026-10-23), exit test pending.** `TRACE/Bike/`: `Due` (computed due
+state), `Garage` (bike, odometer, trip meters A/B, tasks, mark done, documents),
+`Reminders` (local notifications). Bike tab (S11) with add-bike, odometer sheet (S14),
+task sheet + mark done (S12/S09), document sheet with attachment (S13); Today gained
+03 DUE. Service cost no longer lives on the syncable `ServiceEvent` (decision 60).
+51 tests green. **Next: enter the real bike's tasks and documents on the iPhone, add a
+test document expiring tomorrow and confirm its 9:00 notification; log the real fill
+for M3; then M4.**
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.

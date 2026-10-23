@@ -5,7 +5,7 @@ enum AppTab: String, CaseIterable {
     var title: String { rawValue.uppercased() }
 }
 
-/// Four tabs, one per pillar plus the hub (decision 32). Rides is a plain list until M7; Money and Bike are empty until M4/M5.
+/// Four tabs, one per pillar plus the hub (decision 32). Rides is a plain list until M7; Money is empty until M4.
 struct RootView: View {
     @State private var tab = AppTab.today
 
@@ -15,6 +15,8 @@ struct RootView: View {
                 TodayView()
             } else if tab == .rides {
                 RidesListView()       // M2 stand-in; the real Rides screen (S06) is M7
+            } else if tab == .bike {
+                BikeView()
             } else {
                 Text(tab.title)
                     .font(.oswald(28, .bold, relativeTo: .largeTitle))
@@ -23,6 +25,7 @@ struct RootView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             TabBar(selection: $tab)
+                .ignoresSafeArea(.keyboard)   // stays at the bottom, under the keyboard
         }
         .background(Color.ground.ignoresSafeArea())
     }

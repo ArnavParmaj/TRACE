@@ -25,6 +25,8 @@ final class Expense: SyncRecord {
     /// Set by the fusion rule when a ride closes; user can detach.
     var rideID: UUID?
     var vehicleID: UUID?
+    /// The service this paid for, if any. The event syncs; this link and the money don't.
+    var serviceEventID: UUID?
     var odometerKm: Int?
 
     // Fuel only. Litres are a quantity, not money, so Double is fine.

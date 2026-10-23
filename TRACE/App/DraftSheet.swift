@@ -166,20 +166,8 @@ private struct DraftForm: View {
     // MARK: Keypad + SAVE, pinned at the bottom.
 
     private var keypad: some View {
-        let keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"]
-        return VStack(spacing: 8) {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-                ForEach(keys, id: \.self) { key in
-                    Button { press(key) } label: {
-                        Text(key).font(.oswald(26, .medium)).foregroundStyle(Color.ink)
-                            .frame(maxWidth: .infinity, minHeight: minTouch)
-                            .background(Color.surfaceLine)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(PressStyle())
-                    .accessibilityLabel(key == "⌫" ? "Delete" : key == "." ? "Point" : key)
-                }
-            }
+        VStack(spacing: 8) {
+            KeypadGrid(onKey: press)
             Button(action: save) {
                 Text("SAVE").font(.oswald(24, .bold)).tracking(1.6)
                     .foregroundStyle(amountMinor == nil ? Color.inkFaint : Color.ground)
@@ -215,6 +203,27 @@ private struct DraftForm: View {
 
     private func run(_ work: () throws -> Void) {
         do { try work() } catch { self.error = "Couldn't save: \(error.localizedDescription)" }
+    }
+}
+
+/// 60pt keys for gloves; the system number pad's keys are smaller (invariant 10).
+struct KeypadGrid: View {
+    let onKey: (String) -> Void
+
+    var body: some View {
+        let keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"]
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+            ForEach(keys, id: \.self) { key in
+                Button { onKey(key) } label: {
+                    Text(key).font(.oswald(26, .medium)).foregroundStyle(Color.ink)
+                        .frame(maxWidth: .infinity, minHeight: minTouch)
+                        .background(Color.surfaceLine)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(PressStyle())
+                .accessibilityLabel(key == "⌫" ? "Delete" : key == "." ? "Point" : key)
+            }
+        }
     }
 }
 
