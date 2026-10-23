@@ -19,6 +19,8 @@ final class Ride: SyncRecord {
     var climbM = 0
     var avgSpeedKph = 0.0
     var maxSpeedKph = 0.0
+    /// The rider's own name for the ride ("Lonavala chai run"). Nil shows the date.
+    var title: String?
     var startPlaceName: String?
     var endPlaceName: String?
     var odoStartKm: Int?

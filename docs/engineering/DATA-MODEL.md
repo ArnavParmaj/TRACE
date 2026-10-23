@@ -33,7 +33,7 @@ Odometer is the spine — service intervals and fuel economy both read from it.
 ### Ride   (syncable)
 `startedAt`, `endedAt?`, `distanceM: Int`, `movingDurationS: Int`,
 `elapsedDurationS: Int`, `climbM: Int`, `avgSpeedKph`, `maxSpeedKph`,
-`startPlaceName?`, `endPlaceName?`, `odoStartKm: Int?`, `odoEndKm: Int?`,
+`title?` (rider-given name; nil shows the date), `startPlaceName?`, `endPlaceName?`, `odoStartKm: Int?`, `odoEndKm: Int?`,
 `encodedPolyline: Data` (compressed route for map replay),
 `isRecording: Bool`, `vehicleID: UUID`, `pausedAt: Date?` (set while paused),
 `pausedDurationS: Int` (decision 51). Moving time = elapsed − stops − paused.

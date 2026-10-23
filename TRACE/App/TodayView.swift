@@ -40,7 +40,9 @@ struct TodayView: View {
         .sheet(item: $completing, onDismiss: reload) { DraftSheet(start: $0, capture: capture) }
         .fullScreenCover(isPresented: $showRide) { rideScreen }
         // START has no press haptic; the outcome is the confirmation (decision 52).
-        .sensoryFeedback(.success, trigger: recorder.phase) { old, new in old == .idle && new == .recording && !showRide }
+        .sensoryFeedback(.success, trigger: recorder.phase) { old, new in old == .idle && new == .recording }
+        // A ride that ends (END RIDE, END AT, auto-close) drops back to Today.
+        .onChange(of: recorder.phase) { _, phase in if phase == .idle && recorder.orphan == nil { showRide = false } }
     }
 
     private var header: some View {
@@ -64,6 +66,7 @@ struct TodayView: View {
                 CaptureButton(title: "START RIDE") {
                     // No bike added yet: the ride still records, against no vehicle.
                     recorder.start(vehicleID: (try? garage.bike())?.id ?? .unowned)
+                    showRide = true   // straight to the live numbers
                 }
                 if drafts.isEmpty {
                     Text("Press the Action Button any time to log. Start a ride here.")

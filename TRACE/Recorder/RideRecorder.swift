@@ -130,6 +130,13 @@ final class RideRecorder {
     /// Closed rides for the Rides tab, newest first.
     func finishedRides() -> [Ride] { attempt { try rides.finished() } ?? [] }
 
+    /// Blank clears the name back to the date.
+    func rename(_ finished: Ride, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        rides.update(finished) { $0.title = trimmed.isEmpty ? nil : String(trimmed.prefix(60)) }
+        attempt { try rides.save() }
+    }
+
     /// Soft delete (invariant 5). Its samples stay but are only reachable through the ride.
     func delete(_ finished: Ride) {
         guard finished.id != ride?.id else { return }

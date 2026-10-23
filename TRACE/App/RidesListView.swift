@@ -6,6 +6,8 @@ struct RidesListView: View {
     @Environment(RideRecorder.self) private var recorder
     @State private var rides: [Ride] = []
     @State private var deleting: Ride?
+    @State private var renaming: Ride?
+    @State private var newName = ""
 
     var body: some View {
         ScrollView {
@@ -21,10 +23,13 @@ struct RidesListView: View {
                 }
                 ForEach(rides) { ride in
                     row(ride)
-                        .contextMenu { Button("Delete ride") { deleting = ride } }
+                        .contextMenu {
+                            Button("Rename ride") { newName = ride.title ?? ""; renaming = ride }
+                            Button("Delete ride") { deleting = ride }
+                        }
                 }
                 if !rides.isEmpty {
-                    Text("Hold a ride to delete it.").font(.condensed(13)).foregroundStyle(Color.inkFaint)
+                    Text("Hold a ride to rename or delete it.").font(.condensed(13)).foregroundStyle(Color.inkFaint)
                         .padding(.top, 12)
                 }
             }
@@ -40,6 +45,14 @@ struct RidesListView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: { Text("Its route and stats are removed from TRACE.") }
+        .alert("Name this ride", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+            TextField("Lonavala chai run", text: $newName)
+            Button("Save") {
+                if let renaming { recorder.rename(renaming, to: newName) }
+                rides = recorder.finishedRides()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Leave it blank to show the date.") }
     }
 
     private func row(_ ride: Ride) -> some View {
@@ -47,6 +60,9 @@ struct RidesListView: View {
             Text(ride.startedAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).hour().minute()))
                 .font(.oswald(13, .medium)).tracking(2).textCase(.uppercase)
                 .foregroundStyle(Color.inkMuted)
+            if let title = ride.title {
+                Text(title).font(.oswald(20, .semibold)).foregroundStyle(Color.ink).lineLimit(2)
+            }
             HStack(alignment: .firstTextBaseline, spacing: 16) {
                 stat(String(format: "%.2f", Double(ride.distanceM) / 1000), "KM")
                 stat(clock(ride.elapsedDurationS), "TOTAL")
