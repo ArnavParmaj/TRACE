@@ -83,7 +83,7 @@ Decision 32: custom four-tab bar, ≥60pt tall (the stock bar is 49pt).
 | S03 | Ride mode | full-screen cover | v1 | M6 (debug UI in M2) | Start ride on Today, Live Activity |
 | S04 | Ride recovery | sheet | v1 | M2 | launch with an open ride |
 | S05 | Ride recap | full screen | v1 | M4 | ride stop |
-| S06 | Rides | tab root | v1 | M7 | tab |
+| S06 | Rides | tab root | v1 | M7 (plain stand-in list since M2, decision 53) | tab |
 | S07 | Ride detail | push | v1 | M7 | S05, S06, Money rows |
 | S08 | Expense editor | sheet | v1 | M3 | draft, + Add, any expense row |
 | S09 | Mark service done | sheet | v1 | M5 | S12, notification |

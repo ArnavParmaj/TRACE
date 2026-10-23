@@ -36,6 +36,7 @@ owner-scoped repository, the hand-written token file, bundled fonts
 
 ### M2 · Recorder — the risky one — CODE DONE (2026-10-23), awaiting the real-ride exit test
 Built: `TRACE/Recorder/` + debug screen on TODAY (start / pause / resume / stop, haptics),
+a plain read-only ride list on RIDES (stand-in until S06 in M7, decision 53),
 30 tests green, simulator ride with
 background recording and kill/recovery checked. Exit procedure: `engineering/M2-RIDE-TEST.md`.
 Accuracy tiering deferred until the drain is measured (decision 45).

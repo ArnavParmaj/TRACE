@@ -127,6 +127,9 @@ final class RideRecorder {
 
     func altitude(_ metres: Double) { stats.addAltitude(metres) }
 
+    /// Closed rides for the Rides tab, newest first.
+    func finishedRides() -> [Ride] { attempt { try rides.finished() } ?? [] }
+
     // MARK: - Private
 
     private func begin(_ ride: Ride, stats: RideStats, samples: Int, stops: Int) {

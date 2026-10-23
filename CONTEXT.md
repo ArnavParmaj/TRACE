@@ -91,7 +91,8 @@ stores (synced / local-only money), `CurrentUser` stub, generic owner-scoped
 **M2, the recorder, is built but not passed.** `TRACE/Recorder/`: `RideStats` (distance,
 stops, climb, polyline; pure and unit-tested), `LocationService` (1 Hz GPS + barometer),
 `RideRecorder` (start / pause / resume / stop / 15s autosave / 30-min auto-close / kill
-recovery), and a debug screen on the TODAY tab with haptics. 30 tests green; a simulator ride recorded in the
+recovery), a debug screen on the TODAY tab with haptics, and a plain ride list on RIDES
+(stand-in; the real S06 is M7). 30 tests green; a simulator ride recorded in the
 background and recovered after a kill. **Next: the author's real ride**
 (`docs/engineering/M2-RIDE-TEST.md`), then write the battery drain into DECISIONS and
 mark M2 DONE. Do not start M3 before that.

@@ -26,6 +26,8 @@ If any fails, stop and fix before M3.
 6. Ride another 30+ minutes, then **STOP** (warning haptic on the confirm, success on stop).
 
 ## Write down
+(The RIDES tab lists each finished ride with distance, total and moving time, so you can
+read the numbers there.)
 - Total time, battery at start and end → drain %/h. Append it as a decision row.
 - Saved-up-to time vs kill time (seconds lost).
 - DISTANCE vs bike odometer (GPS should be within ~2–5%, decision 24).

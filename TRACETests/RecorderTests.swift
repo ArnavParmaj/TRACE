@@ -241,6 +241,18 @@ private func ride(from startS: Int, seconds: Int, speed: Double, lat0: Double = 
         #expect(orphan.endedAt == t0.addingTimeInterval(30))
     }
 
+    @Test func finishedRidesAreNewestFirstAndSkipTheOpenOne() throws {
+        let rec = recorder()
+        rec.start(vehicleID: UUID(), at: t0)
+        ride(from: 0, seconds: 5, speed: 10).forEach(rec.ingest)
+        rec.stop()
+        rec.start(vehicleID: UUID(), at: t0.addingTimeInterval(100))
+        ride(from: 100, seconds: 5, speed: 10).forEach(rec.ingest)
+        rec.stop()
+        rec.start(vehicleID: UUID(), at: t0.addingTimeInterval(200))   // still recording
+        #expect(rec.finishedRides().map(\.startedAt) == [t0.addingTimeInterval(100), t0])
+    }
+
     @Test func noNewRideWhileAnOrphanIsPending() throws {
         recorder().start(vehicleID: UUID(), at: t0)
         let relaunched = recorder(ModelContext(container))

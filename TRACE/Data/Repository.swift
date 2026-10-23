@@ -60,6 +60,14 @@ extension Repository where Record == Ride {
         descriptor.fetchLimit = 1
         return try context.fetch(descriptor).first
     }
+
+    /// Closed rides, newest first.
+    func finished() throws -> [Ride] {
+        let owner = user.ownerID
+        return try context.fetch(FetchDescriptor(
+            predicate: #Predicate<Ride> { $0.ownerID == owner && $0.deletedAt == nil && !$0.isRecording },
+            sortBy: [SortDescriptor(\.startedAt, order: .reverse)]))
+    }
 }
 
 extension Repository where Record == RouteSample {
