@@ -201,6 +201,7 @@ Shown once, right after a ride stops. The fusion moment.
 ```
 ‹ RIDES                      SAT 18 OCT
 [ map with route polyline, ~40% height ]   offline → polyline on black, no basemap
+                                          line coloured by speed (decision 55)
 01 STATS ──────────────────────────────
   86.4 KM   2:14 MOVING   2:51 ELAPSED
   +624 M    38 AVG        92 MAX KM/H
@@ -264,6 +265,7 @@ MONEY                      [ WEEK | MONTH | YEAR ]
 ```
 CB350 · MH 02 AB 1234
   ODO 12,480 KM                    UPDATE ›   (→ S14)
+  TRIP A 342.6 KM   TRIP B 31.0 KM   (hold to reset)
 01 SERVICE ────────────────────────────
 ┃ CHAIN LUBE  OVERDUE BY 80 KM         ›    (alarm rail)
   OIL CHANGE  DUE IN 1,520 KM ▬▬▬▬──   ›
@@ -276,6 +278,8 @@ CB350 · MH 02 AB 1234
                               + ADD DOCUMENT
 ```
 - Sorted most-urgent first. Due state computed on render (invariant 6).
+- Trip A / B (decision 55): sum of ride distance since each reset, computed on render.
+  Only the reset time is stored. Reset is hold-to-confirm, so a gloved brush can't wipe it.
 - One vehicle shown. Switching the primary vehicle lives in Settings (decision 28).
 
 ### S12 · Service task

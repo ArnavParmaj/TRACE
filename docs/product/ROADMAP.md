@@ -34,12 +34,14 @@ owner-scoped repository, the hand-written token file, bundled fonts
 - **Exit:** unit tests green on soft-delete exclusion, ownerID scoping, paise arithmetic.
   App launches to the empty tab shell on `#000000`.
 
-### M2 · Recorder — the risky one — CODE DONE (2026-10-23), awaiting the real-ride exit test
+### M2 · Recorder — the risky one — DONE (2026-10-23)
+Passed on a real 78-min, 31 km ride: force-killed and resumed with ≤6 s lost, GPS at
+1 Hz throughout, battery 6.9%/h (decision 54). Results: `engineering/M2-RIDE-TEST.md`.
 Built: `TRACE/Recorder/` + debug screen on TODAY (start / pause / resume / stop, haptics),
 a plain read-only ride list on RIDES (stand-in until S06 in M7, decision 53),
 30 tests green, simulator ride with
 background recording and kill/recovery checked. Exit procedure: `engineering/M2-RIDE-TEST.md`.
-Accuracy tiering deferred until the drain is measured (decision 45).
+Accuracy tiering not needed at the measured drain (decisions 45, 54).
 `LocationService`, `RideRecorder` (start / stop / 15s autosave / recovery),
 `CMAltimeter`, raw `StopEvent`s, polyline encoding, stationary auto-close (30 min within 50 m, decision 50; was 10 min).
 Minimal debug UI only: a start/stop button and live numbers.
@@ -64,6 +66,8 @@ fused expenses on the ride recap.
 Bike tab (S11), odometer sheet (S14), service tasks with computed due state (S12),
 mark-done → `ServiceEvent` (+ paired local-only `Expense` if cost given),
 documents with expiry and attachment (S13), local notifications for both.
+Trip meters A and B on S11: resettable distance counters like a bike's own, summed
+from rides since each reset (decision 55).
 - **Exit:** real tasks and documents entered for the actual bike. A test document
   expiring tomorrow fires its notification. An overdue task shows the alarm rail.
 
@@ -76,7 +80,7 @@ Live Activity (S18) with elapsed time, distance and a log button.
 
 ### M7 · Review — replay, charts, summaries
 Rides tab (S06), ride detail with map replay, offline no-basemap fallback, elevation
-profile and splits (S07), trend charts on Rides and Money, weekly summary (S15),
+profile and splits (S07), route line coloured by speed slow → moderate → fast (decision 55), trend charts on Rides and Money, weekly summary (S15),
 per-trip recap (S05).
 - **Exit:** "what did the last trip cost?" answered from a cold open in under 10 seconds.
   Ride detail renders a 200 km ride in under 2 seconds. Replay works in airplane mode.

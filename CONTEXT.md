@@ -88,14 +88,15 @@ stores (synced / local-only money), `CurrentUser` stub, generic owner-scoped
 `Repository<T>`, design tokens + bundled fonts, empty 4-tab shell on true black,
 12 tests green.
 
-**M2, the recorder, is built but not passed.** `TRACE/Recorder/`: `RideStats` (distance,
+**M2, the recorder, is DONE (2026-10-23).** `TRACE/Recorder/`: `RideStats` (distance,
 stops, climb, polyline; pure and unit-tested), `LocationService` (1 Hz GPS + barometer),
 `RideRecorder` (start / pause / resume / stop / 15s autosave / 30-min auto-close / kill
 recovery), a debug screen on the TODAY tab with haptics, and a plain ride list on RIDES
-(stand-in; the real S06 is M7). 30 tests green; a simulator ride recorded in the
-background and recovered after a kill. **Next: the author's real ride**
-(`docs/engineering/M2-RIDE-TEST.md`), then write the battery drain into DECISIONS and
-mark M2 DONE. Do not start M3 before that.
+(stand-in; the real S06 is M7). 31 tests green. Passed on a real 78-min, 31 km ride:
+force-kill recovered with ≤6 s lost, GPS 1 Hz throughout, battery 6.9%/h (decision 54).
+Known: barometric climb reads high (252 m on a route spanning ~60 m), tune before M7's
+elevation profile. Planned additions: speed-coloured route (M7), trip meters A/B (M5).
+**Next is M3: Today screen + Action Button capture.**
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.

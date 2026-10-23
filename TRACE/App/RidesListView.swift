@@ -31,11 +31,12 @@ struct RidesListView: View {
             Text(ride.startedAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).hour().minute()))
                 .font(.oswald(13, .medium)).tracking(2).textCase(.uppercase)
                 .foregroundStyle(Color.inkMuted)
-            HStack(alignment: .firstTextBaseline, spacing: 20) {
+            HStack(alignment: .firstTextBaseline, spacing: 16) {
                 stat(String(format: "%.2f", Double(ride.distanceM) / 1000), "KM")
                 stat(clock(ride.elapsedDurationS), "TOTAL")
                 stat(clock(ride.movingDurationS), "MOVING")
-                stat(String(format: "%.0f", ride.avgSpeedKph), "KM/H")
+                stat(String(format: "%.0f", ride.avgSpeedKph), "AVG")
+                stat(String(format: "%.0f", ride.maxSpeedKph), "MAX")
             }
         }
         .padding(.vertical, 14)

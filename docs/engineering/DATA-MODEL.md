@@ -52,6 +52,11 @@ than 50 m from where it began, so gridlock creep is moving time, not a stop. A r
 auto-closes after 30 minutes still (decision 50) ends at the start of that dwell, and the
 dwell is not stored as a stop.
 
+### Planned for M5: trip meters (decision 55)
+`Vehicle.tripAResetAt: Date?`, `Vehicle.tripBResetAt: Date?`. The trip value is the sum
+of `Ride.distanceM` started since the reset, computed, never stored (same reason as
+invariant 6: a stored total goes stale when a ride is edited or deleted).
+
 ### Expense   (**localOnly — permanent**)
 `occurredAt`, `amountMinor: Int` (paise — **never Double for money**),
 `currencyCode: String`, `category: ExpenseCategory` (fuel, food, parts, parking, other;
