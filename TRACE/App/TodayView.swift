@@ -1,8 +1,8 @@
 import SwiftData
 import SwiftUI
 
-/// S02 Today: 01 RIDE, 02 DRAFTS, 03 DUE. THIS WEEK and RECENT arrive with the data
-/// behind them (M4, M7); they hide when empty anyway.
+/// S02 Today: 01 RIDE, 02 DRAFTS, 03 DUE. THIS WEEK and RECENT arrive with M7;
+/// they hide when empty anyway.
 struct TodayView: View {
     @Environment(RideRecorder.self) private var recorder
     @Environment(\.modelContext) private var context
@@ -11,10 +11,13 @@ struct TodayView: View {
     @State private var due: [(label: String, status: DueStatus)] = []
     @State private var completing: CaptureDraft?
     @State private var showRide = false
+    @State private var recap: Ride?
+    @State private var shownRecap: UUID?   // the recap is shown once per ride
     @State private var error: String?
 
     private var capture: Capture { Capture(context: context, user: LocalStubUser.load()) }
     private var garage: Garage { Garage(context: context, user: LocalStubUser.load()) }
+    private var ledger: Ledger { Ledger(context: context, user: LocalStubUser.load()) }
 
     var body: some View {
         ScrollView {
@@ -37,12 +40,14 @@ struct TodayView: View {
         }
         .task(id: scenePhase) { if scenePhase == .active { reload() } }
         .onReceive(NotificationCenter.default.publisher(for: .draftCaptured)) { _ in reload() }
-        .sheet(item: $completing, onDismiss: reload) { DraftSheet(start: $0, capture: capture) }
-        .fullScreenCover(isPresented: $showRide) { rideScreen }
+        .sheet(item: $completing, onDismiss: reload) { DraftSheet(start: $0, capture: capture, ledger: ledger) }
+        .sheet(item: $recap, onDismiss: reload) { RideSheet(ride: $0, isRecap: true) }
+        .fullScreenCover(isPresented: $showRide, onDismiss: showRecap) { rideScreen }
         // START has no press haptic; the outcome is the confirmation (decision 52).
         .sensoryFeedback(.success, trigger: recorder.phase) { old, new in old == .idle && new == .recording }
-        // A ride that ends (END RIDE, END AT, auto-close) drops back to Today.
-        .onChange(of: recorder.phase) { _, phase in if phase == .idle && recorder.orphan == nil { showRide = false } }
+        // A ride that ends (END RIDE, END AT, auto-close) drops back to Today, then shows its recap (S05).
+        .onChange(of: recorder.phase) { _, _ in rideEnded() }
+        .onChange(of: recorder.orphan == nil) { _, _ in rideEnded() }   // END AT on an unfinished ride
     }
 
     private var header: some View {
@@ -155,6 +160,15 @@ struct TodayView: View {
         .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+    }
+
+    private func rideEnded() {
+        guard recorder.phase == .idle, recorder.orphan == nil else { return }
+        if showRide { showRide = false } else { showRecap() }   // the cover's onDismiss shows it: no sheet over a closing cover
+    }
+
+    private func showRecap() {
+        if let closed = recorder.lastClosed, closed.id != shownRecap { shownRecap = closed.id; recap = closed }
     }
 
     private func reload() {

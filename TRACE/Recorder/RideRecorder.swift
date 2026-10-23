@@ -22,16 +22,20 @@ final class RideRecorder {
     private(set) var sampleCount = 0
     private(set) var stopCount = 0
     private(set) var lastError: String?
+    /// The ride that closed most recently, for the recap (S05).
+    private(set) var lastClosed: Ride?
 
     private let rides: Repository<Ride>
     private let samples: Repository<RouteSample>
     private let stops: Repository<StopEvent>
+    private let ledger: Ledger
     private let sensors: any RideSensors
 
     init(context: ModelContext, user: any CurrentUser, sensors: any RideSensors) {
         rides = Repository(context: context, user: user)
         samples = Repository(context: context, user: user)
         stops = Repository(context: context, user: user)
+        ledger = Ledger(context: context, user: user)
         self.sensors = sensors
         orphan = attempt { try rides.openRide() } ?? nil
     }
@@ -142,6 +146,7 @@ final class RideRecorder {
         guard finished.id != ride?.id else { return }
         rides.softDelete(finished)
         attempt { try rides.save() }
+        attempt { try ledger.detachAll(from: finished.id) }
     }
 
     // MARK: - Private
@@ -186,6 +191,8 @@ final class RideRecorder {
         }
         writeTotals(ride, until: end)
         attempt { try rides.save() }
+        attempt { try ledger.fuse(ride) }
+        lastClosed = ride
     }
 
     private func writeTotals(_ ride: Ride, until end: Date) {

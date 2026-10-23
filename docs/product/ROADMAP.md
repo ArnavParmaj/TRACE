@@ -57,7 +57,10 @@ Today, draft-completion sheet (S08) promoting a draft to an `Expense`.
 - **Exit:** a real fuel fill logged at a real pump, gloves on, phone locked, one press.
   Completed later from Today in under 15 seconds.
 
-### M4 · Money + fusion
+### M4 · Money + fusion — CODE DONE (2026-10-24), awaiting exit test
+Built: `TRACE/Money/Ledger.swift` (fusion, attach/detach, km/L), shared S08 editor
+(`ExpenseSheet`: draft, new, edit, delete), Money tab (S10), `RideSheet` (S05 recap +
+S07 cost), tap-through and ₹ spent on RIDES. Decision 64.
 Expense editor with fuel fields, the fusion rule on ride close, km/L between
 consecutive full-tank fills (partials flagged, excluded), Money tab (S10),
 fused expenses on the ride recap.

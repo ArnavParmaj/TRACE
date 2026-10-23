@@ -6,7 +6,7 @@ enum AppTab: String, CaseIterable, Comparable {
     var title: String { rawValue.uppercased() }
 }
 
-/// Four tabs, one per pillar plus the hub (decision 32). Rides is a plain list until M7; Money is empty until M4.
+/// Four tabs, one per pillar plus the hub (decision 32). Rides is a plain list until M7.
 struct RootView: View {
     @State private var tab = AppTab.today
     @State private var forward = true
@@ -42,11 +42,7 @@ struct RootView: View {
             } else if tab == .bike {
                 BikeView()
             } else {
-                Text(tab.title)
-                    .font(.oswald(28, .bold, relativeTo: .largeTitle))
-                    .tracking(1.6)
-                    .foregroundStyle(Color.ink)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                MoneyView()
             }
     }
 }

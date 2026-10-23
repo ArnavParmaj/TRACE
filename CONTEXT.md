@@ -104,9 +104,16 @@ state), `Garage` (bike, odometer, trip meters A/B, tasks, mark done, documents),
 `Reminders` (local notifications). Bike tab (S11) with add-bike, odometer sheet (S14),
 task sheet + mark done (S12/S09), document sheet with attachment (S13); Today gained
 03 DUE. Service cost no longer lives on the syncable `ServiceEvent` (decision 60).
-51 tests green. **Next: enter the real bike's tasks and documents on the iPhone, add a
-test document expiring tomorrow and confirm its 9:00 notification; log the real fill
-for M3; then M4.**
+51 tests green.
+
+**M4 code is done (2026-10-24), exit test pending.** `TRACE/Money/Ledger.swift`: fusion
+on ride close, attach / detach, km/L between consecutive full fills with odometer
+(decision 64). One S08 editor for drafts, new and existing expenses (`ExpenseSheet`),
+Money tab (S10: period total, by category, km/L chart, entries), `RideSheet` as the
+recap after a ride and as ride detail from RIDES. 55 tests green.
+**Next: on the iPhone, ride with two expenses logged during it and check both attach
+with the right total, detach one; log two full fills with odometer and check km/L by
+hand. Still open: M3 real-pump test, M5 notification test.**
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.

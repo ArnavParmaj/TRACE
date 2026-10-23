@@ -4,17 +4,19 @@ import SwiftUI
 /// SAVE moves to the next waiting draft, so a queue is one sheet, not N round trips.
 struct DraftSheet: View {
     let capture: Capture
+    let ledger: Ledger
     @State private var draft: CaptureDraft
     @State private var saves = 0
     @Environment(\.dismiss) private var dismiss
 
-    init(start: CaptureDraft, capture: Capture) {
+    init(start: CaptureDraft, capture: Capture, ledger: Ledger) {
         self.capture = capture
+        self.ledger = ledger
         _draft = State(initialValue: start)
     }
 
     var body: some View {
-        DraftForm(draft: draft, capture: capture, onDone: advance)
+        ExpenseForm(subject: .draft(draft), capture: capture, ledger: ledger, onDone: advance)
             .id(draft.id)   // fresh fields per draft
             .background(Color.ground.ignoresSafeArea())
             .presentationBackground(Color.ground)
@@ -27,11 +29,32 @@ struct DraftSheet: View {
     }
 }
 
-private struct DraftForm: View {
+/// S08 for a new expense (nil) or an existing one: edit, detach from its ride, delete.
+struct ExpenseSheet: View {
+    let expense: Expense?
+    let capture: Capture
+    let ledger: Ledger
+    @State private var saves = 0
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ExpenseForm(subject: .expense(expense), capture: capture, ledger: ledger) { saved in
+            if saved { saves += 1 }
+            dismiss()
+        }
+        .background(Color.ground.ignoresSafeArea())
+        .presentationBackground(Color.ground)
+        .sensoryFeedback(.success, trigger: saves)
+    }
+}
+
+private struct ExpenseForm: View {
+    enum Subject { case draft(CaptureDraft), expense(Expense?) }
     enum Field { case amount, litres, odometer }
 
-    let draft: CaptureDraft
+    let subject: Subject
     let capture: Capture
+    let ledger: Ledger
     let onDone: (_ saved: Bool) -> Void
 
     @State private var category: ExpenseCategory?
@@ -41,8 +64,39 @@ private struct DraftForm: View {
     @State private var odometer = ""
     @State private var fullTank = true   // the rider always fills to full
     @State private var note = ""
+    @State private var time = Date.now
+    @State private var rideName: String?
+    @State private var confirmDelete = false
     @State private var error: String?
     @Environment(\.dismiss) private var dismiss
+
+    init(subject: Subject, capture: Capture, ledger: Ledger, onDone: @escaping (_ saved: Bool) -> Void) {
+        self.subject = subject
+        self.capture = capture
+        self.ledger = ledger
+        self.onDone = onDone
+        switch subject {
+        case .draft(let d): _time = State(initialValue: d.capturedAt)
+        case .expense(nil): break
+        case .expense(let e?):
+            _category = State(initialValue: e.category)
+            _amount = State(initialValue: Self.rupees(e.amountMinor))
+            _litres = State(initialValue: e.litres.map { String(format: "%g", $0) } ?? "")
+            _odometer = State(initialValue: e.odometerKm.map(String.init) ?? "")
+            _fullTank = State(initialValue: e.isFullTank ?? true)
+            _note = State(initialValue: e.note ?? "")
+            _time = State(initialValue: e.occurredAt)
+            _rideName = State(initialValue: (try? ledger.ride(e.rideID))?.displayName)
+        }
+    }
+
+    /// 41050 → "410.50", 41000 → "410": the keypad's own text form.
+    private static func rupees(_ p: Int) -> String {
+        p % 100 == 0 ? "\(p / 100)" : String(format: "%d.%02d", p / 100, p % 100)
+    }
+
+    private var existing: Expense? { if case .expense(let e) = subject { e } else { nil } }
+    private var draft: CaptureDraft? { if case .draft(let d) = subject { d } else { nil } }
 
     private var amountMinor: Int? { Money.paise(fromRupees: amount).flatMap { $0 > 0 ? $0 : nil } }
     private var litresValue: Double? { Double(litres).flatMap { $0 > 0 ? $0 : nil } }
@@ -62,6 +116,10 @@ private struct DraftForm: View {
             .scrollDismissesKeyboard(.interactively)
             if category != nil { keypad }
         }
+        .alert("Delete this expense?", isPresented: $confirmDelete) {
+            Button("Delete", role: .destructive) { run { if let existing { try ledger.delete(existing) }; onDone(false) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("It is removed from MONEY and from any ride it was attached to.") }
     }
 
     private var topBar: some View {
@@ -71,17 +129,29 @@ private struct DraftForm: View {
                     .frame(minWidth: minTouch, minHeight: minTouch).contentShape(Rectangle())
             }
             .buttonStyle(PressStyle())
-            Text(draft.capturedAt.formatted(date: .omitted, time: .shortened) + "  DRAFT")
-                .font(.oswald(15, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
+            Text(title).font(.oswald(15, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
             Spacer()
-            Button { run { try capture.discard(draft); onDone(false) } } label: {
-                Text("DISCARD DRAFT").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
-                    .frame(minHeight: minTouch).contentShape(Rectangle())
+            if let draft {
+                Button { run { try capture.discard(draft); onDone(false) } } label: {
+                    Text("DISCARD DRAFT").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
+                        .frame(minHeight: minTouch).contentShape(Rectangle())
+                }
+                .buttonStyle(PressStyle())
+            } else if existing != nil {
+                Button { confirmDelete = true } label: {
+                    Text("DELETE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
+                        .frame(minWidth: minTouch, minHeight: minTouch).contentShape(Rectangle())
+                }
+                .buttonStyle(PressStyle())
             }
-            .buttonStyle(PressStyle())
         }
         .padding(.horizontal, 20)
         .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+    }
+
+    private var title: String {
+        if let draft { return draft.capturedAt.formatted(date: .omitted, time: .shortened) + "  DRAFT" }
+        return existing == nil ? "NEW EXPENSE" : "EXPENSE"
     }
 
     // MARK: Category grid: FUEL full width, the rest 2×2.
@@ -143,8 +213,26 @@ private struct DraftForm: View {
             }
             valueRow("ODOMETER (OPTIONAL)", odometer.isEmpty ? "—" : odometer + " KM", .odometer)
         }
-        if draft.rideID != nil {
-            Text("Attached to the ride you were on.").font(.condensed(15)).foregroundStyle(Color.inkDim)
+        if let draft {
+            if draft.rideID != nil {
+                Text("Attached to the ride you were on.").font(.condensed(15)).foregroundStyle(Color.inkDim)
+            }
+        } else {
+            DatePicker("TIME", selection: $time, in: ...Date.now.addingTimeInterval(3_600))
+                .font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
+                .tint(Color.accent).frame(minHeight: minTouch)
+        }
+        if let existing, existing.rideID != nil {
+            // Fusion is shown, not hidden (S08).
+            HStack {
+                Text("Attached to ride: \(rideName ?? "a ride")").font(.condensed(15)).foregroundStyle(Color.inkDim)
+                Spacer()
+                Button { run { try ledger.detach(existing); rideName = nil } } label: {
+                    Text("DETACH").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
+                        .frame(minWidth: minTouch, minHeight: minTouch).contentShape(Rectangle())
+                }
+                .buttonStyle(PressStyle())
+            }
         }
         TextField("", text: $note, prompt: Text("Note (optional)").foregroundStyle(Color.inkFaint))
             .font(.condensed(17)).foregroundStyle(Color.ink)
@@ -200,10 +288,19 @@ private struct DraftForm: View {
     private func save() {
         guard let category, let amountMinor else { return }
         let trimmed = note.trimmingCharacters(in: .whitespaces)
+        let text = trimmed.isEmpty ? nil : trimmed
         run {
-            try capture.complete(draft, category: category, amountMinor: amountMinor,
-                                 litres: litresValue, isFullTank: fullTank, odometerKm: Int(odometer),
-                                 note: trimmed.isEmpty ? nil : trimmed)
+            switch subject {
+            case .draft(let d):
+                try capture.complete(d, category: category, amountMinor: amountMinor, litres: litresValue,
+                                     isFullTank: fullTank, odometerKm: Int(odometer), note: text)
+            case .expense(nil):
+                try ledger.add(category: category, amountMinor: amountMinor, at: time, litres: litresValue,
+                               isFullTank: fullTank, odometerKm: Int(odometer), note: text)
+            case .expense(let e?):
+                try ledger.update(e, category: category, amountMinor: amountMinor, at: time, litres: litresValue,
+                                  isFullTank: fullTank, odometerKm: Int(odometer), note: text)
+            }
             onDone(true)
         }
     }

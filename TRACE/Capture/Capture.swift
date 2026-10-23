@@ -38,21 +38,15 @@ struct Capture {
         try drafts.all(sortBy: [SortDescriptor(\.capturedAt, order: .reverse)])
     }
 
-    /// Promotes the draft to an expense at the draft's capture time. Fuel fields are
-    /// kept only for fuel; price per litre is derived, never typed.
+    /// Promotes the draft to an expense at the draft's capture time.
     @discardableResult
     func complete(_ draft: CaptureDraft, category: ExpenseCategory, amountMinor: Int,
                   litres: Double? = nil, isFullTank: Bool? = nil, odometerKm: Int? = nil,
                   note: String? = nil) throws -> Expense {
         let expense = Expense(amountMinor: amountMinor, category: category, occurredAt: draft.capturedAt)
         expense.rideID = draft.rideID
-        expense.note = note
-        if category == .fuel {
-            expense.litres = litres
-            expense.pricePerLitreMinor = Self.pricePerLitreMinor(amountMinor: amountMinor, litres: litres)
-            expense.isFullTank = isFullTank
-            expense.odometerKm = odometerKm
-        }
+        expense.fill(category: category, amountMinor: amountMinor, litres: litres, isFullTank: isFullTank,
+                     odometerKm: odometerKm, note: note)
         expenses.insert(expense)
         drafts.softDelete(draft)
         try expenses.save()
@@ -65,7 +59,7 @@ struct Capture {
     }
 
     /// Paise per litre, rounded to the nearest paisa. Nil without a positive litre count.
-    static func pricePerLitreMinor(amountMinor: Int, litres: Double?) -> Int? {
+    nonisolated static func pricePerLitreMinor(amountMinor: Int, litres: Double?) -> Int? {
         guard let litres, litres > 0 else { return nil }
         return Int((Double(amountMinor) / litres).rounded())
     }
