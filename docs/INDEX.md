@@ -20,13 +20,12 @@ asking a question it already answers.
 
 ## Design
 - `../design/DESIGN.md` — frozen design language, tokens, type, components.
-- `../design/artboards/` — exported artboards E (Today) and F (Ride mode). Visual source
-  of truth for those screens.
 - `design-notes/` — supporting design rationale and exploration notes.
 - `../design/icon/render.swift` — draws the app icon PNGs into `TRACE/Assets.xcassets/AppIcon.appiconset`
   (`swift design/icon/render.swift`). Concepts canvas (private): https://claude.ai/artifact/Hh8eidwrmvYjq4qL3qwjdN
 - Prototype canvas (private): https://claude.ai/artifact/MTdvxrwvJhGdanmtdvQe9Q — 9 clickable
-  v1 boards. Reference only; `SCREENS.md` is the spec.
+  v1 boards (Today = artboard E, Ride mode = F), the visual source of truth the app is
+  matched against (decision 65). `SCREENS.md` is the spec.
 
 ## Cross-cutting
 - `DECISIONS.md` — numbered, append-only decision log with rationale. Every real

@@ -39,6 +39,21 @@ call site changes. This is the whole multi-tenant preparation — an afternoon n
   (CoreLocation + barometer behind the `RideSensors` protocol), `RideRecorder`
   (start / pause / resume / stop / autosave / auto-close / recovery).
 - Pause turns GPS and the barometer off; the ride stays open (decision 51).
+- Closing a ride runs the fusion rule (`Ledger.fuse`) and sets `lastClosed`, which Today
+  turns into the one-time recap (S05).
+
+## Code map
+| Folder | What lives there |
+|---|---|
+| `TRACE/Models/` | SwiftData models: route, money (local-only), bike ops, `SyncRecord` |
+| `TRACE/Data/` | `Store` (synced + local-only containers), `Repository<T>` (owner-scoped, soft delete), `CurrentUser` |
+| `TRACE/Recorder/` | GPS + barometer recording, autosave, recovery |
+| `TRACE/Capture/` | `Capture` (draft queue) and `LogEntryIntent` (Action Button) |
+| `TRACE/Money/` | `Ledger`: expenses, fusion, attach / detach, km/L (decision 64) |
+| `TRACE/Bike/` | `Garage`, computed `Due` state, `Reminders` (local notifications) |
+| `TRACE/Design/` | `Tokens` (from DESIGN.md, Display P3), `Hatch`, `ScreenHeader` |
+| `TRACE/Support/` | `Money` formatting: paise ↔ text, view layer only |
+| `TRACE/App/` | Views. Dumb: they call services, never fetch models directly |
 
 ## Notifications
 `UNUserNotificationCenter`, local only — service due and document expiry. Local

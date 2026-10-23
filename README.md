@@ -2,7 +2,8 @@
 
 Offline-first iOS ride logger for motorcycles. Route, money, and bike ops. SwiftUI, on-device only.
 
-Status: **pre-development — design language not yet chosen.**
+Status: **v1 in progress.** M0–M2 done; M3, M4, M5 code done and awaiting their road/device tests.
+Where things stand: `CONTEXT.md`. Milestones: `docs/product/ROADMAP.md`.
 
 ## What it is
 One-tap capture (Action Button / Control Center / Live Activity) that logs a ride,
@@ -14,7 +15,7 @@ window, producing one fused trip object, and the same odo feeds service interval
 Route apps, expense apps and maintenance apps each own one slice; nothing joins them.
 
 Shorthand: "Strava for motorcycles" — for capture and replay quality only. No social
-graph in v1. See docs/SCOPE.md.
+graph in v1. See `docs/product/SCOPE.md`.
 
 ## Constraints (fixed)
 - Target: iPhone 16 (non-Pro), iOS. Personal use, not App Store.
@@ -33,15 +34,17 @@ Closest shorthand is "Strava for motorcycles", but only for the route-and-stats
 half. The differences are deliberate and load-bearing:
 - No social graph, no leaderboards, no segments, no kudos. Single user, no accounts.
 - No server. Nothing leaves the phone. (Also forced by free-tier signing.)
-- Money and study-time logging are first-class, not bolted on — the fusion of
-  route + spend + time is the actual product.
+- Money and bike upkeep are first-class, not bolted on — the fusion of
+  route + spend + service is the actual product.
 Treat Strava as the reference for *ride capture and replay quality only*.
 
 ## Open decisions
-- [ ] Design language — 4 hybrid directions to mock up, then choose against the
-      7 shortlisted standalones. See `design/DESIGN.md`.
+- [x] Design language — OLED Splice, frozen in `design/DESIGN.md`.
 - [ ] App name — TRACE is a placeholder.
 
 ## Layout
-- `docs/` — scope, specs, data model, architecture, decision log
-- `design/` — design language exploration and chosen tokens
+- `TRACE/` — the app: `Models/`, `Data/` (owner-scoped repository, store), `Recorder/`,
+  `Capture/`, `Money/`, `Bike/`, `Design/` (tokens, hatch, header), `App/` (views)
+- `TRACETests/` — Swift Testing suites
+- `docs/` — scope, specs, data model, architecture, decision log (`docs/INDEX.md`)
+- `design/` — frozen design tokens and the app icon renderer

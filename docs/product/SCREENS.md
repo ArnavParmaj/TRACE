@@ -82,9 +82,9 @@ Decision 32: custom four-tab bar, ≥60pt tall (the stock bar is 49pt).
 | S02 | Today | tab root | v1 | M3 | app launch, tab |
 | S03 | Ride mode | full-screen cover | v1 | M6 (debug UI in M2) | Start ride on Today, Live Activity |
 | S04 | Ride recovery | sheet | v1 | M2 | launch with an open ride |
-| S05 | Ride recap | full screen | v1 | M4 | ride stop |
+| S05 | Ride recap | sheet | v1 | M4 (built) | ride stop |
 | S06 | Rides | tab root | v1 | M7 (plain stand-in list since M2, decision 53) | tab |
-| S07 | Ride detail | push | v1 | M7 | S05, S06, Money rows |
+| S07 | Ride detail | sheet | v1 | M4 stats + cost; M7 the rest | S05, S06, Money rows |
 | S08 | Expense editor | sheet | v1 | M3 | draft, + Add, any expense row |
 | S09 | Mark service done | sheet | v1 | M5 | S12, notification |
 | S10 | Money | tab root | v1 | M4 | tab |
@@ -183,6 +183,7 @@ Shown on launch when a ride is still marked recording and the recorder is not ru
 - Never auto-discards. No third "delete" button here; delete lives on S07.
 
 ### S05 · Ride recap
+Built in M4 as `RideSheet` (decisions 64, 65). Odometer prompt is ENTER → S14.
 Shown once, right after a ride stops. The fusion moment.
 - Headline: place → place, date. Stat row: distance, moving time, climb, ₹ total.
 - **Attached expenses** (fused automatically) with a DETACH action per row.
@@ -199,6 +200,8 @@ Shown once, right after a ride stops. The fusion moment.
 - Empty: "No rides yet. Start one from Today."
 
 ### S07 · Ride detail
+M4 built 01 STATS and COST (same `RideSheet`, opened from RIDES or VIEW RIDE). Map, elevation,
+splits, speed bands, stops, BIKE and DELETE RIDE come in M7.
 ```
 ‹ RIDES                      SAT 18 OCT
 [ map with route polyline, ~40% height ]   offline → polyline on black, no basemap
@@ -233,8 +236,8 @@ One sheet for three jobs: completing a draft, adding a new expense, editing one.
    scope (decision 37).
 2. **Amount**: big Oswald display + numeric keypad pinned at the bottom of the sheet.
    Entered as rupees (max 2 decimals, max ₹99,99,999), stored as paise.
-3. **Fuel extras** (only if Fuel): litres, price/L (any two compute the third),
-   FULL TANK toggle (default on), odometer (prefilled suggestion).
+3. **Fuel extras** (only if Fuel): litres; price/L is derived from amount ÷ litres, never
+   typed (decision 58). FULL TANK toggle (default on), odometer (optional).
 4. Optional note (one line). Time defaults to the draft's capture time.
 5. **SAVE** (primary). Draft is promoted and removed from the queue.
 - **DISCARD DRAFT** (secondary) for accidental presses.
