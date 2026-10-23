@@ -93,7 +93,7 @@ stops, climb, polyline; pure and unit-tested), `LocationService` (1 Hz GPS + bar
 `RideRecorder` (start / pause / resume / stop / 15s autosave / 30-min auto-close / kill
 recovery), a debug screen on the TODAY tab with haptics, and a plain ride list on RIDES
 (stand-in; the real S06 is M7). 31 tests green. Passed on a real 78-min, 31 km ride:
-force-kill recovered with ≤6 s lost, GPS 1 Hz throughout, battery 6.9%/h (decision 54).
+force-kill recovered with ≤6 s lost, GPS 1 Hz throughout, battery 6.9%/h (decision 55).
 Known: barometric climb reads high (252 m on a route spanning ~60 m), tune before M7's
 elevation profile. Planned additions: speed-coloured route (M7), trip meters A/B (M5).
 **Next is M3: Today screen + Action Button capture.**

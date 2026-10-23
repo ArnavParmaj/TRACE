@@ -54,7 +54,7 @@ Ride: 16:45:54 → 18:04:17, 31.03 km (GPS points re-summed: 31.07 km), 1:18:23 
 - **GPS:** 4,694 samples at 1.00 Hz, median accuracy ±8 m, p95 ±14 m, 1.3% rejected.
 - **Battery:** 68% → 59% in 78 min = **6.9%/h**, with Bluetooth music playing for the
   second half, on a battery at 88% health (≈6.1%/h on a new battery). Under the ~8%/h
-  line in decision 45, so no accuracy tiering (decision 54).
+  line in decision 45, so no accuracy tiering (decision 55).
 - **Stops ≥ 2 min:** 2 (3.4 and 4.3 min); ~8.6 min of shorter stops counted as moving.
 - **Climb:** 252 m from the barometer against a GPS altitude range of −5…54 m. Likely
   overcounted (wind and pressure gusts at speed). Tune the step before M7's elevation

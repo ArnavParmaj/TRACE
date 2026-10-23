@@ -201,7 +201,7 @@ Shown once, right after a ride stops. The fusion moment.
 ```
 ‹ RIDES                      SAT 18 OCT
 [ map with route polyline, ~40% height ]   offline → polyline on black, no basemap
-                                          line coloured by speed (decision 55)
+                                          line coloured by speed (decision 56)
 01 STATS ──────────────────────────────
   86.4 KM   2:14 MOVING   2:51 ELAPSED
   +624 M    38 AVG        92 MAX KM/H
@@ -278,7 +278,7 @@ CB350 · MH 02 AB 1234
                               + ADD DOCUMENT
 ```
 - Sorted most-urgent first. Due state computed on render (invariant 6).
-- Trip A / B (decision 55): sum of ride distance since each reset, computed on render.
+- Trip A / B (decision 56): sum of ride distance since each reset, computed on render.
   Only the reset time is stored. Reset is hold-to-confirm, so a gloved brush can't wipe it.
 - One vehicle shown. Switching the primary vehicle lives in Settings (decision 28).
 
