@@ -22,12 +22,12 @@ enum Token: String, CaseIterable {
         case .ground: 0x000000
         case .surfaceLine: 0x1E1C1A
         case .surfaceRule: 0x2A2724
-        case .diagonal: 0x1A1714
+        case .diagonal: 0x2C2824
         case .ink: 0xF2EFE9
         case .inkDim: 0xC9C5BF
         case .inkMuted: 0x8A8681
         case .inkFaint: 0x6E6B67
-        case .accent: 0xFF8A3D
+        case .accent: 0xFF7A1A
         case .alarm: 0xE0241B
         case .alarmInk: 0xFF6A5F
         case .warn: 0xE8B84B
@@ -35,7 +35,8 @@ enum Token: String, CaseIterable {
     }
 
     var color: Color {
-        Color(.sRGB,
+        // Display P3: the same hex reads more saturated on the iPhone's OLED (decision 65).
+        Color(.displayP3,
               red: Double((hex >> 16) & 0xFF) / 255,
               green: Double((hex >> 8) & 0xFF) / 255,
               blue: Double(hex & 0xFF) / 255)

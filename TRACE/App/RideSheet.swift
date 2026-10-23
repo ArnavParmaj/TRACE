@@ -6,17 +6,28 @@ extension Ride {
     var displayName: String {
         title ?? startedAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)).uppercased()
     }
+
+    /// "SAT 18 OCT · 08:14 – 11:05"; just the times when the name already is the date.
+    var whenLine: String {
+        let start = startedAt.formatted(date: .omitted, time: .shortened)
+        let times = endedAt.map { "\(start) – \($0.formatted(date: .omitted, time: .shortened))" } ?? start
+        guard title != nil else { return times }
+        return startedAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)).uppercased() + " · " + times
+    }
 }
 
-/// S05 recap, shown once when a ride stops, and the cost part of S07 when opened from RIDES.
-/// shortcut: S07's map, elevation and splits are M7; until then this sheet is the ride detail.
+/// S05 recap, shown once when a ride stops; VIEW RIDE (or a tap on RIDES) shows the
+/// ride view: stats and cost.
+/// shortcut: S07's map, elevation and splits are M7; until then the ride view is stats + cost.
 struct RideSheet: View {
     let ride: Ride
     var isRecap = false
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @State private var detail = false
     @State private var attached: [Expense] = []
+    @State private var detached: [Expense] = []   // detached on this screen; UNDO puts them back
     @State private var attachable: [Expense] = []
     @State private var drafts: [CaptureDraft] = []
     @State private var economy: [Economy] = []
@@ -31,24 +42,23 @@ struct RideSheet: View {
     private var capture: Capture { Capture(context: context, user: LocalStubUser.load()) }
     private var garage: Garage { Garage(context: context, user: LocalStubUser.load()) }
     private var totalMinor: Int { attached.reduce(0) { $0 + $1.amountMinor } }
+    private var showsRecap: Bool { isRecap && !detail }
 
     var body: some View {
         VStack(spacing: 0) {
-            SheetBar(title: isRecap ? "RIDE DONE" : "RIDE")
+            if showsRecap { SheetBar(title: "") } else { SheetBar(title: ride.whenLine) }
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    headline
+                VStack(alignment: .leading, spacing: 28) {
+                    if showsRecap { recapHead } else { detailHead }
                     cost
-                    if !drafts.isEmpty { draftLine }
-                    if isRecap, let bike { odometerPrompt(bike) }
+                    if !drafts.isEmpty { draftSection }
+                    if showsRecap, let bike { odometerSection(bike) }
                     if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
                 }
-                .padding(20)
-                .animation(.easeOut(duration: 0.2), value: attached.map(\.id) + attachable.map(\.id))
+                .padding(.horizontal, 20).padding(.vertical, 8)
+                .animation(.easeOut(duration: 0.2), value: attached.map(\.id) + detached.map(\.id) + attachable.map(\.id))
             }
-            if isRecap {
-                PrimaryButton("DONE") { dismiss() }.padding(.horizontal, 20).padding(.vertical, 12)
-            }
+            if showsRecap { bottomBar }
         }
         .background(Color.ground.ignoresSafeArea())
         .presentationBackground(Color.ground)
@@ -58,40 +68,91 @@ struct RideSheet: View {
         .sheet(isPresented: $odometer, onDismiss: reload) { if let bike { OdometerSheet(bike: bike, garage: garage) } }
     }
 
-    private var headline: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(ride.displayName).font(.oswald(28, .bold, relativeTo: .largeTitle)).foregroundStyle(Color.ink)
-            if ride.title != nil {
-                Text(ride.startedAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).hour().minute()))
-                    .font(.oswald(13, .medium)).tracking(2).textCase(.uppercase).foregroundStyle(Color.inkMuted)
+    // MARK: Heads
+
+    private var recapHead: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("RIDE SAVED").font(.oswald(13, .medium)).tracking(2.6).foregroundStyle(Color.accent)
+                Text(ride.displayName).font(.oswald(34, .bold, relativeTo: .largeTitle)).foregroundStyle(Color.ink)
+                Text(ride.whenLine).font(.oswald(14, .medium)).tracking(1.4).foregroundStyle(Color.inkMuted)
             }
-            HStack(alignment: .firstTextBaseline, spacing: 18) {
-                StatCell(value: String(format: "%.1f", Double(ride.distanceM) / 1000), unit: "KM")
-                StatCell(value: StatCell.clock(ride.movingDurationS), unit: "MOVING")
-                StatCell(value: "+\(ride.climbM)", unit: "CLIMB M")
-                StatCell(value: Money.format(totalMinor), unit: "SPENT")
-            }
+            .padding(.horizontal, 20).padding(.vertical, 16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background { Hatch() }
+            .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+            .padding(.horizontal, -20)
+            statGrid([(km, "KM"), (StatCell.clock(ride.movingDurationS), "MOVING"),
+                      ("+\(ride.climbM)", "M CLIMB"), (Money.format(totalMinor), "SPENT")], columns: 2, size: 32)
         }
     }
 
-    // MARK: 04 COST
+    private var detailHead: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(ride.displayName).font(.oswald(28, .bold, relativeTo: .largeTitle)).foregroundStyle(Color.ink)
+            SectionHead(number: "01", title: "STATS")
+            statGrid([(km, "KM"), (StatCell.clock(ride.movingDurationS), "MOVING"),
+                      (StatCell.clock(ride.elapsedDurationS), "ELAPSED"), ("+\(ride.climbM)", "M CLIMB"),
+                      (String(format: "%.0f", ride.avgSpeedKph), "AVG KM/H"), (String(format: "%.0f", ride.maxSpeedKph), "MAX KM/H")],
+                     columns: 3, size: 26)
+        }
+    }
+
+    private var km: String { String(format: "%.1f", Double(ride.distanceM) / 1000) }
+
+    /// Ruled grid of stats; the SPENT cell is the one lit figure.
+    private func statGrid(_ cells: [(String, String)], columns: Int, size: CGFloat) -> some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: columns), spacing: 0) {
+            ForEach(cells.indices, id: \.self) { i in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(cells[i].0).font(.oswald(size, .semibold)).monospacedDigit()
+                        .foregroundStyle(cells[i].1 == "SPENT" ? Color.accent : Color.ink)
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                    Text(cells[i].1).font(.oswald(12, .medium)).tracking(2.2).foregroundStyle(Color.inkMuted)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 0.5) }
+                .accessibilityElement(children: .combine)
+            }
+        }
+        .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 0.5) }
+    }
+
+    // MARK: Cost
 
     private var cost: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHead(number: "04", title: "COST").padding(.bottom, 4)
-            if attached.isEmpty {
+            if showsRecap {
+                SectionHead(number: "01", title: "ATTACHED")
+                if !attached.isEmpty {
+                    Text("Logged while you rode, so they joined this ride.")
+                        .font(.condensed(13)).foregroundStyle(Color.inkMuted).padding(.top, 6)
+                }
+            } else {
+                SectionHead(number: "02", title: "COST", value: totalMinor > 0 ? Money.format(totalMinor) : nil)
+            }
+            if attached.isEmpty && detached.isEmpty {
                 Text("Nothing attached to this ride.").font(.condensed(15)).foregroundStyle(Color.inkDim)
                     .frame(minHeight: minTouch, alignment: .leading)
             }
             ForEach(attached) { e in
                 HStack(spacing: 8) {
                     Button { editing = e } label: { ExpenseRow(expense: e) }.buttonStyle(PressStyle())
-                    smallButton("DETACH") { run { try ledger.detach(e) } }
+                    smallButton("DETACH", lit: false) { run { try ledger.detach(e); detached.append(e) } }
+                }
+            }
+            ForEach(detached) { e in
+                HStack(spacing: 8) {
+                    ExpenseRow(expense: e).opacity(0.4)
+                    smallButton("UNDO", lit: false) {
+                        run { try ledger.attach(e, to: ride); detached.removeAll { $0.id == e.id } }
+                    }
                 }
             }
             Button { picking.toggle() } label: {
-                Text(picking ? "− HIDE" : "+ ATTACH AN EXPENSE").font(.oswald(15, .semibold)).tracking(1.5)
-                    .foregroundStyle(Color.accent)
+                Text(picking ? "− HIDE" : "+ ATTACH AN EXPENSE").font(.oswald(13, .medium)).tracking(1.6)
+                    .foregroundStyle(Color.inkDim)
                     .frame(maxWidth: .infinity, minHeight: minTouch, alignment: .leading).contentShape(Rectangle())
             }
             .buttonStyle(PressStyle())
@@ -103,7 +164,7 @@ struct RideSheet: View {
                 ForEach(attachable) { e in
                     HStack(spacing: 8) {
                         ExpenseRow(expense: e, showsDay: true)
-                        smallButton("ATTACH") { run { try ledger.attach(e, to: ride) } }
+                        smallButton("ATTACH", lit: true) { run { try ledger.attach(e, to: ride) } }
                     }
                 }
             }
@@ -115,45 +176,80 @@ struct RideSheet: View {
     private var economyLine: some View {
         let ids = Set(attached.map(\.id))
         let here = economy.last { ids.contains($0.closingID) }
-        return VStack(alignment: .leading, spacing: 2) {
+        return HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(here.map { String(format: "%.1f KM/L", $0.kmPerL) } ?? "— KM/L")
-                .font(.oswald(22, .medium)).monospacedDigit().foregroundStyle(Color.ink)
-            Text(here == nil ? "needs two full-tank fills in a row, with odometer" : "full tank to full tank")
-                .font(.condensed(15)).foregroundStyle(Color.inkDim)
+                .font(.oswald(20, .semibold)).monospacedDigit().foregroundStyle(Color.ink)
+            Text(here == nil ? "NEEDS TWO FULL-TANK FILLS IN A ROW" : "FULL TANK TO FULL TANK")
+                .font(.oswald(13, .medium)).tracking(1).foregroundStyle(Color.inkMuted)
         }
-        .padding(.top, 8)
     }
 
-    private var draftLine: some View {
-        Button { completing = drafts.first } label: {
-            HStack {
-                Text(drafts.count == 1 ? "1 draft from this ride" : "\(drafts.count) drafts from this ride")
-                    .font(.condensed(17)).foregroundStyle(Color.ink)
-                Spacer()
-                Text("COMPLETE ›").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
+    // MARK: Drafts, odometer
+
+    private var draftSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SectionHead(number: showsRecap ? "02" : "03", title: "DRAFTS")
+            Button { completing = drafts.first } label: {
+                HStack {
+                    Text(drafts.count == 1 ? "1 draft from this ride" : "\(drafts.count) drafts from this ride")
+                        .font(.condensed(17)).foregroundStyle(Color.ink)
+                    Spacer()
+                    Text("COMPLETE ›").font(.oswald(13, .medium)).tracking(1.6).foregroundStyle(Color.accent)
+                }
+                .frame(minHeight: 64)
+                .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
+                .contentShape(Rectangle())
             }
-            .frame(minHeight: minTouch).contentShape(Rectangle())
+            .buttonStyle(PressStyle())
         }
-        .buttonStyle(PressStyle())
     }
 
     /// Skippable: manual is authoritative, GPS only suggests (decision 24).
-    private func odometerPrompt(_ bike: Vehicle) -> some View {
+    private func odometerSection(_ bike: Vehicle) -> some View {
         let suggested = (try? garage.odometerSuggestion(bike)) ?? bike.odometerKm
-        return Button { odometer = true } label: {
-            HStack {
-                Text("Odometer now? Suggested \(suggested.formatted())").font(.condensed(17)).foregroundStyle(Color.ink)
+        return VStack(alignment: .leading, spacing: 12) {
+            SectionHead(number: drafts.isEmpty ? "02" : "03", title: "ODOMETER")
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(suggested.formatted()) KM?").font(.oswald(28, .semibold)).monospacedDigit().foregroundStyle(Color.ink)
+                    Text("Suggested from GPS. Your reading wins.").font(.condensed(13)).foregroundStyle(Color.inkMuted)
+                }
                 Spacer()
-                Text("UPDATE ›").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
+                Button { odometer = true } label: {
+                    Text("ENTER").font(.oswald(14, .medium)).tracking(1.7).foregroundStyle(Color.ink)
+                        .frame(minWidth: 96, minHeight: minTouch)
+                        .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(PressStyle())
             }
-            .frame(minHeight: minTouch).contentShape(Rectangle())
         }
-        .buttonStyle(PressStyle())
     }
 
-    private func smallButton(_ title: String, action: @escaping () -> Void) -> some View {
+    private var bottomBar: some View {
+        HStack(spacing: 10) {
+            Button { withAnimation(.easeOut(duration: 0.2)) { detail = true } } label: {
+                Text("VIEW RIDE").font(.oswald(16, .medium)).tracking(1.9).foregroundStyle(Color.inkDim)
+                    .frame(maxWidth: .infinity, minHeight: 64)
+                    .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
+            Button { dismiss() } label: {
+                Text("DONE").font(.oswald(18, .bold)).tracking(2.2).foregroundStyle(Color.ink)
+                    .frame(maxWidth: .infinity, minHeight: 64)
+                    .overlay { Rectangle().stroke(Color.accent, lineWidth: 2) }
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
+        }
+        .padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 8)
+        .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+    }
+
+    private func smallButton(_ title: String, lit: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
+            Text(title).font(.oswald(13, .medium)).tracking(1.6).foregroundStyle(lit ? Color.accent : Color.inkDim)
                 .frame(minWidth: 84, minHeight: minTouch).contentShape(Rectangle())
         }
         .buttonStyle(PressStyle())
@@ -162,7 +258,8 @@ struct RideSheet: View {
     private func reload() {
         do {
             attached = try ledger.attached(to: ride.id)
-            attachable = try ledger.attachable(to: ride)
+            detached.removeAll { e in attached.contains { $0.id == e.id } }
+            attachable = try ledger.attachable(to: ride).filter { e in !detached.contains { $0.id == e.id } }
             economy = try ledger.economy()
             drafts = try capture.pending().filter { $0.rideID == ride.id }
             bike = try garage.bike()

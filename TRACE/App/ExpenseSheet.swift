@@ -263,15 +263,7 @@ private struct ExpenseForm: View {
     private var keypad: some View {
         VStack(spacing: 8) {
             KeypadGrid(onKey: press)
-            Button(action: save) {
-                Text("SAVE").font(.oswald(24, .bold)).tracking(1.6)
-                    .foregroundStyle(amountMinor == nil ? Color.inkFaint : Color.ground)
-                    .frame(maxWidth: .infinity, minHeight: 72)
-                    .background(amountMinor == nil ? Color.surfaceLine : Color.accent)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(PressStyle(haptic: false))
-            .disabled(amountMinor == nil)
+            PrimaryButton("SAVE", enabled: amountMinor != nil, action: save)
         }
         .padding(.horizontal, 20).padding(.vertical, 12)
         .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }

@@ -20,16 +20,18 @@ Reference artboards: E (Today) and F (Ride mode) on the design canvas.
 --ground          #000000   true black, every screen
 --surface-line    #1E1C1A   hairline dividers inside a section
 --surface-rule    #2A2724   section boundaries
---diagonal        #1A1714   unlit decorative diagonals
+--diagonal        #2C2824   hairline decorative diagonals (visible on OLED; was #1A1714, decision 65)
 --ink             #F2EFE9   primary text
 --ink-dim         #C9C5BF   secondary text
 --ink-muted       #8A8681   labels, units
 --ink-faint       #6E6B67   footnotes, slugs
---accent          #FF8A3D   amber. live state, due-soon, primary action
+--accent          #FF7A1A   amber. live state, due-soon, primary action (was #FF8A3D, decision 65)
 --alarm           #E0241B   red. STRUCTURAL/urgent only
 --alarm-ink       #FF6A5F   red text on black (contrast-safe; #E0241B is not)
 --warn            #E8B84B   amber-yellow, expiry countdown chips
 ```
+
+Tokens are drawn in Display P3 on device (decision 65), so they read more vivid than in a browser.
 
 Note: `#E0241B` passes as a border or fill but fails contrast as small text on black.
 Text that must be red uses `--alarm-ink`.

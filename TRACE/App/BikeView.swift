@@ -363,7 +363,7 @@ struct SheetBar: View {
     }
 }
 
-/// Amber-filled primary action, 72pt.
+/// Primary action: amber outline, 72pt.
 struct PrimaryButton: View {
     let title: String
     let enabled: Bool
@@ -377,10 +377,11 @@ struct PrimaryButton: View {
 
     var body: some View {
         Button(action: action) {
+            // Outlined, not filled: no large lit slabs (DESIGN.md rule 2).
             Text(title).font(.oswald(24, .bold)).tracking(1.6)
-                .foregroundStyle(enabled ? Color.ground : Color.inkFaint)
+                .foregroundStyle(enabled ? Color.ink : Color.inkFaint)
                 .frame(maxWidth: .infinity, minHeight: 72)
-                .background(enabled ? Color.accent : Color.surfaceLine)
+                .overlay { Rectangle().stroke(enabled ? Color.accent : Color.surfaceRule, lineWidth: 2) }
                 .contentShape(Rectangle())
         }
         .buttonStyle(PressStyle(haptic: false))

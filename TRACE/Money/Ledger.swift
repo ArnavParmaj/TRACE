@@ -119,7 +119,7 @@ struct Ledger {
     /// interval: km between them ÷ litres of the second. Any other fuel entry between them
     /// (a partial, or a fill missing odometer or litres) voids that interval: never a guess.
     /// shortcut: one bike assumed (capture doesn't set vehicleID); group by vehicle when a second bike is possible.
-    static func economy(_ all: [Expense]) -> [Economy] {
+    nonisolated static func economy(_ all: [Expense]) -> [Economy] {
         let fills = all.filter { $0.category == .fuel }.sorted { $0.occurredAt < $1.occurredAt }
         var out: [Economy] = []
         for (prev, next) in zip(fills, fills.dropFirst()) {

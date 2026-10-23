@@ -111,6 +111,9 @@ on ride close, attach / detach, km/L between consecutive full fills with odomete
 (decision 64). One S08 editor for drafts, new and existing expenses (`ExpenseSheet`),
 Money tab (S10: period total, by category, km/L chart, entries), `RideSheet` as the
 recap after a ride and as ride detail from RIDES. 55 tests green.
+Design-match pass (decision 65): hotter P3 amber, visible diagonals, chip section heads,
+outlined primary buttons, Today 04 THIS WEEK + 05 RECENT, Money / recap / ride view per
+the prototype canvas.
 **Next: on the iPhone, ride with two expenses logged during it and check both attach
 with the right total, detach one; log two full fills with odometer and check km/L by
 hand. Still open: M3 real-pump test, M5 notification test.**

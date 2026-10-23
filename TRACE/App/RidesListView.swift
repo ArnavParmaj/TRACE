@@ -15,10 +15,7 @@ struct RidesListView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                Text("RIDES")
-                    .font(.oswald(28, .bold, relativeTo: .largeTitle)).tracking(1.6)
-                    .foregroundStyle(Color.ink)
-                    .padding(.bottom, 12)
+                ScreenHeader(title: "RIDES").padding(.bottom, 12)
                 if rides.isEmpty {
                     Text("No finished rides yet. Start one on TODAY.")
                         .font(.condensed(17)).foregroundStyle(Color.inkDim)
@@ -37,7 +34,7 @@ struct RidesListView: View {
                         .padding(.top, 12)
                 }
             }
-            .padding(20)
+            .padding(.horizontal, 20).padding(.bottom, 20)
         }
         // Reload on open and whenever a ride starts or ends while this tab is showing.
         .task(id: recorder.phase) { reload() }
