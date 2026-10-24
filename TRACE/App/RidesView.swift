@@ -156,7 +156,7 @@ struct RidesView: View {
                     .font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
                     .padding(.top, 16).padding(.bottom, 4)
                 ForEach(groups[month] ?? []) { ride in
-                    row(ride, records: bests.records(for: ride))
+                    row(ride)
                         .onTapGesture { open = ride }
                         .contextMenu {
                             Button("Rename ride") { newName = ride.title ?? ""; renaming = ride }
@@ -169,18 +169,13 @@ struct RidesView: View {
         }
     }
 
-    private func row(_ ride: Ride, records: [String]) -> some View {
+    private func row(_ ride: Ride) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(ride.startedAt.formatted(.dateTime.weekday(.abbreviated).day()).uppercased())
                 .font(.oswald(13, .medium)).tracking(1).foregroundStyle(Color.inkMuted).frame(width: 52, alignment: .leading)
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 8) {
                     Text(ride.displayName).font(.condensed(17)).foregroundStyle(Color.ink).lineLimit(2)
-                    if !records.isEmpty {
-                        Text(records.joined(separator: " · ") + " PB").font(.oswald(11, .semibold)).tracking(1).foregroundStyle(Color.accent)
-                            .padding(.horizontal, 5).padding(.vertical, 1)
-                            .overlay { Rectangle().stroke(Color.accent, lineWidth: 1) }
-                    }
                 }
                 Text(String(format: "%.1f km · ", Double(ride.distanceM) / 1000) + StatCell.clock(ride.movingDurationS) + " moving")
                     .font(.condensed(13)).foregroundStyle(Color.inkMuted)

@@ -42,6 +42,7 @@ struct RideSheet: View {
     @State private var analysis: RideAnalysis?
     @State private var stops: [StopEvent] = []
     @State private var confirmDelete = false
+    @State private var records: [String] = []   // personal bests this ride holds (empty when none)
     @Environment(RideRecorder.self) private var recorder
 
     private var ledger: Ledger { Ledger(context: context, user: LocalStubUser.load()) }
@@ -71,6 +72,7 @@ struct RideSheet: View {
         .background(Color.ground.ignoresSafeArea())
         .presentationBackground(Color.ground)
         .task { reload() }
+        .task { records = Review.bests(recorder.finishedRides()).records(for: ride) }
         .sheet(item: $editing, onDismiss: reload) { ExpenseSheet(expense: $0, capture: capture, ledger: ledger) }
         .sheet(item: $completing, onDismiss: reload) { DraftSheet(start: $0, capture: capture, ledger: ledger) }
         .sheet(isPresented: $odometer, onDismiss: reload) { if let bike { OdometerSheet(bike: bike, garage: garage) } }
@@ -114,6 +116,12 @@ struct RideSheet: View {
             .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
             .padding(.horizontal, -20).padding(.top, -8).padding(.bottom, 8)
             Text(ride.displayName).font(.oswald(28, .bold, relativeTo: .largeTitle)).foregroundStyle(Color.ink)
+            if !records.isEmpty {
+                Text(records.joined(separator: " · ") + " PB").font(.oswald(13, .semibold)).foregroundStyle(Color.accent)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .overlay { Rectangle().stroke(Color.accent, lineWidth: 1) }
+                    .accessibilityLabel("Personal best: " + records.joined(separator: ", "))
+            }
             SectionHead(number: "01", title: "STATS")
             statGrid([(km, "KM"), (StatCell.clock(ride.movingDurationS), "MOVING"),
                       (StatCell.clock(ride.elapsedDurationS), "ELAPSED"), ("+\(ride.climbM)", "M CLIMB"),
