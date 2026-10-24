@@ -27,6 +27,7 @@ private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
     /// M4 exit in miniature: two expenses fuse with the right total; detaching one frees it.
     @Test func fusionAttachesInsideTheRideOnly() throws {
         let ride = try closedRide(from: 0, to: 3_600)
+        ride.endedAt = nil                                   // still riding while they're logged
         let fuel = try spend(410, at: 600, .fuel)
         let chai = try spend(70, at: 3_600)                 // the end instant counts
         let before = try spend(50, at: -1)
@@ -36,6 +37,7 @@ private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
         let gone = try spend(99, at: 900)
         try ledger.delete(gone)
 
+        ride.endedAt = t0.addingTimeInterval(3_600)
         let fused = try ledger.fuse(ride)
         #expect(Set(fused.map(\.id)) == [fuel.id, chai.id])
         #expect(try ledger.attached(to: ride.id).map(\.id) == [fuel.id, chai.id])
@@ -46,6 +48,26 @@ private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
         #expect(chai.rideID == nil)
         #expect(try ledger.totalsByRide()[ride.id] == 41_000)
         #expect(try ledger.attachable(to: ride).map(\.id).contains(chai.id))
+    }
+
+    /// Fusion also covers entries added or re-timed after the ride closed; an unchanged time
+    /// keeps a manual detach.
+    @Test func addingOrRetimingAnOldExpenseFuses() throws {
+        let morning = try closedRide(from: 0, to: 3_600)
+        let evening = try closedRide(from: 20_000, to: 23_600)
+        let chai = try spend(70, at: 1_800)
+        let home = try spend(30, at: 10_000)
+        #expect(chai.rideID == morning.id && home.rideID == nil)
+
+        try ledger.update(chai, category: .food, amountMinor: 7_000, at: t0.addingTimeInterval(21_000))
+        #expect(chai.rideID == evening.id)
+        try ledger.update(chai, category: .food, amountMinor: 7_000, at: t0.addingTimeInterval(10_000))
+        #expect(chai.rideID == nil)
+
+        let fuel = try spend(410, at: 22_000, .fuel)
+        try ledger.detach(fuel)
+        try ledger.update(fuel, category: .fuel, amountMinor: 42_000, at: fuel.occurredAt)
+        #expect(fuel.rideID == nil)
     }
 
     @Test func closingARideFusesAndDeletingItDetaches() throws {

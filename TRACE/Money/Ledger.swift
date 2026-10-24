@@ -34,6 +34,11 @@ struct Ledger {
         return found
     }
 
+    /// The finished ride whose span contains `time`, if any. A ride still recording is fused when it closes.
+    func ride(containing time: Date) throws -> Ride? {
+        try rides.finished().first { r in r.endedAt.map { r.startedAt <= time && time <= $0 } ?? false }
+    }
+
     func attach(_ e: Expense, to ride: Ride) throws {
         expenses.update(e) { $0.rideID = ride.id }
         try expenses.save()
@@ -91,6 +96,7 @@ struct Ledger {
         let e = Expense(amountMinor: amountMinor, category: category, occurredAt: time)
         e.fill(category: category, amountMinor: amountMinor, litres: litres, isFullTank: isFullTank,
                odometerKm: odometerKm, note: note)
+        e.rideID = try ride(containing: time)?.id   // fusion for entries added after the ride closed
         expenses.insert(e)
         try expenses.save()
         return e
@@ -98,8 +104,11 @@ struct Ledger {
 
     func update(_ e: Expense, category: ExpenseCategory, amountMinor: Int, at time: Date, litres: Double? = nil,
                 isFullTank: Bool? = nil, odometerKm: Int? = nil, note: String? = nil) throws {
+        // A new time re-runs fusion; the same time keeps the rider's own attach or detach.
+        let rideID = time == e.occurredAt ? e.rideID : try ride(containing: time)?.id
         expenses.update(e) {
             $0.occurredAt = time
+            $0.rideID = rideID
             $0.fill(category: category, amountMinor: amountMinor, litres: litres, isFullTank: isFullTank,
                     odometerKm: odometerKm, note: note)
         }

@@ -97,6 +97,9 @@ When a Ride closes, every Expense whose `occurredAt` falls between the ride's
 `startedAt` and `endedAt` and which has no `rideID` is attached to it. The attachment
 is reversible and user-editable — automatic, not irreversible. This is the feature
 no existing app has; it is also two lines of predicate, which is the point.
+The same rule runs when an expense is added after its ride closed, or its time is edited
+into or out of a ride. An edit that keeps the time keeps the rider's own attach or detach
+(decision 70).
 
 ## Money
 Integer minor units everywhere. `Double` for currency is a bug waiting for a
