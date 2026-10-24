@@ -119,7 +119,18 @@ struct RideSheet: View {
                       (StatCell.clock(ride.elapsedDurationS), "ELAPSED"), ("+\(ride.climbM)", "M CLIMB"),
                       (String(format: "%.0f", ride.avgSpeedKph), "AVG KM/H"), (String(format: "%.0f", ride.maxSpeedKph), "MAX KM/H")],
                      columns: 3, size: 26)
+            if let odo = odometerLine {
+                Text(odo).font(.oswald(17, .medium)).monospacedDigit().foregroundStyle(Color.inkDim)
+                    .accessibilityLabel(odo.replacingOccurrences(of: "→", with: "to"))
+            }
         }
+    }
+
+    /// From the readings around the ride (S07); hidden when neither is known.
+    private var odometerLine: String? {
+        let start = ride.odoStartKm?.formatted(), end = ride.odoEndKm?.formatted()
+        guard start != nil || end != nil else { return nil }
+        return "ODO \(start ?? "—") → \(end ?? "—") KM"
     }
 
     // MARK: 02 ELEVATION · 03 SPEED · 04 SPLITS

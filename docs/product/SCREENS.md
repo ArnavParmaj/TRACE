@@ -201,7 +201,7 @@ Shown once, right after a ride stops. The fusion moment.
 
 ### S07 · Ride detail
 Built (M4 + M7, `RideSheet`): map, 01 STATS, 02 ELEVATION, 03 SPEED (bands, top, stops), 04 SPLITS,
-05 COST, DELETE RIDE. BIKE odometer row not built: rides don't record odometer readings yet.
+05 COST, DELETE RIDE. The odometer shows as one line under 01 STATS, "ODO a → b KM", not a 05 BIKE section (decision 71).
 ```
 ‹ RIDES                      SAT 18 OCT
 [ map with route polyline, ~40% height ]   offline → polyline on black, no basemap

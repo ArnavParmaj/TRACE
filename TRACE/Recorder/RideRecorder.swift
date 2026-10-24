@@ -48,9 +48,10 @@ final class RideRecorder {
     var isRecording: Bool { ride != nil }
     var phase: Phase { ride == nil ? .idle : (ride?.pausedAt == nil ? .recording : .paused) }
 
-    func start(vehicleID: UUID, at time: Date = .now) {
+    func start(vehicleID: UUID, odoStartKm: Int? = nil, at time: Date = .now) {
         guard ride == nil, orphan == nil else { return }
         let new = Ride(vehicleID: vehicleID, startedAt: time)
+        new.odoStartKm = odoStartKm
         new.isRecording = true
         rides.insert(new)
         attempt { try rides.save() }

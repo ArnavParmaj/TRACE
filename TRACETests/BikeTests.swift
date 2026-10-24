@@ -101,6 +101,23 @@ private func day(_ d: Int, _ hour: Int = 12) -> Date {
         #expect(try garage.bikes().filter(\.isPrimary).count == 1)
     }
 
+    /// S07 odometer row: a fresh reading is the start; the first reading after the ride is the end.
+    @Test func ridesPickUpOdometerReadings() throws {
+        let bike = try garage.addBike(name: "CB350", registration: nil, odometerKm: 12_480, at: day(1, 8))
+        #expect(try garage.startReading(bike) == 12_480)
+        let rides = Repository<Ride>(context: container.mainContext, user: user)
+        let ride = Ride(vehicleID: bike.id, startedAt: day(1, 9))
+        ride.endedAt = day(1, 11)
+        rides.insert(ride)
+        try rides.save()
+        #expect(try garage.startReading(bike) == nil)           // reading is older than the ride
+        try garage.setOdometer(bike, km: 12_566, at: day(1, 12))
+        #expect(ride.odoEndKm == 12_566)
+        try garage.setOdometer(bike, km: 12_600, at: day(2))
+        #expect(ride.odoEndKm == 12_566)                       // only the first reading after
+        #expect(try garage.startReading(bike) == 12_600)
+    }
+
     @Test func odometerRefusesGoingDownUnlessConfirmed() throws {
         let bike = try garage.addBike(name: "CB350", registration: nil, odometerKm: 12_480)
         #expect(throws: Garage.Failure.odometerWentDown) { try garage.setOdometer(bike, km: 12_000) }

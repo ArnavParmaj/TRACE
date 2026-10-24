@@ -123,19 +123,37 @@ copy of the real 31 km ride. 63 tests green. Climb left as is (decision 66). S15
 with the right total, detach one; log two full fills with odometer and check km/L by
 hand. Still open: M3 real-pump test, M5 notification test.**
 
-**M8 started (2026-10-24).** All 18 screens mocked on the "TRACE v1 Screens" canvas and
-approved. Built: S01 onboarding (`OnboardingView`, also the add-bike flow) and S16 settings
-(`SettingsView`, ⚙ on Today): primary-bike picker, due-soon share, document lead defaults
-(`TRACE/Bike/Preferences.swift`), storage, about (decision 67). 65 tests green. Next in M8:
-S15 decision, S03 final ride mode + S18 Live Activity (M6), empty/error states, Dynamic Type,
-VoiceOver, airplane mode, file protection. Route samples are kept in full and indexed by ride (supersedes decision 27); file protection
-stays at the iOS default (decision 69).
-
 **M6 code is done (2026-10-24), exit test pending.** `RideModeView` is S03 (gauge, tap to log,
 hold to stop, pause, S04 recovery); the debug screen is gone. `TRACEWidgets` is the S18 Live
-Activity with a LOG button running `LogEntryIntent` (decision 68). 65 tests green; signed device
-build passes. **Next: a handlebar ride: readable at a glance, a gloved tap logs a draft, hold
-stops it, no accidental stops; the Live Activity shows and LOG works from the lock screen.**
+Activity with a LOG button running `LogEntryIntent` (decision 68). Signed device build passes.
+
+**M8 in progress (2026-10-24).** All 18 screens mocked on the "TRACE v1 Screens" canvas and
+approved. Done so far:
+- S01 onboarding (`OnboardingView`, also the add-bike flow) and S16 settings (`SettingsView`,
+  ⚙ on Today): primary-bike picker, due-soon share, document lead defaults
+  (`TRACE/Bike/Preferences.swift`), storage, about (decision 67).
+- File protection stays at the iOS default; route samples are kept in full and indexed by ride,
+  no thinning, soft deletes only (decision 69, supersedes 27).
+- Fusion also covers expenses added or re-timed after a ride closes (decision 70).
+- Rides record odometer start/end from readings the rider already enters; ride detail shows
+  "ODO a → b KM" (decision 71).
+67 tests green.
+
+**M8 plan, remaining steps (agreed 2026-10-24, do one at a time):**
+3. Automated accessibility audit: a UI-test target that taps through every screen and runs
+   `performAccessibilityAudit` (labels, Dynamic Type clipping, contrast, hit size); fix findings.
+4. Dynamic Type at the largest size: render Today, Ride mode, Bike in tests and fix truncation
+   (Ride mode speed numeral stays fixed size).
+5. Empty / error / populated states on all 18 screens, using the canvas's worst-case data.
+6. Airplane mode: review map + place-name offline paths, then the rider taps every tab offline.
+7. Crash-log check on the phone and the Mac.
+8. Tick the v1 ship checklist in ROADMAP with evidence.
+Open decisions for the rider: drop S15 weekly summary (recommended: Today's THIS WEEK and the
+Rides chart cover it) and skip Money prev/next period arrows (recommended).
+
+**Needs a ride:** M3 real fuel pump, M4 two expenses during a ride + km/L by hand, M6 handlebar
+test (readable at a glance, gloved tap logs, hold stops, no accidental stops, Live Activity LOG
+from the lock screen). Also on the phone: M5 9:00 document notification, M7 timings.
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.

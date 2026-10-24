@@ -65,10 +65,27 @@ struct Garage {
 
     /// Manual and authoritative (decision 24). A lower reading needs `allowLower`
     /// ("odometer replaced?", S14).
+    /// The first reading after a ride is also that ride's end reading (S07).
     func setOdometer(_ bike: Vehicle, km: Int, allowLower: Bool = false, at time: Date = .now) throws {
         guard km >= bike.odometerKm || allowLower else { throw Failure.odometerWentDown }
+        let previous = bike.odometerUpdatedAt ?? .distantPast
         vehicles.update(bike) { $0.odometerKm = km; $0.odometerUpdatedAt = time }
+        if let last = try lastRide(bike), last.odoEndKm == nil, let end = last.endedAt, end > previous, end <= time {
+            rides.update(last) { $0.odoEndKm = km }
+        }
         try vehicles.save()
+    }
+
+    /// The odometer at a ride's start, only when it was entered after the last ride: an older
+    /// reading would be a guess (decision 24).
+    func startReading(_ bike: Vehicle) throws -> Int? {
+        guard let updated = bike.odometerUpdatedAt else { return nil }
+        let lastEnd = try lastRide(bike)?.endedAt ?? .distantPast
+        return updated >= lastEnd ? bike.odometerKm : nil
+    }
+
+    private func lastRide(_ bike: Vehicle) throws -> Ride? {
+        try rides.finished().first { $0.vehicleID == bike.id }   // newest first
     }
 
     /// Last reading plus recorded rides since it. A hint only; GPS drifts 2–5%.

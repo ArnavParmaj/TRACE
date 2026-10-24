@@ -86,7 +86,8 @@ struct TodayView: View {
             } else if recorder.phase == .idle {
                 CaptureButton(title: "START RIDE", subtitle: bikeLine) {
                     // No bike added yet: the ride still records, against no vehicle.
-                    recorder.start(vehicleID: (try? garage.bike())?.id ?? .unowned)
+                    let bike = try? garage.bike()
+                    recorder.start(vehicleID: bike?.id ?? .unowned, odoStartKm: bike.flatMap { try? garage.startReading($0) })
                     showRide = true   // straight to the live numbers
                 }
                 if drafts.isEmpty && due.isEmpty && recent.isEmpty {
