@@ -149,7 +149,6 @@ struct RidesView: View {
     private var list: some View {
         let groups = Dictionary(grouping: shown) { Self.cal.dateInterval(of: .month, for: $0.startedAt)?.start ?? $0.startedAt }
         let months = groups.keys.sorted(by: >)
-        let pbs = bests.holders
         return VStack(alignment: .leading, spacing: 0) {
             SectionHead(number: "03", title: "RIDES", count: shown.count).padding(.bottom, 4)
             ForEach(months, id: \.self) { month in
@@ -157,7 +156,7 @@ struct RidesView: View {
                     .font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
                     .padding(.top, 16).padding(.bottom, 4)
                 ForEach(groups[month] ?? []) { ride in
-                    row(ride, isPB: pbs.contains(ride.id))
+                    row(ride, records: bests.records(for: ride))
                         .onTapGesture { open = ride }
                         .contextMenu {
                             Button("Rename ride") { newName = ride.title ?? ""; renaming = ride }
@@ -170,15 +169,15 @@ struct RidesView: View {
         }
     }
 
-    private func row(_ ride: Ride, isPB: Bool) -> some View {
+    private func row(_ ride: Ride, records: [String]) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(ride.startedAt.formatted(.dateTime.weekday(.abbreviated).day()).uppercased())
                 .font(.oswald(13, .medium)).tracking(1).foregroundStyle(Color.inkMuted).frame(width: 52, alignment: .leading)
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 8) {
                     Text(ride.displayName).font(.condensed(17)).foregroundStyle(Color.ink).lineLimit(2)
-                    if isPB {
-                        Text("PB").font(.oswald(11, .semibold)).tracking(1).foregroundStyle(Color.accent)
+                    if !records.isEmpty {
+                        Text(records.joined(separator: " · ") + " PB").font(.oswald(11, .semibold)).tracking(1).foregroundStyle(Color.accent)
                             .padding(.horizontal, 5).padding(.vertical, 1)
                             .overlay { Rectangle().stroke(Color.accent, lineWidth: 1) }
                     }

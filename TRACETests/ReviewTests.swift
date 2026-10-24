@@ -77,6 +77,21 @@ private func fixes(_ legs: [(Int, Double)], altitude: (Int) -> Double = { _ in 0
         let pb = Review.bests([long, quick, hilly, ride(0, 0, 0, nil)])
         #expect(pb.longest === long && pb.topSpeed === quick && pb.biggestClimb === hilly && pb.fastest10k === quick)
         #expect(pb.holders == [long.id, quick.id, hilly.id])
+        #expect(pb.records(for: hilly) == ["CLIMB"])
+        #expect(pb.records(for: quick) == ["TOP SPEED", "10 KM"])
+    }
+
+    /// Yesterday keeps the badge only for the record it still holds, named on the badge.
+    @Test func recordsNameOnlyTheBestsARideStillHolds() {
+        func ride(_ km: Int, _ top: Double, _ climb: Int) -> Ride {
+            let r = Ride(vehicleID: UUID())
+            r.distanceM = km * 1000; r.maxSpeedKph = top; r.climbM = climb
+            return r
+        }
+        let yesterday = ride(31, 109, 252), today = ride(32, 95, 238)
+        let pb = Review.bests([yesterday, today])
+        #expect(pb.records(for: yesterday) == ["TOP SPEED", "CLIMB"])
+        #expect(pb.records(for: today) == ["LONGEST"])
     }
 
     @Test func weeklyKmCoversTwelveWeeks() {

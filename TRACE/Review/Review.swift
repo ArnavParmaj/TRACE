@@ -11,6 +11,16 @@ struct PersonalBests: Equatable {
 
     /// Rides holding at least one best, for the PB badge.
     var holders: Set<UUID> { Set([longest, topSpeed, biggestClimb, fastest10k].compactMap { $0?.id }) }
+
+    /// The records a ride holds, named for its PB badge: "CLIMB", "LONGEST · TOP SPEED".
+    func records(for ride: Ride) -> [String] {
+        var names: [String] = []
+        if longest?.id == ride.id { names.append("LONGEST") }
+        if topSpeed?.id == ride.id { names.append("TOP SPEED") }
+        if biggestClimb?.id == ride.id { names.append("CLIMB") }
+        if fastest10k?.id == ride.id { names.append("10 KM") }
+        return names
+    }
 }
 
 /// Reads for the Rides tab and ride detail (S06, S07), and the derived fields a ride
