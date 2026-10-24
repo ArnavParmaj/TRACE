@@ -131,6 +131,12 @@ S15 decision, S03 final ride mode + S18 Live Activity (M6), empty/error states, 
 VoiceOver, airplane mode, file protection. Gap found: route-sample retention (decision 27) is
 not implemented.
 
+**M6 code is done (2026-10-24), exit test pending.** `RideModeView` is S03 (gauge, tap to log,
+hold to stop, pause, S04 recovery); the debug screen is gone. `TRACEWidgets` is the S18 Live
+Activity with a LOG button running `LogEntryIntent` (decision 68). 65 tests green; signed device
+build passes. **Next: a handlebar ride: readable at a glance, a gloved tap logs a draft, hold
+stops it, no accidental stops; the Live Activity shows and LOG works from the lock screen.**
+
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.
 

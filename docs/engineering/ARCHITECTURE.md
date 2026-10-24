@@ -47,8 +47,10 @@ call site changes. This is the whole multi-tenant preparation — an afternoon n
 |---|---|
 | `TRACE/Models/` | SwiftData models: route, money (local-only), bike ops, `SyncRecord` |
 | `TRACE/Data/` | `Store` (synced + local-only containers), `Repository<T>` (owner-scoped, soft delete), `CurrentUser` |
-| `TRACE/Recorder/` | GPS + barometer recording, autosave, recovery |
-| `TRACE/Capture/` | `Capture` (draft queue) and `LogEntryIntent` (Action Button) |
+| `TRACE/Recorder/` | GPS + barometer recording, autosave, recovery; `RideActivityController` keeps the Live Activity in step |
+| `TRACE/Capture/` | `Capture` (draft queue) |
+| `TRACE/Shared/` | Compiled into the app and the widget: `LogEntryIntent` (Action Button + Live Activity LOG, decision 68), `RideActivityAttributes` |
+| `TRACEWidgets/` | Widget extension: the S18 Live Activity (lock screen + Dynamic Island) |
 | `TRACE/Money/` | `Ledger`: expenses, fusion, attach / detach, km/L (decision 64) |
 | `TRACE/Review/` | `RideAnalysis` (pure: bands, splits, fastest 10 km, elevation), `Review` (PBs, weekly km, place names), `RouteMap` |
 | `TRACE/Bike/` | `Garage`, computed `Due` state, `Reminders` (local notifications) |

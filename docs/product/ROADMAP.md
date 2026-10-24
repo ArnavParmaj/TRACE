@@ -78,7 +78,9 @@ from rides since each reset (decision 56).
 - **Exit:** real tasks and documents entered for the actual bike. A test document
   expiring tomorrow fires its notification. An overdue task shows the alarm rail.
 
-### M6 · Ride mode + Live Activity
+### M6 · Ride mode + Live Activity — CODE DONE (2026-10-24), awaiting exit test
+Built: `RideModeView` (S03 + S04 recovery), Live Activity (S18) in the `TRACEWidgets` extension,
+signed on the free team. The M2 debug screen is gone (decision 68).
 Ride mode (S03) per artboard F, tap-anywhere capture, hold-to-stop, screen kept awake,
 Live Activity (S18) with elapsed time, distance and a log button.
 - **Exit:** a ride with the phone on the handlebar mount: numbers readable at a glance

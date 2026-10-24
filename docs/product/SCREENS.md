@@ -80,7 +80,7 @@ Decision 32: custom four-tab bar, ≥60pt tall (the stock bar is 49pt).
 |---|---|---|---|---|---|
 | S01 | Onboarding | full screen, 3 steps | v1 | M8 (built, decision 67) | first launch, Bike tab empty, Settings + ADD BIKE |
 | S02 | Today | tab root | v1 | M3 | app launch, tab |
-| S03 | Ride mode | full-screen cover | v1 | M6 (debug UI in M2) | Start ride on Today, Live Activity |
+| S03 | Ride mode | full-screen cover | v1 | M6 (built, decision 68) | Start ride on Today, Live Activity |
 | S04 | Ride recovery | sheet | v1 | M2 | launch with an open ride |
 | S05 | Ride recap | sheet | v1 | M4 (built) | ride stop |
 | S06 | Rides | tab root | v1 | M7 (plain stand-in list since M2, decision 53) | tab |
@@ -95,7 +95,7 @@ Decision 32: custom four-tab bar, ≥60pt tall (the stock bar is 49pt).
 | S15 | Weekly summary | push | v1 | M7 | Today week strip |
 | S16 | Settings | sheet | v1 | M8 (built, decision 67) | ⚙ on Today |
 | S17 | Notifications | system | v1 | M5 | — |
-| S18 | Live Activity | system | v1 | M6 | ride start |
+| S18 | Live Activity | system | v1 | M6 (built, decision 68) | ride start |
 | — | Control Center control, widget | system | unblocked, not scheduled | — | decision 39 |
 
 **Not in v1:** segments, gear/mods, export, sharing, friends, accounts. No screens for
@@ -328,7 +328,7 @@ re-evaluated after each ride and each odometer update, not at a fixed time.
 ### S18 · Live Activity (lock screen + Dynamic Island)
 Elapsed time, distance, REC dot. One **LOG** button running the same App Intent as the
 Action Button. Tap elsewhere opens Ride mode. State is pushed from the app via
-ActivityKit local updates (no push entitlement). Verify on free signing in M6.
+ActivityKit local updates (no push entitlement). Signs on the free team (decision 68); on-device check is the M6 exit.
 
 ---
 

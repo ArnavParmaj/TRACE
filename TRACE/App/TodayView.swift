@@ -47,6 +47,8 @@ struct TodayView: View {
         }
         .task(id: scenePhase) { if scenePhase == .active { reload() } }
         .onReceive(NotificationCenter.default.publisher(for: .draftCaptured)) { _ in reload() }
+        // The Live Activity opens Ride mode (S18).
+        .onOpenURL { url in if url.host == "ride", recorder.phase != .idle { showRide = true } }
         .sheet(item: $completing, onDismiss: reload) { DraftSheet(start: $0, capture: capture, ledger: ledger) }
         .sheet(item: $recap, onDismiss: reload) { RideSheet(ride: $0, isRecap: true) }
         .sheet(item: $openRide, onDismiss: reload) { RideSheet(ride: $0) }
@@ -120,23 +122,7 @@ struct TodayView: View {
         .buttonStyle(PressStyle())
     }
 
-    /// shortcut: the M2 recorder screen stands in for Ride mode (S03) until M6.
-    private var rideScreen: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Spacer()
-                Button { showRide = false } label: {
-                    Text("CLOSE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
-                        .frame(minWidth: minTouch, minHeight: minTouch)
-                }
-                .buttonStyle(PressStyle())
-            }
-            .padding(.horizontal, 12)
-            RecorderDebugView()
-        }
-        .background(Color.ground.ignoresSafeArea())
-        .environment(recorder)
-    }
+    private var rideScreen: some View { RideModeView().environment(recorder) }
 
     // MARK: 02 DRAFTS
 

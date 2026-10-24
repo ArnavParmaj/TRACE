@@ -13,6 +13,9 @@ targets:
     type: application
     platform: iOS
     sources: [TRACE]
+    dependencies:
+      - target: TRACEWidgets
+        embed: true
     scheme:
       testTargets: [TRACETests]
     settings:
@@ -31,6 +34,30 @@ targets:
         NSMotionUsageDescription: TRACE uses the barometer to measure climb during a ride.
         UIBackgroundModes: [location]
         UIAppFonts: [Oswald.ttf, RobotoCondensed.ttf]
+        NSSupportsLiveActivities: true
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [trace]
+  TRACEWidgets:
+    # S18 Live Activity. Local updates only: works on the free Personal Team.
+    type: app-extension
+    platform: iOS
+    sources:
+      - TRACEWidgets
+      - TRACE/Shared
+      - TRACE/Design/Tokens.swift
+      - TRACE/Design/Fonts
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.arnavparmaj.trace.widgets
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) WIDGET_EXTENSION
+        GENERATE_INFOPLIST_FILE: NO
+    info:
+      path: TRACEWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: TRACE
+        UIAppFonts: [Oswald.ttf, RobotoCondensed.ttf]
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
   TRACETests:
     type: bundle.unit-test
     platform: iOS
