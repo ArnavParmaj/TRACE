@@ -17,7 +17,7 @@ targets:
       - target: TRACEWidgets
         embed: true
     scheme:
-      testTargets: [TRACETests]
+      testTargets: [TRACETests, TRACEUITests]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.arnavparmaj.trace
@@ -68,3 +68,14 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.arnavparmaj.trace.tests
+  TRACEUITests:
+    # M8 step 3: accessibility audit of the first run and every tab.
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [TRACEUITests]
+    dependencies:
+      - target: TRACE
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.arnavparmaj.trace.uitests

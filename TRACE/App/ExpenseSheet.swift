@@ -68,6 +68,7 @@ private struct ExpenseForm: View {
     @State private var rideName: String?
     @State private var confirmDelete = false
     @State private var error: String?
+    @FocusState private var noteFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
     init(subject: Subject, capture: Capture, ledger: Ledger, onDone: @escaping (_ saved: Bool) -> Void) {
@@ -114,7 +115,7 @@ private struct ExpenseForm: View {
                 .padding(20)
             }
             .scrollDismissesKeyboard(.interactively)
-            if category != nil { keypad }
+            if category != nil && !noteFocused { keypad }   // typing a note brings up the system keyboard instead
         }
         .alert("Delete this expense?", isPresented: $confirmDelete) {
             Button("Delete", role: .destructive) { run { if let existing { try ledger.delete(existing) }; onDone(false) } }
@@ -239,11 +240,13 @@ private struct ExpenseForm: View {
             .padding(.horizontal, 16).frame(minHeight: minTouch)
             .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
             .submitLabel(.done)
+            .focused($noteFocused)
+            .onSubmit { noteFocused = false }   // Done hands the screen back to the keypad
     }
 
     private func valueRow(_ label: String, _ value: String, _ f: Field, big: Bool = false) -> some View {
         let on = field == f
-        return Button { field = f } label: {
+        return Button { noteFocused = false; field = f } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(label).font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
                 Text(value).font(.oswald(big ? 44 : 26, .semibold, relativeTo: big ? .largeTitle : .title))

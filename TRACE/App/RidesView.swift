@@ -130,6 +130,7 @@ struct RidesView: View {
                 Text(value ?? "—").font(.oswald(26, .semibold)).monospacedDigit().foregroundStyle(Color.ink)
                     .lineLimit(1).minimumScaleFactor(0.6)
                 Text(label).font(.oswald(12, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
+                    .lineLimit(1).minimumScaleFactor(0.6)
                 Text(ride?.startedAt.formatted(.dateTime.day().month(.abbreviated)).uppercased() ?? "needs a 10 km ride")
                     .font(.condensed(13)).foregroundStyle(Color.inkMuted).lineLimit(1)
             }

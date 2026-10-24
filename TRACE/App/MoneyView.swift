@@ -45,6 +45,7 @@ struct MoneyView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     ScreenHeader(title: "MONEY") {
                         Text("ON THIS PHONE ONLY").font(.oswald(12, .medium)).tracking(1.7).foregroundStyle(Color.inkMuted)
+                            .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)   // wraps at large sizes instead of clipping
                     }
                     periodPicker
                 }

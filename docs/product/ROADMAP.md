@@ -79,6 +79,8 @@ from rides since each reset (decision 56).
   expiring tomorrow fires its notification. An overdue task shows the alarm rail.
 
 ### M6 · Ride mode + Live Activity — CODE DONE (2026-10-24), awaiting exit test
+**Phone check (2026-10-24):** the UI behaves as designed on the phone. The handlebar test is
+not done (no mount yet), so the exit is still open.
 Built: `RideModeView` (S03 + S04 recovery), Live Activity (S18) in the `TRACEWidgets` extension,
 signed on the free team. The M2 debug screen is gone (decision 68).
 Ride mode (S03) per artboard F, tap-anywhere capture, hold-to-stop, screen kept awake,
@@ -90,10 +92,10 @@ Live Activity (S18) with elapsed time, distance and a log button.
 ### M7 · Review — replay, charts, summaries — CODE DONE (2026-10-24), awaiting exit test
 Built: `TRACE/Review/` (`RideAnalysis`, `Review`, `RouteMap`), S06 Rides (12-week chart, PB card,
 month list), S07 map / elevation / speed bands / stops / splits / delete, Money 6-month trend.
-Decision 66. Not built: S15 weekly summary.
+Decision 66. S15 weekly summary dropped (decision 72). Phone check not done.
 Rides tab (S06), ride detail with map replay, offline no-basemap fallback, elevation
 profile and splits (S07), route line coloured by speed slow → moderate → fast (decision 56),
-top speed marker, speed bands, stops, ride-level personal bests, place names (decision 62), trend charts on Rides and Money, weekly summary (S15),
+top speed marker, speed bands, stops, ride-level personal bests, place names (decision 62), trend charts on Rides and Money,
 per-trip recap (S05).
 - **Exit:** "what did the last trip cost?" answered from a cold open in under 10 seconds.
   Ride detail renders a 200 km ride in under 2 seconds. Replay works in airplane mode.
@@ -102,7 +104,7 @@ per-trip recap (S05).
 Onboarding (S01), Settings with vehicle picker (S16), empty/error states on every
 screen, Dynamic Type pass at the largest sizes, VoiceOver labels, airplane-mode test of
 every screen, store file protection (default `completeUntilFirstUserAuthentication`, decision 69), a crash-log check.
-- **Progress:** S01 onboarding and S16 settings built (decision 67); file protection settled, route samples kept and indexed (decision 69); fusion for late and re-timed expenses (decision 70); ride odometer readings (decision 71); the rest open.
+- **Progress:** S01 onboarding and S16 settings built (decision 67); file protection settled, route samples kept and indexed (decision 69); fusion for late and re-timed expenses (decision 70); ride odometer readings (decision 71); S15 dropped (decision 72); the rest open.
 - **Exit:** the v1 ship checklist below is all ticked.
 
 ### v1 ship checklist

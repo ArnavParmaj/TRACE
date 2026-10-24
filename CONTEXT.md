@@ -118,7 +118,7 @@ the prototype canvas.
 **M7 code is done (2026-10-24), exit test pending.** `TRACE/Review/`: ride analysis, personal
 bests, place names, route map with offline fallback. RIDES is now S06 (12-week chart, PBs, month
 list); a ride opens S07 (map, elevation, speed bands, stops, splits, cost, delete). Checked on a
-copy of the real 31 km ride. 63 tests green. Climb left as is (decision 66). S15 not built.
+copy of the real 31 km ride. 63 tests green. Climb left as is (decision 66). S15 dropped (decision 72).
 **Next: on the iPhone, ride with two expenses logged during it and check both attach
 with the right total, detach one; log two full fills with odometer and check km/L by
 hand. Still open: M3 real-pump test, M5 notification test.**
@@ -140,6 +140,8 @@ approved. Done so far:
 67 tests green.
 
 **M8 plan, remaining steps (agreed 2026-10-24, do one at a time):**
+Step 3 is in progress: `TRACEUITests` exists and the audit tab test still fails on Rides and Bike
+Dynamic Type findings. Open and recorded as decision 73; the cause is not found yet.
 3. Automated accessibility audit: a UI-test target that taps through every screen and runs
    `performAccessibilityAudit` (labels, Dynamic Type clipping, contrast, hit size); fix findings.
 4. Dynamic Type at the largest size: render Today, Ride mode, Bike in tests and fix truncation
@@ -148,12 +150,12 @@ approved. Done so far:
 6. Airplane mode: review map + place-name offline paths, then the rider taps every tab offline.
 7. Crash-log check on the phone and the Mac.
 8. Tick the v1 ship checklist in ROADMAP with evidence.
-Open decisions for the rider: drop S15 weekly summary (recommended: Today's THIS WEEK and the
-Rides chart cover it) and skip Money prev/next period arrows (recommended).
+Decided 2026-10-24 (decision 72): S15 weekly summary dropped; no Money prev/next arrows.
 
-**Needs a ride:** M3 real fuel pump, M4 two expenses during a ride + km/L by hand, M6 handlebar
-test (readable at a glance, gloved tap logs, hold stops, no accidental stops, Live Activity LOG
-from the lock screen). Also on the phone: M5 9:00 document notification, M7 timings.
+**Still to check on the phone (none done yet):** M3 real fuel pump (gloves, locked phone, one
+press); M4 two expenses during a ride + km/L by hand; M6 handlebar mount (the UI worked on the
+phone; readability, gloved taps, hold-to-stop and Live Activity LOG are open until the mount is
+fitted); M5 9:00 document notification; M7 exit timings and airplane-mode replay.
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.

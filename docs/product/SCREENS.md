@@ -62,7 +62,7 @@ Decision 32: custom four-tab bar, ≥60pt tall (the stock bar is 49pt).
  │ Draft ─▶ S08 │              │              │ Doc ─▶ S13   │
  │ Due item ─▶  │              │              │              │
  │   S12 / S13  │              │              │              │
- │ Week ─▶ S15  │              │              │              │
+ │              │              │              │              │
  │ ⚙ ─▶ S16     │              │              │              │
  └──────────────┴──────────────┴──────────────┴──────────────┘
  S03 Ride mode ─(stop)─▶ S05 Ride recap ─▶ S07 Ride detail
@@ -92,7 +92,7 @@ Decision 32: custom four-tab bar, ≥60pt tall (the stock bar is 49pt).
 | S12 | Service task | push | v1 | M5 | S11, Today due list, notification |
 | S13 | Document | push | v1 | M5 | S11, Today due list, notification |
 | S14 | Odometer update | sheet | v1 | M5 | S11, S05 |
-| S15 | Weekly summary | push | v1 | M7 | Today week strip |
+| S15 | Weekly summary | — | dropped (decision 72) | — | — |
 | S16 | Settings | sheet | v1 | M8 (built, decision 67) | ⚙ on Today |
 | S17 | Notifications | system | v1 | M5 | — |
 | S18 | Live Activity | system | v1 | M6 (built, decision 68) | ride start |
@@ -303,9 +303,8 @@ attachment (photo or PDF from Files, stored in the app container only, never Pho
 Big Oswald display + keypad. Shows the GPS-summed suggestion and the last manual value.
 Rejects a value lower than the last reading unless confirmed ("odometer replaced?").
 
-### S15 · Weekly summary
-Generated, not requested. Mon–Sun: rides, km, moving time, climb, spend by category,
-km/L, services done, anything that became due. Previous/next week arrows.
+### S15 · Weekly summary — dropped (decision 72)
+Not in v1. Today's THIS WEEK and the Rides chart cover the week.
 
 ### S16 · Settings
 - Vehicles: list, add, set primary (picker, decision 28)

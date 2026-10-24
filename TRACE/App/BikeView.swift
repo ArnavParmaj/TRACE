@@ -99,7 +99,8 @@ struct BikeView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
             Text(String(format: "%.1f KM", km)).font(.oswald(22, .medium)).monospacedDigit().foregroundStyle(Color.ink)
-            Text("HOLD TO RESET").font(.oswald(11, .medium)).tracking(1.5).foregroundStyle(Color.inkFaint)
+            Text("HOLD TO RESET").font(.oswald(11, .medium)).tracking(1.5).foregroundStyle(Color.inkMuted)
+                .lineLimit(1).minimumScaleFactor(0.6)
         }
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: minTouch, alignment: .leading)
@@ -358,7 +359,7 @@ struct PrimaryButton: View {
         Button(action: action) {
             // Outlined, not filled: no large lit slabs (DESIGN.md rule 2).
             Text(title).font(.oswald(24, .bold)).tracking(1.6)
-                .foregroundStyle(enabled ? Color.ink : Color.inkFaint)
+                .foregroundStyle(enabled ? Color.ink : Color.inkMuted)
                 .frame(maxWidth: .infinity, minHeight: 72)
                 .overlay { Rectangle().stroke(enabled ? Color.accent : Color.surfaceRule, lineWidth: 2) }
                 .contentShape(Rectangle())

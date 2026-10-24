@@ -66,6 +66,7 @@ struct TodayView: View {
         ScreenHeader(title: "TRACE", hatched: true) {
             Text(Date.now.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)).uppercased())
                 .font(.oswald(14, .medium)).tracking(1.7).foregroundStyle(Color.inkMuted)
+                .lineLimit(1).minimumScaleFactor(0.6)
             Button { settings = true } label: {
                 Image(systemName: "gearshape").font(.system(size: 22, weight: .regular)).foregroundStyle(Color.inkDim)
                     .frame(width: minTouch, height: minTouch).contentShape(Rectangle())
@@ -178,7 +179,7 @@ struct TodayView: View {
                     let rode = week.rideDays.contains(i)
                     VStack(spacing: 6) {
                         Text(["M", "T", "W", "T", "F", "S", "S"][i]).font(.oswald(14, .medium))
-                            .foregroundStyle(rode ? Color.ink : Color.inkFaint)
+                            .foregroundStyle(rode ? Color.ink : Color.inkMuted)   // faint fails contrast as small text
                         Rectangle().fill(rode ? Color.accent : Color.surfaceLine).frame(width: 16, height: 3)
                     }
                     .frame(maxWidth: .infinity).padding(.vertical, 8)
