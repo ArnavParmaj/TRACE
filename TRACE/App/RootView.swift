@@ -6,7 +6,7 @@ enum AppTab: String, CaseIterable, Comparable {
     var title: String { rawValue.uppercased() }
 }
 
-/// Four tabs, one per pillar plus the hub (decision 32). Rides is a plain list until M7.
+/// Four tabs, one per pillar plus the hub (decision 32).
 struct RootView: View {
     @State private var tab = AppTab.today
     @State private var forward = true
@@ -38,7 +38,7 @@ struct RootView: View {
             if tab == .today {
                 TodayView()
             } else if tab == .rides {
-                RidesListView()       // M2 stand-in; the real Rides screen (S06) is M7
+                RidesView()
             } else if tab == .bike {
                 BikeView()
             } else {

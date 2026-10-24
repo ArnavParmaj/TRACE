@@ -50,6 +50,7 @@ call site changes. This is the whole multi-tenant preparation — an afternoon n
 | `TRACE/Recorder/` | GPS + barometer recording, autosave, recovery |
 | `TRACE/Capture/` | `Capture` (draft queue) and `LogEntryIntent` (Action Button) |
 | `TRACE/Money/` | `Ledger`: expenses, fusion, attach / detach, km/L (decision 64) |
+| `TRACE/Review/` | `RideAnalysis` (pure: bands, splits, fastest 10 km, elevation), `Review` (PBs, weekly km, place names), `RouteMap` |
 | `TRACE/Bike/` | `Garage`, computed `Due` state, `Reminders` (local notifications) |
 | `TRACE/Design/` | `Tokens` (from DESIGN.md, Display P3), `Hatch`, `ScreenHeader` |
 | `TRACE/Support/` | `Money` formatting: paise ↔ text, view layer only |

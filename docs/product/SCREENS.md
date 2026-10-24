@@ -84,7 +84,7 @@ Decision 32: custom four-tab bar, ≥60pt tall (the stock bar is 49pt).
 | S04 | Ride recovery | sheet | v1 | M2 | launch with an open ride |
 | S05 | Ride recap | sheet | v1 | M4 (built) | ride stop |
 | S06 | Rides | tab root | v1 | M7 (plain stand-in list since M2, decision 53) | tab |
-| S07 | Ride detail | sheet | v1 | M4 stats + cost; M7 the rest | S05, S06, Money rows |
+| S07 | Ride detail | sheet | v1 | M7 (built) | S05, S06, Money rows |
 | S08 | Expense editor | sheet | v1 | M3 | draft, + Add, any expense row |
 | S09 | Mark service done | sheet | v1 | M5 | S12, notification |
 | S10 | Money | tab root | v1 | M4 | tab |
@@ -200,8 +200,8 @@ Shown once, right after a ride stops. The fusion moment.
 - Empty: "No rides yet. Start one from Today."
 
 ### S07 · Ride detail
-M4 built 01 STATS and COST (same `RideSheet`, opened from RIDES or VIEW RIDE). Map, elevation,
-splits, speed bands, stops, BIKE and DELETE RIDE come in M7.
+Built (M4 + M7, `RideSheet`): map, 01 STATS, 02 ELEVATION, 03 SPEED (bands, top, stops), 04 SPLITS,
+05 COST, DELETE RIDE. BIKE odometer row not built: rides don't record odometer readings yet.
 ```
 ‹ RIDES                      SAT 18 OCT
 [ map with route polyline, ~40% height ]   offline → polyline on black, no basemap

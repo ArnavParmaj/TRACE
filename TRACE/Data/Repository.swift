@@ -79,6 +79,18 @@ extension Repository where Record == RouteSample {
     }
 }
 
+extension Repository where Record == RouteSample {
+    /// The first or last fix of a ride without loading the rest.
+    func endSample(of rideID: UUID, last: Bool) throws -> RouteSample? {
+        let owner = user.ownerID
+        var descriptor = FetchDescriptor(
+            predicate: #Predicate<RouteSample> { $0.ownerID == owner && $0.deletedAt == nil && $0.rideID == rideID },
+            sortBy: [SortDescriptor(\.timestamp, order: last ? .reverse : .forward)])
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+}
+
 extension Repository where Record == StopEvent {
     func stops(of rideID: UUID) throws -> [StopEvent] {
         let owner = user.ownerID

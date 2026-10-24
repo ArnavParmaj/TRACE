@@ -2,16 +2,18 @@ import SwiftData
 import SwiftUI
 
 extension Ride {
-    /// The rider's name for the ride, else its start date.
+    /// The rider's name, else "Bandra → Lonavala", else the start date.
     var displayName: String {
-        title ?? startedAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)).uppercased()
+        if let title { return title }
+        if let from = startPlaceName { return endPlaceName.map { $0 == from ? from : "\(from) → \($0)" } ?? from }
+        return startedAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)).uppercased()
     }
 
     /// "SAT 18 OCT · 08:14 – 11:05"; just the times when the name already is the date.
     var whenLine: String {
         let start = startedAt.formatted(date: .omitted, time: .shortened)
         let times = endedAt.map { "\(start) – \($0.formatted(date: .omitted, time: .shortened))" } ?? start
-        guard title != nil else { return times }
+        guard title != nil || startPlaceName != nil else { return times }
         return startedAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)).uppercased() + " · " + times
     }
 }
@@ -37,6 +39,10 @@ struct RideSheet: View {
     @State private var completing: CaptureDraft?
     @State private var odometer = false
     @State private var error: String?
+    @State private var analysis: RideAnalysis?
+    @State private var stops: [StopEvent] = []
+    @State private var confirmDelete = false
+    @Environment(RideRecorder.self) private var recorder
 
     private var ledger: Ledger { Ledger(context: context, user: LocalStubUser.load()) }
     private var capture: Capture { Capture(context: context, user: LocalStubUser.load()) }
@@ -50,9 +56,11 @@ struct RideSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
                     if showsRecap { recapHead } else { detailHead }
+                    if !showsRecap, let analysis { review(analysis) }
                     cost
                     if !drafts.isEmpty { draftSection }
                     if showsRecap, let bike { odometerSection(bike) }
+                    if !showsRecap { deleteButton }
                     if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
                 }
                 .padding(.horizontal, 20).padding(.vertical, 8)
@@ -66,6 +74,12 @@ struct RideSheet: View {
         .sheet(item: $editing, onDismiss: reload) { ExpenseSheet(expense: $0, capture: capture, ledger: ledger) }
         .sheet(item: $completing, onDismiss: reload) { DraftSheet(start: $0, capture: capture, ledger: ledger) }
         .sheet(isPresented: $odometer, onDismiss: reload) { if let bike { OdometerSheet(bike: bike, garage: garage) } }
+        // Loaded after the sheet is up, so a long ride never delays it opening.
+        .task(id: detail) { if !showsRecap && analysis == nil { loadReview() } }
+        .alert("Delete this ride?", isPresented: $confirmDelete) {
+            Button("Delete", role: .destructive) { recorder.delete(ride); dismiss() }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Its route and stats are removed. Attached expenses stay in MONEY.") }
     }
 
     // MARK: Heads
@@ -89,6 +103,16 @@ struct RideSheet: View {
 
     private var detailHead: some View {
         VStack(alignment: .leading, spacing: 12) {
+            Group {
+                if let analysis, !analysis.segments.isEmpty {
+                    RouteMap(analysis: analysis, stops: stops)
+                } else {
+                    Hatch(spacing: 18)
+                }
+            }
+            .frame(height: 300)
+            .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+            .padding(.horizontal, -20).padding(.top, -8).padding(.bottom, 8)
             Text(ride.displayName).font(.oswald(28, .bold, relativeTo: .largeTitle)).foregroundStyle(Color.ink)
             SectionHead(number: "01", title: "STATS")
             statGrid([(km, "KM"), (StatCell.clock(ride.movingDurationS), "MOVING"),
@@ -96,6 +120,82 @@ struct RideSheet: View {
                       (String(format: "%.0f", ride.avgSpeedKph), "AVG KM/H"), (String(format: "%.0f", ride.maxSpeedKph), "MAX KM/H")],
                      columns: 3, size: 26)
         }
+    }
+
+    // MARK: 02 ELEVATION · 03 SPEED · 04 SPLITS
+
+    @ViewBuilder private func review(_ a: RideAnalysis) -> some View {
+        if a.elevation.count > 1 {
+            VStack(alignment: .leading, spacing: 12) {
+                SectionHead(number: "02", title: "ELEVATION")
+                ElevationChart(analysis: a)
+            }
+        }
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHead(number: "03", title: "SPEED")
+            let total = max(1, a.bandSeconds.reduce(0, +))
+            ForEach(RideAnalysis.Band.allCases, id: \.self) { band in
+                let secs = a.bandSeconds[band.rawValue]
+                HStack(spacing: 10) {
+                    Text(band.label).font(.oswald(14, .medium)).monospacedDigit().foregroundStyle(Color.inkDim)
+                        .frame(width: 56, alignment: .leading)
+                    Rectangle().fill(Color.surfaceLine).frame(height: 6)
+                        .overlay(alignment: .leading) {
+                            GeometryReader { g in Rectangle().fill(band.color).frame(width: g.size.width * CGFloat(secs) / CGFloat(total)) }
+                        }
+                    Text(StatCell.clock(secs)).font(.oswald(16, .semibold)).monospacedDigit().foregroundStyle(Color.ink)
+                        .frame(width: 64, alignment: .trailing)
+                }
+                .accessibilityElement(children: .combine)
+            }
+            Text("KM/H · TOP \(String(format: "%.0f", a.topSpeedKph)) · \(stopLine)")
+                .font(.oswald(13, .medium)).tracking(1.2).foregroundStyle(Color.inkMuted)
+        }
+        if a.splits.count > 1 {
+            VStack(alignment: .leading, spacing: 0) {
+                SectionHead(number: "04", title: "SPLITS").padding(.bottom, 4)
+                ForEach(a.splits.indices, id: \.self) { i in
+                    let sp = a.splits[i]
+                    let km = sp.toKm - Double(sp.fromKm)
+                    HStack {
+                        Text(Int(sp.toKm.rounded()) > sp.fromKm + 1 ? "KM \(sp.fromKm + 1)–\(Int(sp.toKm.rounded()))" : "KM \(sp.fromKm + 1)").foregroundStyle(Color.inkMuted)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(StatCell.clock(sp.seconds)).foregroundStyle(Color.ink)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(sp.seconds > 0 ? String(format: "%.0f KM/H", km / Double(sp.seconds) * 3600) : "—")
+                            .foregroundStyle(Color.inkDim).frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                    .font(.oswald(15, .medium)).monospacedDigit()
+                    .frame(minHeight: 44)
+                    .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+        }
+    }
+
+    private var stopLine: String {
+        let stopped = stops.reduce(0.0) { $0 + $1.endedAt.timeIntervalSince($1.startedAt) }
+        return stops.isEmpty ? "NO STOPS" : "\(stops.count) \(stops.count == 1 ? "STOP" : "STOPS") · \(StatCell.clock(Int(stopped))) STOPPED"
+    }
+
+    private var deleteButton: some View {
+        Button { confirmDelete = true } label: {
+            Text("DELETE RIDE").font(.oswald(14, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
+                .frame(maxWidth: .infinity, minHeight: minTouch)
+                .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
+        .disabled(recorder.ride?.id == ride.id)
+    }
+
+    private func loadReview() {
+        let review = Review(context: context, user: LocalStubUser.load())
+        do {
+            stops = try review.stops(of: ride)
+            analysis = try review.analysis(of: ride)
+        } catch { self.error = "Couldn't load the route: \(error.localizedDescription)" }
     }
 
     private var km: String { String(format: "%.1f", Double(ride.distanceM) / 1000) }
@@ -130,7 +230,7 @@ struct RideSheet: View {
                         .font(.condensed(13)).foregroundStyle(Color.inkMuted).padding(.top, 6)
                 }
             } else {
-                SectionHead(number: "02", title: "COST", value: totalMinor > 0 ? Money.format(totalMinor) : nil)
+                SectionHead(number: "05", title: "COST", value: totalMinor > 0 ? Money.format(totalMinor) : nil)
             }
             if attached.isEmpty && detached.isEmpty {
                 Text("Nothing attached to this ride.").font(.condensed(15)).foregroundStyle(Color.inkDim)
@@ -188,7 +288,7 @@ struct RideSheet: View {
 
     private var draftSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHead(number: showsRecap ? "02" : "03", title: "DRAFTS")
+            SectionHead(number: showsRecap ? "02" : "06", title: "DRAFTS")
             Button { completing = drafts.first } label: {
                 HStack {
                     Text(drafts.count == 1 ? "1 draft from this ride" : "\(drafts.count) drafts from this ride")

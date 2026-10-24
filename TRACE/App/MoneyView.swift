@@ -29,6 +29,7 @@ struct MoneyView: View {
     @State private var anyEver = false
     @State private var caption = ""
     @State private var partials = 0
+    @State private var months: [(month: Date, minor: Int)] = []
     @State private var editing: Expense?
     @State private var adding = false
     @State private var openRide: Ride?
@@ -58,6 +59,7 @@ struct MoneyView: View {
                 }
                 if !entries.isEmpty { byCategory }
                 if anyEver { fuelEconomy }
+                if anyEver { trend }
                 if !entries.isEmpty { entryList }
                 PrimaryButton("+ ADD EXPENSE") { adding = true }
                 if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
@@ -161,11 +163,40 @@ struct MoneyView: View {
         }
     }
 
-    // MARK: 03 ENTRIES
+    // MARK: 03 TREND
+
+    private var trend: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHead(number: "03", title: "6 MONTHS")
+            Chart(months, id: \.month) { m in
+                BarMark(x: .value("Month", m.month, unit: .month), y: .value("₹", Double(m.minor) / 100))
+                    .foregroundStyle(m.month == months.last?.month ? Color.accent : Color.inkDim)
+            }
+            .chartXAxis { AxisMarks(values: .stride(by: .month)) { _ in
+                AxisValueLabel(format: .dateTime.month(.narrow)).foregroundStyle(Color.inkMuted) } }
+            .chartYAxis { AxisMarks(values: .automatic(desiredCount: 3)) { _ in
+                AxisGridLine().foregroundStyle(Color.surfaceLine)
+                AxisValueLabel().foregroundStyle(Color.inkMuted) } }
+            .frame(height: 110)
+            .accessibilityLabel("Spending per month for six months")
+        }
+    }
+
+    /// Paise per calendar month, the last six ending this month, oldest first.
+    static func monthly(_ all: [Expense], now: Date = .now) -> [(month: Date, minor: Int)] {
+        let cal = Calendar(identifier: .iso8601)
+        guard let this = cal.dateInterval(of: .month, for: now)?.start else { return [] }
+        let starts = (0..<6).reversed().compactMap { cal.date(byAdding: .month, value: -$0, to: this) }
+        var sums = [Date: Int]()
+        for e in all { if let m = cal.dateInterval(of: .month, for: e.occurredAt)?.start { sums[m, default: 0] += e.amountMinor } }
+        return starts.map { ($0, sums[$0] ?? 0) }
+    }
+
+    // MARK: 04 ENTRIES
 
     private var entryList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHead(number: "03", title: "ENTRIES", count: entries.count).padding(.bottom, 4)
+            SectionHead(number: "04", title: "ENTRIES", count: entries.count).padding(.bottom, 4)
             ForEach(entries) { e in
                 VStack(alignment: .leading, spacing: 0) {
                     Button { editing = e } label: { ExpenseRow(expense: e, showsDay: true) }.buttonStyle(PressStyle())
@@ -189,6 +220,7 @@ struct MoneyView: View {
             entries = all.filter { span.contains($0.occurredAt) }
             caption = period.caption(span)
             partials = all.filter { $0.category == .fuel && $0.isFullTank == false }.count
+            months = Self.monthly(all)
             anyEver = !all.isEmpty
             economy = Ledger.economy(all)
             rides = [:]

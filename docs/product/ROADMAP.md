@@ -85,7 +85,10 @@ Live Activity (S18) with elapsed time, distance and a log button.
   in daylight, a draft logged by tapping with gloves, the ride stopped without
   looking twice. No accidental stops.
 
-### M7 · Review — replay, charts, summaries
+### M7 · Review — replay, charts, summaries — CODE DONE (2026-10-24), awaiting exit test
+Built: `TRACE/Review/` (`RideAnalysis`, `Review`, `RouteMap`), S06 Rides (12-week chart, PB card,
+month list), S07 map / elevation / speed bands / stops / splits / delete, Money 6-month trend.
+Decision 66. Not built: S15 weekly summary.
 Rides tab (S06), ride detail with map replay, offline no-basemap fallback, elevation
 profile and splits (S07), route line coloured by speed slow → moderate → fast (decision 56),
 top speed marker, speed bands, stops, ride-level personal bests, place names (decision 62), trend charts on Rides and Money, weekly summary (S15),

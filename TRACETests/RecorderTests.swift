@@ -102,7 +102,7 @@ private func ride(from startS: Int, seconds: Int, speed: Double, lat0: Double = 
     let user = RiderUser()
 
     private func recorder(_ context: ModelContext? = nil, _ sensors: StubSensors = StubSensors()) -> RideRecorder {
-        RideRecorder(context: context ?? container.mainContext, user: user, sensors: sensors)
+        RideRecorder(context: context ?? container.mainContext, user: user, sensors: sensors, lookUpPlaces: false)
     }
 
     @Test func startRecordStop() throws {

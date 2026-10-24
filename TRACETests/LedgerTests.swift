@@ -49,7 +49,7 @@ private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
     }
 
     @Test func closingARideFusesAndDeletingItDetaches() throws {
-        let rec = RideRecorder(context: container.mainContext, user: user, sensors: StubSensors())
+        let rec = RideRecorder(context: container.mainContext, user: user, sensors: StubSensors(), lookUpPlaces: false)
         rec.start(vehicleID: UUID(), at: t0)
         let fuel = try spend(410, at: 30, .fuel)
         for s in 0...60 { rec.ingest(Fix(time: t0.addingTimeInterval(Double(s)), lat: 19 + Double(s) * 1e-4, lon: 72.8, speedMps: 10)) }

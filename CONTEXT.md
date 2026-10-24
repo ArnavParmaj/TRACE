@@ -114,6 +114,11 @@ recap after a ride and as ride detail from RIDES. 55 tests green.
 Design-match pass (decision 65): hotter P3 amber, visible diagonals, chip section heads,
 outlined primary buttons, Today 04 THIS WEEK + 05 RECENT, Money / recap / ride view per
 the prototype canvas.
+
+**M7 code is done (2026-10-24), exit test pending.** `TRACE/Review/`: ride analysis, personal
+bests, place names, route map with offline fallback. RIDES is now S06 (12-week chart, PBs, month
+list); a ride opens S07 (map, elevation, speed bands, stops, splits, cost, delete). Checked on a
+copy of the real 31 km ride. 63 tests green. Climb left as is (decision 66). S15 not built.
 **Next: on the iPhone, ride with two expenses logged during it and check both attach
 with the right total, detach one; log two full fills with odometer and check km/L by
 hand. Still open: M3 real-pump test, M5 notification test.**

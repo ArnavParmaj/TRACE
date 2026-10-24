@@ -29,14 +29,19 @@ final class RideRecorder {
     private let samples: Repository<RouteSample>
     private let stops: Repository<StopEvent>
     private let ledger: Ledger
+    private let review: Review
     private let sensors: any RideSensors
+    /// Off in tests: the lookup is async and would outlive a test's in-memory store.
+    private let lookUpPlaces: Bool
 
-    init(context: ModelContext, user: any CurrentUser, sensors: any RideSensors) {
+    init(context: ModelContext, user: any CurrentUser, sensors: any RideSensors, lookUpPlaces: Bool = true) {
         rides = Repository(context: context, user: user)
         samples = Repository(context: context, user: user)
         stops = Repository(context: context, user: user)
         ledger = Ledger(context: context, user: user)
+        review = Review(context: context, user: user)
         self.sensors = sensors
+        self.lookUpPlaces = lookUpPlaces
         orphan = attempt { try rides.openRide() } ?? nil
     }
 
@@ -192,6 +197,11 @@ final class RideRecorder {
         writeTotals(ride, until: end)
         attempt { try rides.save() }
         attempt { try ledger.fuse(ride) }
+        attempt { try review.fillFastest([ride]) }
+        if lookUpPlaces {
+            let review = review
+            Task { await review.fillPlaces([ride]) }   // offline: retried when RIDES opens
+        }
         lastClosed = ride
     }
 

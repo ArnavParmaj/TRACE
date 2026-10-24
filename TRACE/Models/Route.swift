@@ -21,8 +21,11 @@ final class Ride: SyncRecord {
     var maxSpeedKph = 0.0
     /// The rider's own name for the ride ("Lonavala chai run"). Nil shows the date.
     var title: String?
+    /// Reverse-geocoded on close when online; nil until then (decision 62).
     var startPlaceName: String?
     var endPlaceName: String?
+    /// Fastest 10 km anywhere in the ride, seconds. Nil for rides under 10 km.
+    var fastest10kS: Int?
     var odoStartKm: Int?
     var odoEndKm: Int?
     /// Compressed route for map replay, written when the ride closes.
