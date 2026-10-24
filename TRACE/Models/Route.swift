@@ -42,9 +42,12 @@ final class Ride: SyncRecord {
     }
 }
 
-/// Full-resolution GPS sample. The only unbounded table (retention: decision 27).
+/// Full-resolution GPS sample, kept forever: about 100 MB a year at 5 h of riding a week (decision 69).
+/// Indexed by ride, so opening one ride never scans every ride's samples.
 @Model
 final class RouteSample: SyncRecord {
+    #Index<RouteSample>([\.rideID, \.timestamp])
+
     var id = UUID()
     var ownerID = UUID.unowned
     var createdAt = Date.now

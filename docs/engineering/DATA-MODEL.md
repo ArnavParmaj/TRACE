@@ -36,14 +36,14 @@ Odometer is the spine — service intervals and fuel economy both read from it.
 `title?` (rider-given name; nil shows the date), `startPlaceName?`, `endPlaceName?`, `odoStartKm: Int?`, `odoEndKm: Int?`,
 `encodedPolyline: Data` (compressed route for map replay),
 `isRecording: Bool`, `vehicleID: UUID`, `pausedAt: Date?` (set while paused),
-`pausedDurationS: Int` (decision 51). Moving time = elapsed − stops − paused.
+`pausedDurationS: Int` (decision 51), `samplesThinned: Bool` (decision 69). Moving time = elapsed − stops − paused.
 
 ### RouteSample   (syncable, child of Ride)
 `rideID`, `timestamp`, `lat`, `lon`, `altitudeM`, `speedMps`, `horizontalAccuracyM`
 Full-resolution samples for elevation profiles and future segment matching.
 `encodedPolyline` is Google's encoded-polyline string (UTF-8, 1e-5 degrees) of the
-moving fixes, written when the ride closes (decision 46); keep raw samples but allow a
-retention policy later (they are the only thing that grows unboundedly).
+moving fixes, written when the ride closes (decision 46). Raw samples are the only thing
+that grows unboundedly; they are kept in full (about 100 MB a year) and indexed by ride (decision 69).
 
 ### StopEvent   (syncable, child of Ride)
 `rideID`, `startedAt`, `endedAt`, `lat`, `lon`

@@ -243,8 +243,9 @@ arrive at v2 with accounts and selective sharing.
   over-engineer for scale that will not arrive.
 
 ### Security
-- All data at rest protected by iOS file-level encryption; database marked
-  `NSFileProtectionComplete` so it is unreadable while the device is locked.
+- All data at rest protected by iOS file-level encryption at the default
+  `completeUntilFirstUserAuthentication` class: unreadable until the first unlock after a
+  restart. Not `Complete`, which would block the ride recorder's locked-screen saves (decision 69).
 - **Expense data is `syncScope = .localOnly`, enforced at the model layer** — not by
   convention. No future sync, export or analytics path may read it.
 - No analytics SDK, no crash reporter that transmits, no third-party telemetry. Ever.

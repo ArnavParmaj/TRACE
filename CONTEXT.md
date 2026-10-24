@@ -128,8 +128,8 @@ approved. Built: S01 onboarding (`OnboardingView`, also the add-bike flow) and S
 (`SettingsView`, ⚙ on Today): primary-bike picker, due-soon share, document lead defaults
 (`TRACE/Bike/Preferences.swift`), storage, about (decision 67). 65 tests green. Next in M8:
 S15 decision, S03 final ride mode + S18 Live Activity (M6), empty/error states, Dynamic Type,
-VoiceOver, airplane mode, file protection. Gap found: route-sample retention (decision 27) is
-not implemented.
+VoiceOver, airplane mode, file protection. Route samples are kept in full and indexed by ride (supersedes decision 27); file protection
+stays at the iOS default (decision 69).
 
 **M6 code is done (2026-10-24), exit test pending.** `RideModeView` is S03 (gauge, tap to log,
 hold to stop, pause, S04 recovery); the debug screen is gone. `TRACEWidgets` is the S18 Live

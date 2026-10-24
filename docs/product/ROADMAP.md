@@ -101,8 +101,8 @@ per-trip recap (S05).
 ### M8 · Ship hardening
 Onboarding (S01), Settings with vehicle picker (S16), empty/error states on every
 screen, Dynamic Type pass at the largest sizes, VoiceOver labels, airplane-mode test of
-every screen, `NSFileProtectionComplete` on the store, a crash-log check.
-- **Progress:** S01 onboarding and S16 settings built (decision 67); the rest open.
+every screen, store file protection (default `completeUntilFirstUserAuthentication`, decision 69), a crash-log check.
+- **Progress:** S01 onboarding and S16 settings built (decision 67); file protection settled, route samples kept and indexed (decision 69); the rest open.
 - **Exit:** the v1 ship checklist below is all ticked.
 
 ### v1 ship checklist
