@@ -69,6 +69,7 @@ private struct ExpenseForm: View {
     @State private var confirmDelete = false
     @State private var error: String?
     @FocusState private var noteFocused: Bool
+    @State private var keypadOpen = false   // opens on an amount tap, closes on DONE or a note
     @Environment(\.dismiss) private var dismiss
 
     init(subject: Subject, capture: Capture, ledger: Ledger, onDone: @escaping (_ saved: Bool) -> Void) {
@@ -115,7 +116,10 @@ private struct ExpenseForm: View {
                 .padding(20)
             }
             .scrollDismissesKeyboard(.interactively)
-            if category != nil && !noteFocused { keypad }   // typing a note brings up the system keyboard instead
+            if category != nil {
+                if keypadOpen && !noteFocused { keypad }
+                saveBar
+            }
         }
         .alert("Delete this expense?", isPresented: $confirmDelete) {
             Button("Delete", role: .destructive) { run { if let existing { try ledger.delete(existing) }; onDone(false) } }
@@ -241,12 +245,13 @@ private struct ExpenseForm: View {
             .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
             .submitLabel(.done)
             .focused($noteFocused)
-            .onSubmit { noteFocused = false }   // Done hands the screen back to the keypad
+            .onChange(of: noteFocused) { _, focused in if focused { keypadOpen = false } }
+            .onSubmit { noteFocused = false }   // Done closes the keyboard; the keypad stays shut until an amount is tapped
     }
 
     private func valueRow(_ label: String, _ value: String, _ f: Field, big: Bool = false) -> some View {
         let on = field == f
-        return Button { noteFocused = false; field = f } label: {
+        return Button { noteFocused = false; keypadOpen = true; field = f } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(label).font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
                 Text(value).font(.oswald(big ? 44 : 26, .semibold, relativeTo: big ? .largeTitle : .title))
@@ -261,15 +266,24 @@ private struct ExpenseForm: View {
         .accessibilityLabel("\(label) \(value)")
     }
 
-    // MARK: Keypad + SAVE, pinned at the bottom.
+    // MARK: Keypad (opens on an amount tap) + SAVE, pinned at the bottom.
 
     private var keypad: some View {
         VStack(spacing: 8) {
+            Button { keypadOpen = false } label: {
+                Text("DONE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
+                    .frame(maxWidth: .infinity, minHeight: minTouch).contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
             KeypadGrid(onKey: press)
-            PrimaryButton("SAVE", enabled: amountMinor != nil, action: save)
         }
-        .padding(.horizontal, 20).padding(.vertical, 12)
-        .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+        .padding(.horizontal, 20).padding(.top, 12)
+    }
+
+    private var saveBar: some View {
+        PrimaryButton("SAVE", enabled: amountMinor != nil, action: save)
+            .padding(.horizontal, 20).padding(.vertical, 12)
+            .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
     }
 
     private func press(_ key: String) {

@@ -26,18 +26,29 @@ final class AccessibilityAuditTests: XCTestCase {
         }
     }
 
-    /// Typing the note brings up the system keyboard and hides the numeric keypad, so the two never stack.
-    func testNoteHidesKeypad() {
+    /// The keypad stays shut until an amount is tapped, opens on that tap, closes on DONE,
+    /// and never shows alongside the system keyboard used for the note.
+    func testKeypadOpensOnAmountAndHidesForNote() {
         let app = XCUIApplication()
         app.launchArguments = ["-onboarded", "YES"]
         app.launch()
         app.buttons["MONEY"].tap()
         app.buttons["+ ADD EXPENSE"].tap()
         app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "food")).firstMatch.tap()
-        XCTAssertTrue(app.buttons["SAVE"].waitForExistence(timeout: 2), "keypad should show once a category is picked")
+        XCTAssertTrue(app.buttons["SAVE"].waitForExistence(timeout: 2), "SAVE should be pinned once a category is picked")
+        XCTAssertTrue(app.buttons["7"].waitForNonExistence(timeout: 2), "keypad should stay shut until an amount is tapped")
+
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "AMOUNT")).firstMatch.tap()
+        XCTAssertTrue(app.buttons["7"].waitForExistence(timeout: 2), "tapping the amount should open the keypad")
+
+        app.buttons["DONE"].tap()
+        XCTAssertTrue(app.buttons["7"].waitForNonExistence(timeout: 2), "DONE should close the keypad")
+
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "AMOUNT")).firstMatch.tap()
+        XCTAssertTrue(app.buttons["7"].waitForExistence(timeout: 2))
         app.textFields.firstMatch.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 2), "system keyboard should show for the note")
-        XCTAssertTrue(app.buttons["SAVE"].waitForNonExistence(timeout: 2), "keypad should hide while typing a note")
+        XCTAssertTrue(app.buttons["7"].waitForNonExistence(timeout: 2), "keypad should hide while typing a note")
     }
 
     /// Prints every issue before failing, so one run shows the whole list.
