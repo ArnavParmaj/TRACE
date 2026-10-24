@@ -26,7 +26,7 @@ struct Garage {
 
     // MARK: Bike + odometer
 
-    /// The bike shown everywhere. One bike in v1 (decision 28).
+    /// The bike shown everywhere: the primary one (decision 28).
     func bike() throws -> Vehicle? {
         let all = try vehicles.all(sortBy: [SortDescriptor(\.createdAt)])
         return all.first(where: \.isPrimary) ?? all.first
@@ -37,10 +37,19 @@ struct Garage {
         let bike = Vehicle(name: name, odometerKm: odometerKm)
         bike.registrationNumber = registration
         bike.odometerUpdatedAt = time
-        bike.isPrimary = true
+        bike.isPrimary = try self.bike() == nil   // the first bike is primary; later ones are picked in Settings
         vehicles.insert(bike)
         try vehicles.save()
         return bike
+    }
+
+    func bikes() throws -> [Vehicle] { try vehicles.all(sortBy: [SortDescriptor(\.createdAt)]) }
+
+    func makePrimary(_ bike: Vehicle) throws {
+        for other in try bikes() where other.isPrimary != (other.id == bike.id) {
+            vehicles.update(other) { $0.isPrimary = $0.id == bike.id }
+        }
+        try vehicles.save()
     }
 
     func updateBike(_ bike: Vehicle, name: String, registration: String?) throws {
@@ -92,7 +101,8 @@ struct Garage {
 
     func due(_ task: ServiceTask, _ bike: Vehicle, now: Date = .now) -> DueStatus {
         Due.service(lastDoneOdoKm: task.lastDoneOdoKm, lastDoneAt: task.lastDoneAt, intervalKm: task.intervalKm,
-                    intervalDays: task.intervalDays, odometerKm: bike.odometerKm, now: now)
+                    intervalDays: task.intervalDays, odometerKm: bike.odometerKm, now: now,
+                    soonShare: Preferences.soonShare)
     }
 
     func save(_ task: ServiceTask, for bike: Vehicle) throws {

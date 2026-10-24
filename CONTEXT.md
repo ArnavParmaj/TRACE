@@ -123,6 +123,14 @@ copy of the real 31 km ride. 63 tests green. Climb left as is (decision 66). S15
 with the right total, detach one; log two full fills with odometer and check km/L by
 hand. Still open: M3 real-pump test, M5 notification test.**
 
+**M8 started (2026-10-24).** All 18 screens mocked on the "TRACE v1 Screens" canvas and
+approved. Built: S01 onboarding (`OnboardingView`, also the add-bike flow) and S16 settings
+(`SettingsView`, ⚙ on Today): primary-bike picker, due-soon share, document lead defaults
+(`TRACE/Bike/Preferences.swift`), storage, about (decision 67). 65 tests green. Next in M8:
+S15 decision, S03 final ride mode + S18 Live Activity (M6), empty/error states, Dynamic Type,
+VoiceOver, airplane mode, file protection. Gap found: route-sample retention (decision 27) is
+not implemented.
+
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.
 

@@ -17,6 +17,7 @@ struct TodayView: View {
     @State private var bikeLine: String?
     @State private var openRide: Ride?
     @State private var editing: Expense?
+    @State private var settings = false
     @State private var error: String?
 
     private var capture: Capture { Capture(context: context, user: LocalStubUser.load()) }
@@ -49,6 +50,7 @@ struct TodayView: View {
         .sheet(item: $completing, onDismiss: reload) { DraftSheet(start: $0, capture: capture, ledger: ledger) }
         .sheet(item: $recap, onDismiss: reload) { RideSheet(ride: $0, isRecap: true) }
         .sheet(item: $openRide, onDismiss: reload) { RideSheet(ride: $0) }
+        .sheet(isPresented: $settings, onDismiss: reload) { SettingsView() }
         .sheet(item: $editing, onDismiss: reload) { ExpenseSheet(expense: $0, capture: capture, ledger: ledger) }
         .fullScreenCover(isPresented: $showRide, onDismiss: showRecap) { rideScreen }
         // START has no press haptic; the outcome is the confirmation (decision 52).
@@ -62,6 +64,13 @@ struct TodayView: View {
         ScreenHeader(title: "TRACE", hatched: true) {
             Text(Date.now.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)).uppercased())
                 .font(.oswald(14, .medium)).tracking(1.7).foregroundStyle(Color.inkMuted)
+            Button { settings = true } label: {
+                Image(systemName: "gearshape").font(.system(size: 22, weight: .regular)).foregroundStyle(Color.inkDim)
+                    .frame(width: minTouch, height: minTouch).contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
+            .accessibilityLabel("Settings")
+            .padding(.trailing, -14)   // icon sits on the screen margin, target stays 60pt
         }
     }
 

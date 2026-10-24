@@ -10,6 +10,7 @@ struct BikeView: View {
     @State private var trips = (a: 0.0, b: 0.0)
     @State private var editingOdo = false
     @State private var editingBike = false
+    @State private var addingBike = false
     @State private var task: ServiceTask?
     @State private var doc: VehicleDocument?
     @State private var resets = 0
@@ -20,13 +21,18 @@ struct BikeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                if let bike { content(bike) } else { AddBikeForm(garage: garage, onAdded: reload) }
+                if let bike { content(bike) } else {
+                    Text("NO BIKE YET").font(.oswald(28, .bold, relativeTo: .largeTitle)).tracking(1.6).foregroundStyle(Color.ink)
+                    Text("Add the bike your service and documents belong to.").font(.condensed(16)).foregroundStyle(Color.inkDim)
+                    PrimaryButton("ADD YOUR BIKE") { addingBike = true }
+                }
                 if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
             }
             .padding(20)
         }
         .task { reload() }
         .sheet(isPresented: $editingOdo, onDismiss: reload) { if let bike { OdometerSheet(bike: bike, garage: garage) } }
+        .fullScreenCover(isPresented: $addingBike, onDismiss: reload) { OnboardingView() }
         .sheet(isPresented: $editingBike, onDismiss: reload) { if let bike { BikeEditSheet(bike: bike, garage: garage) } }
         .animation(.easeOut(duration: 0.2), value: tasks.map(\.id) + docs.map(\.id))
         .sheet(item: $task, onDismiss: reload) { TaskSheet(task: $0, bike: bike!, garage: garage) }
@@ -82,6 +88,7 @@ struct BikeView: View {
             addButton("+ ADD DOCUMENT") {
                 let new = VehicleDocument(kind: .insurance, expiresOn: Calendar.current.date(byAdding: .year, value: 1, to: .now) ?? .now)
                 new.vehicleID = bike.id
+                new.reminderDaysBefore = Preferences.documentLeads
                 doc = new
             }
         }
@@ -168,36 +175,8 @@ struct DueRow: View {
     }
 }
 
-/// First run: the bike everything hangs off. Full onboarding is M8 (S01).
-private struct AddBikeForm: View {
-    let garage: Garage
-    let onAdded: () -> Void
-    @State private var name = ""
-    @State private var registration = ""
-    @State private var odo = ""
-    @State private var error: String?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("ADD YOUR BIKE").font(.oswald(28, .bold, relativeTo: .largeTitle)).tracking(1.6).foregroundStyle(Color.ink)
-            FieldBox("NAME", text: $name, prompt: "CB350")
-            FieldBox("REGISTRATION (OPTIONAL)", text: $registration, prompt: "MH 02 AB 1234")
-            FieldBox("ODOMETER KM", text: $odo, prompt: "12480", numeric: true)
-            if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
-            PrimaryButton("SAVE BIKE", enabled: !name.trimmingCharacters(in: .whitespaces).isEmpty && Int(odo) != nil) {
-                do {
-                    let reg = registration.trimmingCharacters(in: .whitespaces)
-                    try garage.addBike(name: name.trimmingCharacters(in: .whitespaces),
-                                       registration: reg.isEmpty ? nil : reg.uppercased(), odometerKm: Int(odo) ?? 0)
-                    onAdded()
-                } catch { self.error = "Couldn't save: \(error.localizedDescription)" }
-            }
-        }
-    }
-}
-
 /// Rename the bike, change its registration, or remove it.
-private struct BikeEditSheet: View {
+struct BikeEditSheet: View {
     let bike: Vehicle
     let garage: Garage
     @State private var name: String

@@ -78,7 +78,7 @@ Decision 32: custom four-tab bar, ≥60pt tall (the stock bar is 49pt).
 ## 3. Screen inventory
 | ID | Screen | Type | Phase | Milestone | Entry points |
 |---|---|---|---|---|---|
-| S01 | Onboarding | full screen, 3 steps | v1 | M8 | first launch |
+| S01 | Onboarding | full screen, 3 steps | v1 | M8 (built, decision 67) | first launch, Bike tab empty, Settings + ADD BIKE |
 | S02 | Today | tab root | v1 | M3 | app launch, tab |
 | S03 | Ride mode | full-screen cover | v1 | M6 (debug UI in M2) | Start ride on Today, Live Activity |
 | S04 | Ride recovery | sheet | v1 | M2 | launch with an open ride |
@@ -93,7 +93,7 @@ Decision 32: custom four-tab bar, ≥60pt tall (the stock bar is 49pt).
 | S13 | Document | push | v1 | M5 | S11, Today due list, notification |
 | S14 | Odometer update | sheet | v1 | M5 | S11, S05 |
 | S15 | Weekly summary | push | v1 | M7 | Today week strip |
-| S16 | Settings | push | v1 | M8 | ⚙ on Today |
+| S16 | Settings | sheet | v1 | M8 (built, decision 67) | ⚙ on Today |
 | S17 | Notifications | system | v1 | M5 | — |
 | S18 | Live Activity | system | v1 | M6 | ride start |
 | — | Control Center control, widget | system | unblocked, not scheduled | — | decision 39 |
@@ -441,6 +441,6 @@ Raised, not decided. Each needs an answer before the milestone listed.
 | U1 | ~~Capture button red spine~~ | **Resolved:** amber spine (decision 36). | — |
 | U2 | ~~Expense categories~~ | **Resolved:** Fuel, Food, Parts, Parking, Other; tolls out of scope (decision 37). | — |
 | U3 | Hold-to-stop duration. | 2 seconds on a ≥100pt bottom band. Tune on the M6 ride. | M6 |
-| U4 | Due-soon threshold. | 15% of interval or 14 days, whichever comes first; editable in Settings. | M5 |
+| U4 | ~~Due-soon threshold~~ | **Resolved:** 15% default, 5–30% in Settings, 14-day cap (decision 67). | — |
 | U5 | What can a draft become besides an expense? | v1: expense or discard only. "Mark this spot" waits for real need. | M3 |
 | U6 | Ride mode main number: speed or distance? | Speed in the gauge; distance and climb below. Check against artboard F. | M6 |

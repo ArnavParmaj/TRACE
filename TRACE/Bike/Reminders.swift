@@ -12,7 +12,7 @@ enum Reminders {
     }
 
     static func plan(documents: [VehicleDocument], tasks: [ServiceTask], now: Date,
-                     calendar: Calendar = .current) -> [Planned] {
+                     soonShare: Double = 0.15, calendar: Calendar = .current) -> [Planned] {
         func nineAM(_ day: Date, plus days: Int) -> Date? {
             calendar.date(byAdding: .day, value: days, to: day)
                 .flatMap { calendar.date(bySettingHour: 9, minute: 0, second: 0, of: $0) }
@@ -33,7 +33,7 @@ enum Reminders {
         }
         for task in tasks where task.isActive {
             guard let interval = task.intervalDays, interval > 0, let last = task.lastDoneAt else { continue }
-            let soon = Due.soonDays(interval)
+            let soon = Due.soonDays(interval, share: soonShare)
             if let at = nineAM(last, plus: interval - soon) {
                 out.append(Planned(id: "task-\(task.id)-soon", fireAt: at, body: "\(task.label) due in \(days(soon))"))
             }
@@ -69,7 +69,7 @@ enum Reminders {
             return
         }
         guard let tasks = try? garage.tasks(bike), let docs = try? garage.documents(bike) else { return }
-        let plan = plan(documents: docs, tasks: tasks, now: .now)
+        let plan = plan(documents: docs, tasks: tasks, now: .now, soonShare: Preferences.soonShare)
         // Ask for permission only once there is something to remind about.
         guard !plan.isEmpty || !docs.isEmpty else { return }
         Task { await apply(plan) }

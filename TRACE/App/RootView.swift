@@ -11,6 +11,9 @@ struct RootView: View {
     @State private var tab = AppTab.today
     @State private var forward = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.modelContext) private var context
+    @AppStorage("onboarded") private var onboarded = false
+    @State private var onboarding = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -25,6 +28,9 @@ struct RootView: View {
             .ignoresSafeArea(.keyboard)   // stays at the bottom, under the keyboard
         }
         .background(Color.ground.ignoresSafeArea())
+        // Existing installs already have a bike, so they never see it.
+        .task { onboarding = !onboarded && (try? Garage(context: context, user: LocalStubUser.load()).bike()) == nil }
+        .fullScreenCover(isPresented: $onboarding) { OnboardingView(firstRun: true) }
     }
 
     private var slide: AnyTransition {

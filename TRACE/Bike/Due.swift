@@ -18,13 +18,13 @@ enum Due {
     static let documentSoonDays = 30
 
     static func service(lastDoneOdoKm: Int?, lastDoneAt: Date?, intervalKm: Int?, intervalDays: Int?,
-                        odometerKm: Int, now: Date, calendar: Calendar = .current) -> DueStatus {
+                        odometerKm: Int, now: Date, soonShare: Double = 0.15, calendar: Calendar = .current) -> DueStatus {
         var kmLeft: Int?, kmUsed: Double?, kmSoon = false
         if let interval = intervalKm, interval > 0, let last = lastDoneOdoKm {
             let left = last + interval - odometerKm
             kmLeft = left
             kmUsed = Double(odometerKm - last) / Double(interval)
-            kmSoon = Double(left) <= Double(interval) * 0.15
+            kmSoon = Double(left) <= Double(interval) * soonShare
         }
         var daysLeft: Int?, daysUsed: Double?, daysSoon = false
         if let interval = intervalDays, interval > 0, let last = lastDoneAt,
@@ -32,7 +32,7 @@ enum Due {
             let left = days(from: now, to: dueDay, calendar: calendar)
             daysLeft = left
             daysUsed = Double(interval - left) / Double(interval)
-            daysSoon = left <= soonDays(interval)
+            daysSoon = left <= soonDays(interval, share: soonShare)
         }
         guard kmLeft != nil || daysLeft != nil else { return DueStatus(urgency: .unknown, text: "SET LAST DONE", progress: nil) }
         let progress = max(kmUsed ?? 0, daysUsed ?? 0)
@@ -58,8 +58,8 @@ enum Due {
         return DueStatus(urgency: status.0, text: status.1, progress: nil)
     }
 
-    /// "Soon" for a day interval: 15% of it, capped at 14 days (S02), at least 1.
-    static func soonDays(_ interval: Int) -> Int { min(14, max(1, Int((Double(interval) * 0.15).rounded(.up)))) }
+    /// "Soon" for a day interval: a share of it (15% unless changed in Settings), capped at 14 days, at least 1.
+    static func soonDays(_ interval: Int, share: Double = 0.15) -> Int { min(14, max(1, Int((Double(interval) * share).rounded(.up)))) }
 
     /// Whole calendar days between two dates, by local midnight.
     static func days(from: Date, to: Date, calendar: Calendar = .current) -> Int {

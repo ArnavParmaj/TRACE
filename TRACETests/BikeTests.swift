@@ -28,6 +28,16 @@ private func day(_ d: Int, _ hour: Int = 12) -> Date {
         #expect(s.text == text)
     }
 
+    /// U4: a wider due-soon share in Settings turns the same reading amber earlier.
+    @Test func soonShareIsTunable() {
+        let at15 = Due.service(lastDoneOdoKm: 12_000, lastDoneAt: nil, intervalKm: 500, intervalDays: nil,
+                               odometerKm: 12_380, now: day(1), calendar: cal)
+        let at30 = Due.service(lastDoneOdoKm: 12_000, lastDoneAt: nil, intervalKm: 500, intervalDays: nil,
+                               odometerKm: 12_380, now: day(1), soonShare: 0.3, calendar: cal)
+        #expect(at15.urgency == .ok && at30.urgency == .soon)
+        #expect(Due.soonDays(100, share: 0.05) == 5 && Due.soonDays(100) == 14)
+    }
+
     @Test func byDaysAndWorstWins() {
         // Done Oct 1, 10-day interval → due Oct 11.
         let soon = Due.service(lastDoneOdoKm: nil, lastDoneAt: day(1), intervalKm: nil, intervalDays: 10,
@@ -79,6 +89,17 @@ private func day(_ d: Int, _ hour: Int = 12) -> Date {
     let container = try! Store.container(inMemory: true)
     fileprivate let user = TestUser()
     var garage: Garage { Garage(context: container.mainContext, user: user) }
+
+    /// S16: only the first bike starts primary; picking another moves the flag, never two at once.
+    @Test func onePrimaryBike() throws {
+        let cb = try garage.addBike(name: "CB350", registration: nil, odometerKm: 0)
+        let him = try garage.addBike(name: "Himalayan", registration: nil, odometerKm: 0)
+        #expect(cb.isPrimary && !him.isPrimary)
+        try garage.makePrimary(him)
+        #expect(!cb.isPrimary && him.isPrimary)
+        #expect(try garage.bike()?.id == him.id)
+        #expect(try garage.bikes().filter(\.isPrimary).count == 1)
+    }
 
     @Test func odometerRefusesGoingDownUnlessConfirmed() throws {
         let bike = try garage.addBike(name: "CB350", registration: nil, odometerKm: 12_480)
