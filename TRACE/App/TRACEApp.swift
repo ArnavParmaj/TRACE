@@ -5,6 +5,7 @@ import SwiftUI
 struct TRACEApp: App {
     let container: ModelContainer
     @State private var recorder: RideRecorder
+    @State private var undo = UndoCenter()
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -21,7 +22,7 @@ struct TRACEApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView().preferredColorScheme(.dark).environment(recorder)
+            RootView().preferredColorScheme(.dark).environment(recorder).environment(undo)
                 .onReceive(NotificationCenter.default.publisher(for: .draftCaptured)) { _ in syncActivity() }
         }
         .modelContainer(container)

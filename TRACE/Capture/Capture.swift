@@ -58,6 +58,13 @@ struct Capture {
         try drafts.save()
     }
 
+    /// UNDO after a discard: the draft is back in the queue.
+    func restore(_ draft: CaptureDraft) throws {
+        drafts.restore(draft)
+        try drafts.save()
+        NotificationCenter.default.post(name: .draftCaptured, object: nil)   // Today reloads its queue
+    }
+
     /// Paise per litre, rounded to the nearest paisa. Nil without a positive litre count.
     nonisolated static func pricePerLitreMinor(amountMinor: Int, litres: Double?) -> Int? {
         guard let litres, litres > 0 else { return nil }

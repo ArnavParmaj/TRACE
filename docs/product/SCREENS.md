@@ -114,6 +114,8 @@ Three steps, one question each, a ≥60pt NEXT at the bottom.
    notifications. Also states plainly: *no account, no cloud backup, data stays on this
    phone* (PRD §3).
 - Skippable except step 1. Lands on Today.
+- Each permission button shows what iOS answered: ALLOW (not asked), ALLOWED, or SETTINGS › when
+  refused, which opens iPhone Settings.
 
 ### S02 · Today (artboard E)
 The hub. Answers "what's happening, what's waiting, what's due" in one scroll.
@@ -144,6 +146,9 @@ TRACE                         TUE 21 OCT   ⚙
 - Due-soon threshold: within 15% of interval or 14 days (tunable in Settings).
 - 02 DRAFTS shows at most 3 rows, then "ALL 14 DRAFTS ›". Completing walks the queue
   draft by draft (SAVE moves to the next), so 14 drafts never means 14 round trips.
+- Location refused: 01 shows LOCATION IS OFF · SETTINGS › (opens iPhone Settings) instead of
+  START RIDE, with one line on where to turn it on. A ride without location records nothing.
+- 03 DUE rows open S12 / S13.
 - Empty first-run state: 01 plus a single line under it, "Press the Action Button any
   time to log. Start a ride here."
 
@@ -170,6 +175,7 @@ Screen kept awake while this is foregrounded (`isIdleTimerDisabled`).
 - **Hold the stop band 2s** → progress bar fills along the band → ride stops → S05.
   Release early cancels. No tap-to-stop, ever.
 - No map. A map lights the whole screen and is not readable at a glance.
+- No fix: the speed reads `--` over NO GPS, or LOCATION OFF when the permission is refused.
 - The REC dot is amber, not red: recording is live state, not an emergency (rule 3).
 - GPS lost: speed shows `--` in `--ink-faint` and a small `NO GPS` label. Not red;
   it is not the rider's emergency.
@@ -252,7 +258,8 @@ The task's due state recomputes immediately.
 ### S10 · Money
 ```
 MONEY                      [ WEEK | MONTH | YEAR ]
-  ₹4,860                   this month
+  [‹]          OCTOBER          [›]      (decision 77; › stops at now)
+  ₹4,860
 01 BY CATEGORY ────────────────────────
   Fuel   ▬▬▬▬▬▬▬▬▬▬▬▬  ₹3,280
   Food   ▬▬▬▬          ₹890

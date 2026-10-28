@@ -88,8 +88,10 @@ every open and resolved issue. Simulator tests for M7 are in (`TRACEUITests/Repl
 and the offline map pass; the 200 km ride detail takes about 2.2 s (map) to 3.3 s (elevation) against the 2 s exit, so
 profile `RideSheet.loadReview()` (main-thread work) next. Debug launch arguments for tests only: `-seedLongRide`,
 `-forceOffline`, `-restoreFrom <dir>` with `-localStubOwnerID <uuid>` (`TRACE/Support/DebugSeed.swift`).
-Next session: (1) put every close button in one position on all screens (user request, not started);
-(2) the 200 km open; (3) audit finding I-01 (decision 73); (4) phone checks: M3 real pump, M4 km/L by hand, M6 mount,
+Close buttons: every sheet has CLOSE top-right now (I-04; ExpenseSheet was the odd one out).
+Design critique (I-07): 6 major fixes are in code (location denied, Today clock, undo bar, tappable DUE, keypad replace,
+Money arrows; decisions 77, 78). Next on I-07: undo bar for trip reset / detach / deletes, then items 7–22.
+Next session: (1) the rest of I-07; (2) the 200 km open; (3) audit finding I-01 (decision 73); (4) phone checks (include I-04, I-07): M3 real pump, M4 km/L by hand, M6 mount,
 M7 timings and airplane replay, M8 steps 4-8. Reinstall on the phone every ~7 days, over the top, never uninstall.
 
 Done: M0 scaffold, M0.5 App Groups spike (they work), M1 foundation: all models in two

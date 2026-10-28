@@ -18,6 +18,7 @@ struct DraftSheet: View {
     var body: some View {
         ExpenseForm(subject: .draft(draft), capture: capture, ledger: ledger, onDone: advance)
             .id(draft.id)   // fresh fields per draft
+            .undoBar()      // DISCARD DRAFT offers UNDO while the queue stays open
             .background(Color.ground.ignoresSafeArea())
             .presentationBackground(Color.ground)
             .sensoryFeedback(.success, trigger: saves)
@@ -70,7 +71,9 @@ private struct ExpenseForm: View {
     @State private var error: String?
     @FocusState private var noteFocused: Bool
     @State private var keypadOpen = false   // opens on an amount tap, closes on DONE or a note
+    @State private var fresh = false        // next key replaces the picked field's value
     @Environment(\.dismiss) private var dismiss
+    @Environment(UndoCenter.self) private var undo
 
     init(subject: Subject, capture: Capture, ledger: Ledger, onDone: @escaping (_ saved: Bool) -> Void) {
         self.subject = subject
@@ -128,16 +131,17 @@ private struct ExpenseForm: View {
     }
 
     private var topBar: some View {
+        // CLOSE far right like SheetBar; destructive buttons far left so a gloved miss can't hit them.
         HStack(spacing: 16) {
-            Button { dismiss() } label: {
-                Text("CLOSE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
-                    .frame(minWidth: minTouch, minHeight: minTouch).contentShape(Rectangle())
-            }
-            .buttonStyle(PressStyle())
-            Text(title).font(.oswald(15, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
-            Spacer()
             if let draft {
-                Button { run { try capture.discard(draft); onDone(false) } } label: {
+                Button {
+                    run {
+                        try capture.discard(draft)
+                        let capture = capture
+                        undo.show("Draft discarded") { try? capture.restore(draft) }
+                        onDone(false)
+                    }
+                } label: {
                     Text("DISCARD DRAFT").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
                         .frame(minHeight: minTouch).contentShape(Rectangle())
                 }
@@ -149,6 +153,14 @@ private struct ExpenseForm: View {
                 }
                 .buttonStyle(PressStyle())
             }
+            Text(title).font(.oswald(15, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
+            Spacer()
+            Button { dismiss() } label: {
+                Text("CLOSE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
+                    .frame(minWidth: minTouch, minHeight: minTouch).contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
+            .accessibilityLabel("Close")
         }
         .padding(.horizontal, 20)
         .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
@@ -251,11 +263,13 @@ private struct ExpenseForm: View {
 
     private func valueRow(_ label: String, _ value: String, _ f: Field, big: Bool = false) -> some View {
         let on = field == f
-        return Button { noteFocused = false; keypadOpen = true; field = f } label: {
+        return Button { noteFocused = false; keypadOpen = true; field = f; fresh = true } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(label).font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
                 Text(value).font(.oswald(big ? 44 : 26, .semibold, relativeTo: big ? .largeTitle : .title))
-                    .foregroundStyle(Color.ink).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+                    // Dimmed while the next key will replace it.
+                    .foregroundStyle(on && fresh && keypadOpen ? Color.inkMuted : Color.ink)
+                    .monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(maxWidth: .infinity, minHeight: minTouch, alignment: .leading)
@@ -288,10 +302,11 @@ private struct ExpenseForm: View {
 
     private func press(_ key: String) {
         switch field {
-        case .amount: amount = Keypad.apply(key, to: amount, decimals: 2, maxWhole: 7)   // ₹99,99,999 cap
-        case .litres: litres = Keypad.apply(key, to: litres, decimals: 2, maxWhole: 3)
-        case .odometer: odometer = Keypad.apply(key, to: odometer, decimals: 0, maxWhole: 7)
+        case .amount: amount = Keypad.apply(key, to: amount, decimals: 2, maxWhole: 7, replacing: fresh)   // ₹99,99,999 cap
+        case .litres: litres = Keypad.apply(key, to: litres, decimals: 2, maxWhole: 3, replacing: fresh)
+        case .odometer: odometer = Keypad.apply(key, to: odometer, decimals: 0, maxWhole: 7, replacing: fresh)
         }
+        fresh = false
     }
 
     private func save() {
@@ -342,7 +357,13 @@ struct KeypadGrid: View {
 
 /// Keypad text editing with the field's limits. Refused keys leave the text unchanged.
 enum Keypad {
-    static func apply(_ key: String, to text: String, decimals: Int, maxWhole: Int) -> String {
+    /// `replacing`: the first key after picking a prefilled field starts it fresh,
+    /// so 12480 then "5" is 5, not 124805. A refused key still leaves it alone.
+    static func apply(_ key: String, to text: String, decimals: Int, maxWhole: Int, replacing: Bool = false) -> String {
+        if replacing {
+            let fresh = apply(key, to: "", decimals: decimals, maxWhole: maxWhole)
+            return fresh.isEmpty && key != "⌫" ? text : fresh
+        }
         if key == "⌫" { return String(text.dropLast()) }
         if key == "." {
             guard decimals > 0, !text.contains(".") else { return text }

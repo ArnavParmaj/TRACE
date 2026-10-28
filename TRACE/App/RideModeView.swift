@@ -13,6 +13,8 @@ struct RideModeView: View {
     @State private var hold: CGFloat = 0
     @State private var stops = 0
     @State private var failed = false
+    @State private var locationOff = false
+    @Environment(\.scenePhase) private var scenePhase
 
     /// Above this the gauge is full. A scale, not a limit.
     static let gaugeMaxKph = 120.0
@@ -24,6 +26,7 @@ struct RideModeView: View {
         .background(Color.ground.ignoresSafeArea())
         .onAppear { UIApplication.shared.isIdleTimerDisabled = true }    // readable on the bars
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .task(id: scenePhase) { locationOff = LocationService.isDenied }   // rechecked on return from Settings
         // Haptic and visual on the same frame (decision 52).
         .sensoryFeedback(.success, trigger: logged)
         .sensoryFeedback(.success, trigger: stops)
@@ -65,7 +68,7 @@ struct RideModeView: View {
                 .opacity(paused ? 0.4 : 1)
             Text(paused ? "PAUSED" : "REC").font(.oswald(13, .medium)).tracking(2.6).foregroundStyle(Color.inkMuted)
             Spacer()
-            Text(clock(elapsed(now))).font(.oswald(17, .medium)).monospacedDigit().foregroundStyle(Color.inkMuted)
+            Text(clock(recorder.elapsed(at: now))).font(.oswald(17, .medium)).monospacedDigit().foregroundStyle(Color.inkMuted)
             Button { paused ? recorder.resumeFromPause() : recorder.pause() } label: {
                 Text(paused ? "RESUME" : "PAUSE").font(.oswald(14, .semibold)).tracking(1.6)
                     .foregroundStyle(paused ? Color.accent : Color.inkDim)
@@ -177,12 +180,8 @@ struct RideModeView: View {
 
     private func statusLabel(_ speed: Double?) -> String {
         if recorder.phase == .paused { return "PAUSED" }
+        if speed == nil && locationOff { return "LOCATION OFF" }   // Settings › TRACE › Location
         return speed == nil ? "NO GPS" : "KM/H"
-    }
-
-    private func elapsed(_ now: Date) -> TimeInterval {
-        guard let ride = recorder.ride else { return 0 }
-        return max(0, (ride.pausedAt ?? now).timeIntervalSince(ride.startedAt) - Double(ride.pausedDurationS))
     }
 
     private func clock(_ seconds: TimeInterval) -> String {

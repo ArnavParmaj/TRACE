@@ -46,6 +46,12 @@ final class RideRecorder {
     }
 
     var isRecording: Bool { ride != nil }
+
+    /// Ride time with pauses taken out: the one clock Today and Ride mode both show.
+    func elapsed(at now: Date = .now) -> TimeInterval {
+        guard let ride else { return 0 }
+        return max(0, (ride.pausedAt ?? now).timeIntervalSince(ride.startedAt) - Double(ride.pausedDurationS))
+    }
     var phase: Phase { ride == nil ? .idle : (ride?.pausedAt == nil ? .recording : .paused) }
 
     func start(vehicleID: UUID, odoStartKm: Int? = nil, at time: Date = .now) {

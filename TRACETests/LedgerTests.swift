@@ -116,3 +116,21 @@ private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
         #expect(Ledger.economy([a]).isEmpty)   // W6: one fill is no number, not 0.0
     }
 }
+
+/// Money's ‹ › stepper (critique #6): offset -1 is the period before, and only the current one says SO FAR.
+@Suite struct MoneyPeriodTests {
+    private let now = Date(timeIntervalSince1970: 1_800_000_000)   // 15 Jan 2027
+    private let cal = Calendar(identifier: .iso8601)
+
+    @Test func stepsBackOneMonthAcrossTheYear() {
+        let last = MoneyView.Period.month.span(offset: -1, now: now)
+        #expect(cal.component(.month, from: last.start) == 12)
+        #expect(cal.component(.year, from: last.start) == 2026)
+        #expect(MoneyView.Period.month.caption(last, now: now).hasSuffix("2026"))   // other year: year shown
+    }
+
+    @Test func onlyTheCurrentYearIsSoFar() {
+        #expect(MoneyView.Period.year.caption(MoneyView.Period.year.span(offset: 0, now: now), now: now).hasSuffix("SO FAR"))
+        #expect(MoneyView.Period.year.caption(MoneyView.Period.year.span(offset: -1, now: now), now: now) == "2026")
+    }
+}

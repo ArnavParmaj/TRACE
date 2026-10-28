@@ -17,6 +17,9 @@ struct OnboardingView: View {
     @State private var location = CLLocationManager()
     @State private var altimeter = CMAltimeter()
     @State private var error: String?
+    @State private var answers: [Permission: Answer] = [:]
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
 
     /// Set once setup is finished or skipped, so first launch shows it only once.
     @AppStorage("onboarded") private var onboarded = false
@@ -44,6 +47,9 @@ struct OnboardingView: View {
         }
         .background(Color.ground.ignoresSafeArea())
         .animation(.easeOut(duration: 0.18), value: step)
+        // A system prompt makes the app inactive; back to active means it was answered.
+        .task(id: scenePhase) { if step == 3 { answers = await Permission.current() } }
+        .task(id: step) { if step == 3 { answers = await Permission.current() } }
     }
 
     // MARK: Chrome
@@ -132,16 +138,23 @@ struct OnboardingView: View {
                     Text(p.why).font(.condensed(15)).foregroundStyle(Color.inkDim).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
-                let done = asked.contains(p)
-                Button { ask(p) } label: {
-                    Text(done ? "ASKED" : "ALLOW").font(.oswald(15, .semibold)).tracking(1.5)
-                        .foregroundStyle(done ? Color.inkMuted : Color.ink)
+                // What iOS actually answered, not just that we asked. OFF leads to Settings.
+                let state = answers[p] ?? (asked.contains(p) ? .asked : .unasked)
+                Button {
+                    if state == .off, let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) } else { ask(p) }
+                } label: {
+                    Text(state.label).font(.oswald(15, .semibold)).tracking(1.5)
+                        .foregroundStyle(state == .unasked || state == .off ? Color.ink : Color.inkMuted)
                         .frame(minWidth: 96, minHeight: minTouch)
-                        .overlay { Rectangle().stroke(done ? Color.surfaceRule : Color.accent, lineWidth: done ? 1 : 2) }
+                        .padding(.horizontal, 8)
+                        .overlay {
+                            Rectangle().stroke(state == .unasked || state == .off ? Color.accent : Color.surfaceRule,
+                                               lineWidth: state == .unasked || state == .off ? 2 : 1)
+                        }
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(PressStyle())
-                .disabled(done)
+                .disabled(state == .on || state == .asked)
             }
             .padding(.vertical, 12)
             .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
@@ -193,8 +206,41 @@ struct OnboardingView: View {
         }
     }
 
+    enum Answer: Equatable {
+        case unasked, asked, on, off
+        var label: String {
+            switch self {
+            case .unasked: "ALLOW"
+            case .asked: "ASKED"
+            case .on: "ALLOWED"
+            case .off: "SETTINGS ›"
+            }
+        }
+    }
+
     enum Permission: CaseIterable {
         case location, motion, notifications
+
+        /// What iOS has recorded for each; a permission never asked is left out.
+        @MainActor static func current() async -> [Permission: Answer] {
+            var out: [Permission: Answer] = [:]
+            switch CLLocationManager().authorizationStatus {
+            case .authorizedWhenInUse, .authorizedAlways: out[.location] = .on
+            case .denied, .restricted: out[.location] = .off
+            default: break
+            }
+            switch CMAltimeter.authorizationStatus() {
+            case .authorized: out[.motion] = .on
+            case .denied, .restricted: out[.motion] = .off
+            default: break
+            }
+            switch await UNUserNotificationCenter.current().notificationSettings().authorizationStatus {
+            case .authorized, .provisional, .ephemeral: out[.notifications] = .on
+            case .denied: out[.notifications] = .off
+            default: break
+            }
+            return out
+        }
 
         var title: String {
             switch self {

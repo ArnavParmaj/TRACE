@@ -25,8 +25,23 @@ Status key: OPEN, MONITORING (fix in, needs a phone check), FIXED, WONTFIX.
 - The 8.2 s includes about 6 s of XCUITest launch overhead, so the app itself is well under 10 s on the simulator. Phone timing still to do.
 - Earlier failures were the test's data, not the app, see R-08.
 
-### I-04 Close buttons are not in one place (OPEN, next session)
-- Close buttons sit top-left on some screens and top-right on others. The user wants one position everywhere. Not started.
+### I-04 Close buttons are not in one place (FIXED in code, check on phone)
+- Every sheet now has CLOSE top-right. `SheetBar` already did this; `ExpenseSheet` was the one screen with CLOSE top-left. It now matches, with DELETE / DISCARD DRAFT moved to the far left so a gloved miss next to CLOSE cannot discard a draft.
+- Left as is: ride mode's `‹` (top-left, back to Today while the ride keeps recording) and onboarding's `‹ BACK` (previous step). Both are "back", not "close".
+
+### I-07 Design critique 2026-10-29: 28 items (OPEN, 6 major fixed in code)
+- Full list: `design-critique-2026-10-29.md` (score 25/40). Rider's order: 6 major, then the undo bar everywhere, then items 7–22; polish 23–28 later.
+- Fixed in code, check on the phone (MONITORING):
+  - 1 Location denied: Today shows LOCATION IS OFF · SETTINGS › instead of START RIDE; ride mode says LOCATION OFF; onboarding shows ALLOWED / SETTINGS › from iOS's real answer.
+  - 2 Today's ride clock ticks every second and leaves pauses out (`RideRecorder.elapsed(at:)`, shared with ride mode).
+  - 3 DISCARD DRAFT shows a 5 s UNDO bar (decision 78).
+  - 4 Today's DUE rows open the task or document.
+  - 5 Picking a prefilled number field (edit expense, mark service done) dims it; the first key replaces it.
+  - 6 Money ‹ › steps through past periods (decision 77).
+- Checked: 73 unit tests pass (new: elapsed, undo restore, keypad replace, Money period). Simulator: DUE row opened PUC; Money stepped back to SEPTEMBER. The undo bar itself is not yet seen on screen.
+- Also found by the UI audit: the onboarding REGISTRATION field may clip at large text sizes (joins I-01).
+- Known gaps: location turned off mid-ride has no Settings link (ride mode only says LOCATION OFF); on a
+  field the first key replaces, ⌫ clears the whole value, not one digit.
 
 ### I-05 Phone checks not yet done (OPEN)
 - M3 real fuel pump (user expects it to work, no result yet), M4 km/L by hand on the phone, M6 handlebar mount (no mount yet), M7 timings and airplane-mode replay on the phone, PB badge and keypad check on the phone, M8 step 6 tap-through offline.

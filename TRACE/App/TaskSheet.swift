@@ -131,6 +131,7 @@ private struct MarkDoneSheet: View {
     @State private var field = Field.odo
     @State private var odo: String
     @State private var cost = ""
+    @State private var fresh = true   // the prefilled odometer is replaced by the first key
     @State private var saved = 0
     @State private var error: String?
     @Environment(\.dismiss) private var dismiss
@@ -152,9 +153,10 @@ private struct MarkDoneSheet: View {
             Spacer(minLength: 0)
             KeypadGrid { key in
                 switch field {
-                case .odo: odo = Keypad.apply(key, to: odo, decimals: 0, maxWhole: 7)
-                case .cost: cost = Keypad.apply(key, to: cost, decimals: 2, maxWhole: 7)
+                case .odo: odo = Keypad.apply(key, to: odo, decimals: 0, maxWhole: 7, replacing: fresh)
+                case .cost: cost = Keypad.apply(key, to: cost, decimals: 2, maxWhole: 7, replacing: fresh)
                 }
+                fresh = false
             }
             PrimaryButton("SAVE", enabled: Int(odo) != nil) {
                 guard let km = Int(odo) else { return }
@@ -173,10 +175,11 @@ private struct MarkDoneSheet: View {
     }
 
     private func box(_ label: String, _ value: String, _ f: Field) -> some View {
-        Button { field = f } label: {
+        Button { field = f; fresh = true } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(label).font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
-                Text(value).font(.oswald(32, .semibold, relativeTo: .title)).monospacedDigit().foregroundStyle(Color.ink)
+                Text(value).font(.oswald(32, .semibold, relativeTo: .title)).monospacedDigit()
+                    .foregroundStyle(field == f && fresh ? Color.inkMuted : Color.ink)   // dimmed: next key replaces it
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(maxWidth: .infinity, minHeight: minTouch, alignment: .leading)

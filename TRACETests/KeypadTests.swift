@@ -23,4 +23,16 @@ import Testing
     @Test func odometerTakesNoPoint() {
         #expect(Keypad.apply(".", to: "1248", decimals: 0, maxWhole: 7) == "1248")
     }
+
+    // First key after picking a prefilled field replaces it (critique #5).
+    @Test(arguments: [
+        ("12480", "5", "5"),
+        ("12480", "⌫", ""),
+        ("410.50", ".", "0."),
+        ("12480", ".", "12480"),      // refused on a whole-number field: value kept
+    ])
+    func firstKeyReplaces(text: String, key: String, expected: String) {
+        let decimals = text.contains(".") ? 2 : 0
+        #expect(Keypad.apply(key, to: text, decimals: decimals, maxWhole: 7, replacing: true) == expected)
+    }
 }

@@ -44,6 +44,13 @@ struct Repository<Record: SyncRecord> {
         record.updatedAt = .now
     }
 
+    /// Clears the tombstone: what UNDO does in the 5 s after a delete (SCREENS rule 8).
+    func restore(_ record: Record) {
+        precondition(record.ownerID == user.ownerID, "record belongs to another owner")
+        record.deletedAt = nil
+        record.updatedAt = .now
+    }
+
     func save() throws {
         try context.save()
     }

@@ -17,6 +17,8 @@ asking a question it already answers.
 - `engineering/BUILD-PLAN.md` — week 1, task by task, with hard checkpoints.
 - `engineering/current_issues.md` — open and resolved issues: what broke, what was tried,
   how it was fixed. Update it whenever an issue is opened or closed.
+- `engineering/design-critique-2026-10-29.md` — UX critique of every screen: score, 28 numbered
+  issues by severity. Tracked as I-07 in `current_issues.md`.
 - `engineering/M2-RIDE-TEST.md` — the real-road exit test for the recorder: steps and
   what to write down.
 

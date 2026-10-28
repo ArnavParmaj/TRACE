@@ -8,21 +8,32 @@ struct MoneyView: View {
         case week, month, year
         var component: Calendar.Component { self == .week ? .weekOfYear : self == .month ? .month : .year }
 
-        /// "19–25 OCT", "OCTOBER", "2026 SO FAR".
-        func caption(_ span: DateInterval) -> String {
+        /// "19–25 OCT", "OCTOBER", "SEPTEMBER 2025", "2026 SO FAR", "2025".
+        func caption(_ span: DateInterval, now: Date = .now) -> String {
+            let current = span.contains(now)
             switch self {
             case .week:
                 let end = span.end.addingTimeInterval(-1)
                 return "\(span.start.formatted(.dateTime.day()))–\(end.formatted(.dateTime.day().month(.abbreviated)))".uppercased()
-            case .month: return span.start.formatted(.dateTime.month(.wide)).uppercased()
-            case .year: return span.start.formatted(.dateTime.year()) + " SO FAR"
+            case .month:
+                let sameYear = Calendar.current.isDate(span.start, equalTo: now, toGranularity: .year)
+                return (sameYear ? span.start.formatted(.dateTime.month(.wide)) : span.start.formatted(.dateTime.month(.wide).year())).uppercased()
+            case .year: return span.start.formatted(.dateTime.year()) + (current ? " SO FAR" : "")
             }
+        }
+
+        /// The period `offset` steps back from the one holding `now` (0 = this one).
+        func span(offset: Int, now: Date = .now) -> DateInterval {
+            let cal = Calendar(identifier: .iso8601)
+            let anchor = cal.date(byAdding: component, value: offset, to: now) ?? now
+            return cal.dateInterval(of: component, for: anchor) ?? DateInterval()
         }
     }
 
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @State private var period = Period.month
+    @State private var offset = 0   // 0 = this period, -1 = the one before, ...
     @State private var entries: [Expense] = []
     @State private var economy: [Economy] = []
     @State private var rides: [UUID: Ride] = [:]
@@ -48,15 +59,15 @@ struct MoneyView: View {
                             .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)   // wraps at large sizes instead of clipping
                     }
                     periodPicker
+                    periodStepper
                 }
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(Money.format(total)).font(.oswald(48, .bold, relativeTo: .largeTitle))
-                        .monospacedDigit().foregroundStyle(Color.ink).lineLimit(1).minimumScaleFactor(0.6)
-                    Text(caption).font(.oswald(13, .medium)).tracking(1.6).foregroundStyle(Color.inkMuted)
-                }
+                Text(Money.format(total)).font(.oswald(48, .bold, relativeTo: .largeTitle))
+                    .monospacedDigit().foregroundStyle(Color.ink).lineLimit(1).minimumScaleFactor(0.6)
                 if !anyEver {
                     Text("Nothing logged. Press the Action Button at your next fill.")
                         .font(.condensed(17)).foregroundStyle(Color.inkDim)
+                } else if entries.isEmpty {
+                    Text("Nothing logged in this \(period.rawValue).").font(.condensed(17)).foregroundStyle(Color.inkDim)
                 }
                 if !entries.isEmpty { byCategory }
                 if anyEver { fuelEconomy }
@@ -68,7 +79,8 @@ struct MoneyView: View {
             .padding(.horizontal, 20).padding(.bottom, 20)
             .animation(.easeOut(duration: 0.2), value: entries.map(\.id))
         }
-        .task(id: period) { reload() }
+        .onChange(of: period) { offset = 0 }   // a new period type starts from now
+        .task(id: "\(period)\(offset)") { reload() }
         .task(id: scenePhase) { if scenePhase == .active { reload() } }
         .sheet(item: $editing, onDismiss: reload) { ExpenseSheet(expense: $0, capture: capture, ledger: ledger) }
         .sheet(isPresented: $adding, onDismiss: reload) { ExpenseSheet(expense: nil, capture: capture, ledger: ledger) }
@@ -92,6 +104,28 @@ struct MoneyView: View {
             }
         }
         .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
+    }
+
+    /// ‹ OCTOBER ›: step back through past periods; › stops at the current one.
+    private var periodStepper: some View {
+        HStack(spacing: 0) {
+            stepButton("‹", "Earlier", enabled: true) { offset -= 1 }
+            Text(caption).font(.oswald(15, .medium)).tracking(1.8).monospacedDigit().foregroundStyle(Color.inkDim)
+                .lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: .infinity)
+            stepButton("›", "Later", enabled: offset < 0) { offset += 1 }
+        }
+    }
+
+    private func stepButton(_ glyph: String, _ name: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(glyph).font(.oswald(28, .medium)).foregroundStyle(enabled ? Color.ink : Color.inkFaint)
+                .frame(width: minTouch, height: minTouch)
+                .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
+        .disabled(!enabled)
+        .accessibilityLabel("\(name) \(period.rawValue)")
     }
 
     // MARK: 01 BY CATEGORY
@@ -217,7 +251,7 @@ struct MoneyView: View {
     private func reload() {
         do {
             let all = try ledger.all()
-            let span = Calendar(identifier: .iso8601).dateInterval(of: period.component, for: .now) ?? DateInterval()
+            let span = period.span(offset: offset)
             entries = all.filter { span.contains($0.occurredAt) }
             caption = period.caption(span)
             partials = all.filter { $0.category == .fuel && $0.isFullTank == false }.count

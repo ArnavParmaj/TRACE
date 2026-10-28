@@ -69,6 +69,14 @@ private struct TestUser: CurrentUser { let ownerID = UUID() }
         #expect(try capture.pending().isEmpty)
     }
 
+    @Test func undoRestoresADiscardedDraft() throws {
+        let draft = try capture.log()
+        try capture.discard(draft)
+        try capture.restore(draft)
+        #expect(draft.deletedAt == nil)
+        #expect(try capture.pending().map(\.id) == [draft.id])
+    }
+
     @Test(arguments: [
         (41_000, 4.1, 10_000),     // exact
         (100_000, 3.0, 33_333),    // rounds down

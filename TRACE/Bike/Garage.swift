@@ -186,11 +186,20 @@ struct Garage {
 
     // MARK: Today's 03 DUE
 
+    /// One 03 DUE row and what a tap on it opens (S12 or S13).
+    struct DueItem: Identifiable {
+        var label: String
+        var status: DueStatus
+        var task: ServiceTask?
+        var doc: VehicleDocument?
+        var id: UUID { task?.id ?? doc?.id ?? UUID() }
+    }
+
     /// Overdue and due-soon tasks and documents, most urgent first.
-    func dueItems(now: Date = .now) throws -> [(label: String, status: DueStatus)] {
+    func dueItems(now: Date = .now) throws -> [DueItem] {
         guard let bike = try bike() else { return [] }
-        let service = try tasks(bike, now: now).map { (label: $0.label, status: due($0, bike, now: now)) }
-        let papers = try documents(bike).map { (label: $0.kind.label, status: Due.document(expiresOn: $0.expiresOn, now: now)) }
+        let service = try tasks(bike, now: now).map { DueItem(label: $0.label, status: due($0, bike, now: now), task: $0) }
+        let papers = try documents(bike).map { DueItem(label: $0.kind.label, status: Due.document(expiresOn: $0.expiresOn, now: now), doc: $0) }
         return (service + papers).filter { $0.status.urgency <= .soon }.sorted { $0.status.urgency < $1.status.urgency }
     }
 }

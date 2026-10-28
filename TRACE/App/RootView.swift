@@ -20,6 +20,7 @@ struct RootView: View {
             ZStack { screen.id(tab).transition(slide) }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
+                .undoBar()   // above the tab bar
             TabBar(selection: tab) { new in
                 forward = new > tab
                 // Short and functional (decision 63): shows which way you moved, never in the way.

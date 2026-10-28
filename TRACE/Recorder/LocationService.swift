@@ -17,6 +17,9 @@ final class LocationService: NSObject, RideSensors, CLLocationManagerDelegate {
     private let altimeter = CMAltimeter()
     private var onFix: (@MainActor @Sendable (Fix) -> Void)?
 
+    /// The rider said no (or a profile blocks it): a ride would record nothing.
+    static var isDenied: Bool { [.denied, .restricted].contains(CLLocationManager().authorizationStatus) }
+
     override init() {
         super.init()
         manager.delegate = self

@@ -7,7 +7,12 @@ struct TodayView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @State private var drafts: [CaptureDraft] = []
-    @State private var due: [(label: String, status: DueStatus)] = []
+    @State private var due: [Garage.DueItem] = []
+    @State private var bike: Vehicle?
+    @State private var openTask: ServiceTask?
+    @State private var openDoc: VehicleDocument?
+    @State private var locationOff = false
+    @Environment(\.openURL) private var openURL
     @State private var completing: CaptureDraft?
     @State private var showRide = false
     @State private var recap: Ride?
@@ -33,7 +38,10 @@ struct TodayView: View {
                 if !due.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
                         SectionHead(number: "03", title: "DUE").padding(.bottom, 4)
-                        ForEach(due.indices, id: \.self) { DueRow(label: due[$0].label, status: due[$0].status) }
+                        ForEach(due) { item in
+                            Button { openTask = item.task; openDoc = item.doc } label: { DueRow(label: item.label, status: item.status) }
+                                .buttonStyle(PressStyle())
+                        }
                     }
                 }
                 if week.hasData { weekSection }
@@ -54,6 +62,8 @@ struct TodayView: View {
         .sheet(item: $openRide, onDismiss: reload) { RideSheet(ride: $0) }
         .sheet(isPresented: $settings, onDismiss: reload) { SettingsView() }
         .sheet(item: $editing, onDismiss: reload) { ExpenseSheet(expense: $0, capture: capture, ledger: ledger) }
+        .sheet(item: $openTask, onDismiss: reload) { t in if let bike { TaskSheet(task: t, bike: bike, garage: garage) } }
+        .sheet(item: $openDoc, onDismiss: reload) { DocumentSheet(doc: $0, garage: garage) }
         .fullScreenCover(isPresented: $showRide, onDismiss: showRecap) { rideScreen }
         // START has no press haptic; the outcome is the confirmation (decision 52).
         .sensoryFeedback(.success, trigger: recorder.phase) { old, new in old == .idle && new == .recording }
@@ -84,6 +94,13 @@ struct TodayView: View {
             SectionHead(number: "01", title: "RIDE")
             if recorder.orphan != nil {
                 rideRow("UNFINISHED RIDE", detail: "RESOLVE ›")
+            } else if recorder.phase == .idle && locationOff {
+                // A ride with location denied records nothing: say so instead of starting one.
+                rideRow("LOCATION IS OFF", detail: "SETTINGS ›") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                }
+                Text("Rides need location for the route and distance. Settings › TRACE › Location › While Using.")
+                    .font(.condensed(15)).foregroundStyle(Color.inkDim).fixedSize(horizontal: false, vertical: true)
             } else if recorder.phase == .idle {
                 CaptureButton(title: "START RIDE", subtitle: bikeLine) {
                     // No bike added yet: the ride still records, against no vehicle.
@@ -96,20 +113,23 @@ struct TodayView: View {
                         .font(.condensed(15)).foregroundStyle(Color.inkDim)
                 }
             } else {
-                let label = recorder.phase == .paused ? "PAUSED" : "RIDING"
-                rideRow("\(label)  \(elapsed)  \(String(format: "%.1f KM", recorder.stats.distanceM / 1000))",
-                        detail: "OPEN ›")
+                // Ticks every second, pauses taken out: the same clock as Ride mode.
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    let label = recorder.phase == .paused ? "PAUSED" : "RIDING"
+                    rideRow("\(label)  \(clock(recorder.elapsed(at: context.date)))  \(String(format: "%.1f KM", recorder.stats.distanceM / 1000))",
+                            detail: "OPEN ›")
+                }
             }
         }
     }
 
-    private var elapsed: String {
-        let s = Int(recorder.ride.flatMap { r in recorder.lastFix.map { $0.time.timeIntervalSince(r.startedAt) } } ?? 0)
+    private func clock(_ seconds: TimeInterval) -> String {
+        let s = Int(seconds)
         return String(format: "%d:%02d:%02d", s / 3600, s / 60 % 60, s % 60)
     }
 
-    private func rideRow(_ text: String, detail: String) -> some View {
-        Button { showRide = true } label: {
+    private func rideRow(_ text: String, detail: String, action: (() -> Void)? = nil) -> some View {
+        Button { if let action { action() } else { showRide = true } } label: {
             HStack {
                 Text(text).font(.oswald(20, .medium)).monospacedDigit().foregroundStyle(Color.ink)
                 Spacer()
@@ -239,7 +259,9 @@ struct TodayView: View {
         do {
             drafts = try capture.pending()
             due = try garage.dueItems()
+            locationOff = LocationService.isDenied
             let bike = try garage.bike()
+            self.bike = bike
             bikeLine = bike.map { "\($0.name.uppercased()) · ODO \($0.odometerKm.formatted()) KM" }
             let rides = recorder.finishedRides()
             let expenses = try ledger.all()

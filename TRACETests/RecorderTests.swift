@@ -202,6 +202,17 @@ private func ride(from startS: Int, seconds: Int, speed: Double, lat0: Double = 
         #expect(saved.pausedAt == nil)
     }
 
+    /// Today and Ride mode share this clock: it holds still while paused and leaves the pause out.
+    @Test func elapsedLeavesPausesOut() {
+        let rec = recorder(nil, StubSensors())
+        rec.start(vehicleID: UUID(), at: t0)
+        #expect(rec.elapsed(at: t0.addingTimeInterval(20)) == 20)          // ticks between fixes
+        rec.pause(at: t0.addingTimeInterval(30))
+        #expect(rec.elapsed(at: t0.addingTimeInterval(90)) == 30)          // frozen while paused
+        rec.resumeFromPause(at: t0.addingTimeInterval(100))
+        #expect(rec.elapsed(at: t0.addingTimeInterval(110)) == 40)         // 70 s pause not counted
+    }
+
     @Test func stopWhilePausedEndsAtThePause() throws {
         let rec = recorder()
         rec.start(vehicleID: UUID(), at: t0)
