@@ -12,6 +12,8 @@ final class Connectivity {
     private let monitor = NWPathMonitor()
 
     private init() {
+        // UI tests pass -forceOffline to see the offline drawing while the Mac stays online.
+        if ProcessInfo.processInfo.arguments.contains("-forceOffline") { online = false; return }
         monitor.pathUpdateHandler = { path in
             let up = path.status == .satisfied
             Task { @MainActor in Connectivity.shared.online = up }

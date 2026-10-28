@@ -8,8 +8,13 @@ struct TRACEApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-restoreFrom"), i + 1 < args.count { DebugSeed.restore(from: args[i + 1]) }   // simulator tests only
         let store = Store.shared
         container = store
+        if ProcessInfo.processInfo.arguments.contains("-seedLongRide") {
+            DebugSeed.longRide(context: store.mainContext, user: LocalStubUser.load())   // simulator timing test only
+        }
         _recorder = State(initialValue: RideRecorder(context: store.mainContext, user: LocalStubUser.load(),
                                                      sensors: LocationService()))
     }

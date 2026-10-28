@@ -83,6 +83,15 @@ version after.
 
 ## Where things stand
 
+**Latest (2026-10-29), M8 ship hardening in progress.** Read `docs/engineering/current_issues.md` first: it lists
+every open and resolved issue. Simulator tests for M7 are in (`TRACEUITests/ReplayTimingTests.swift`): cold open 8.2 s
+and the offline map pass; the 200 km ride detail takes about 2.2 s (map) to 3.3 s (elevation) against the 2 s exit, so
+profile `RideSheet.loadReview()` (main-thread work) next. Debug launch arguments for tests only: `-seedLongRide`,
+`-forceOffline`, `-restoreFrom <dir>` with `-localStubOwnerID <uuid>` (`TRACE/Support/DebugSeed.swift`).
+Next session: (1) put every close button in one position on all screens (user request, not started);
+(2) the 200 km open; (3) audit finding I-01 (decision 73); (4) phone checks: M3 real pump, M4 km/L by hand, M6 mount,
+M7 timings and airplane replay, M8 steps 4-8. Reinstall on the phone every ~7 days, over the top, never uninstall.
+
 Done: M0 scaffold, M0.5 App Groups spike (they work), M1 foundation: all models in two
 stores (synced / local-only money), `CurrentUser` stub, generic owner-scoped
 `Repository<T>`, design tokens + bundled fonts, empty 4-tab shell on true black,
@@ -118,7 +127,7 @@ the prototype canvas.
 **M7 code is done (2026-10-24), exit test pending.** `TRACE/Review/`: ride analysis, personal
 bests, place names, route map with offline fallback. RIDES is now S06 (12-week chart, PBs, month
 list); a ride opens S07 (map, elevation, speed bands, stops, splits, cost, delete). Checked on a
-copy of the real 31 km ride. 63 tests green. Climb left as is (decision 66). S15 dropped (decision 72).
+copy of the real 31 km ride. 63 tests green. Simulator run 2026-10-29: cold open 8.2 s, offline map OK, 200 km ride detail 2.2 s map / 3.3 s elevation (over 2 s, I-02 in `docs/engineering/current_issues.md`); M4 rules covered by `LedgerTests`; M5 notification worked per the user. Climb left as is (decision 66). S15 dropped (decision 72).
 **Next: on the iPhone, ride with two expenses logged during it and check both attach
 with the right total, detach one; log two full fills with odometer and check km/L by
 hand. Still open: M3 real-pump test, M5 notification test.**

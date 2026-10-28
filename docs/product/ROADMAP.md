@@ -93,6 +93,7 @@ Live Activity (S18) with elapsed time, distance and a log button.
 Built: `TRACE/Review/` (`RideAnalysis`, `Review`, `RouteMap`), S06 Rides (12-week chart, PB card,
 month list), S07 map / elevation / speed bands / stops / splits / delete, Money 6-month trend.
 Decision 66. S15 weekly summary dropped (decision 72). Phone check not done.
+**Simulator results (2026-10-29, iPhone 17 iOS 27, `ReplayTimingTests`, phone's real data restored):** cold open to the last trip's ₹ amount 8.2 s (includes about 6 s of XCUITest launch overhead); 200 km ride detail map 2.2 s, elevation 3.3 s, over the 2 s target (open, see `engineering/current_issues.md` I-02); offline map drawing shows (passes). Not phone results; the exit stays open until timed on the phone.
 Rides tab (S06), ride detail with map replay, offline no-basemap fallback, elevation
 profile and splits (S07), route line coloured by speed slow → moderate → fast (decision 56),
 top speed marker, speed bands, stops, ride-level personal bests, place names (decision 62), trend charts on Rides and Money,
