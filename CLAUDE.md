@@ -80,8 +80,6 @@ can genuinely surprise us. Everything else is CRUD.
 
 ## Session modes
 - Ponytail at `ultra` and caveman at `ultra` are on by default. Invoke both at session start, before the first reply.
-- Context-mode (`context-mode:context-mode`) is on by default. Use its tools for large output instead of raw Bash or Read.
-
 ## Design skills on standby
 Consult these for UI, UX, motion and visual design work. They are on standby, not mandatory: use whichever fits the task.
 - Design skills: `frontend-design`, `ui-ux-pro-max` (and its sub-skills), `dataviz`, `artifact-design`, `artifact-diagramming`, `animate`, `animate-expo`, `animation-performance`, `animation-vocabulary`, `apple-design`, `ask-sonner`, `brandkit`, `break-ui`, `brutalist-skill`, `emil-design-eng`, `find-animation-opportunities`, `gpt-tasteskill`, `image-to-code-skill`, `imagegen-frontend-mobile`, `imagegen-frontend-web`, `improve-animations`, `minimalist-skill`, `mobile-native`, `redesign-skill`, `review-animations`, `soft-skill`, `stitch-skill`, `taste-skill`, `taste-skill-v1`, `taste-skill-v2-experimental`, `pick-ui-library`.
