@@ -155,6 +155,7 @@ struct RidesView: View {
                 Text(month.formatted(.dateTime.month(.wide).year()).uppercased())
                     .font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
                     .padding(.top, 16).padding(.bottom, 4)
+                    .accessibilityAddTraits(.isHeader)
                 ForEach(groups[month] ?? []) { ride in
                     row(ride)
                         .onTapGesture { open = ride }
@@ -191,6 +192,7 @@ struct RidesView: View {
         .background(Color.ground)              // the lift preview shows the row, not a hole
         .contentShape(Rectangle())             // hold anywhere in the row, not just on the text
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)   // the tap is an onTapGesture, which VoiceOver does not call a button
         .accessibilityHint("Opens the ride")
     }
 

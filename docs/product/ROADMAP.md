@@ -109,13 +109,13 @@ every screen, store file protection (default `completeUntilFirstUserAuthenticati
 - **Exit:** the v1 ship checklist below is all ticked.
 
 ### v1 ship checklist
-- [ ] Every PRD "Must" feature works on device
-- [ ] Every screen in `SCREENS.md` (v1 rows) has empty, error and populated states
-- [ ] Airplane mode: every screen works
-- [ ] Largest Dynamic Type size: nothing truncated on Today, Ride mode, Bike
-- [ ] Zero rides lost across all test rides
-- [ ] No hardcoded hex in any view; red appears only on overdue/expired/urgent
-- [ ] Docs match code (`CONTEXT.md` "where things stand" updated)
+- [ ] Every PRD "Must" feature works on device (open: km/L by hand, gloved logging, daylight reading)
+- [ ] Every screen in `SCREENS.md` (v1 rows) has empty, error and populated states (open: Rides has no error state)
+- [ ] Airplane mode: every screen works (ride detail + offline map pass; replay and the rest still to walk)
+- [ ] Largest Dynamic Type size: nothing truncated on Today, Ride mode, Bike (I-01, last)
+- [ ] Zero rides lost across all test rides (ride 9 clean; owner to confirm the earlier ones)
+- [x] No hardcoded hex in any view; red appears only on overdue/expired/urgent (2026-11-01 grep: no literals outside Tokens.swift; red is overdue rails and error text only)
+- [x] Docs match code (`CONTEXT.md` "where things stand" updated 2026-11-01)
 
 ---
 

@@ -53,6 +53,9 @@ Status key: OPEN, MONITORING (fix in, needs a phone check), FIXED, WONTFIX.
 ### I-06 Free-signing 7-day expiry (RECURRING)
 - Every ~7 days the app shows "no longer available". Fix: rebuild and reinstall over the top. Never uninstall, that deletes the ride data.
 
+### I-08 VoiceOver pass (DONE 2026-11-01)
+- Audit on the simulator shows no label, contrast or hit-region findings; only the Dynamic Type ones (I-01) remain. Added the button trait on Rides rows (onTapGesture) and header trait on month titles. Not done: tapping a chart bar to filter a week has no VoiceOver route; the list is still reachable.
+
 ## Resolved
 
 ### R-01 Expense draft: keypad stacked with the system keyboard (FIXED)
