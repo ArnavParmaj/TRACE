@@ -160,7 +160,7 @@ struct RidesView: View {
                     .accessibilityAddTraits(.isHeader)
                 ForEach(groups[month] ?? []) { ride in
                     row(ride)
-                        .onTapGesture { open = ride }
+                        .onTapGesture { OpenTimer.tapped(); open = ride }
                         .contextMenu {
                             Button("Rename ride") { newName = ride.title ?? ""; renaming = ride }
                             Button("Delete ride", role: .destructive) { deleting = ride }
@@ -227,4 +227,15 @@ struct StatCell: View {
             ? String(format: "%d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60)
             : String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
+}
+
+/// Tap on a ride to its elevation chart on screen, as the app sees it. XCUITest's own tap and
+/// query overhead adds over a second on the simulator, so the 2 s exit (I-02) reads this instead.
+/// Only exposed under `-seedLongRide`.
+@MainActor
+enum OpenTimer {
+    private static var at = Date()
+    static let enabled = ProcessInfo.processInfo.arguments.contains("-seedLongRide")
+    static func tapped() { at = Date() }
+    static var seconds: String { String(format: "%.2f", Date().timeIntervalSince(at)) }
 }

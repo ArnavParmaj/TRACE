@@ -15,11 +15,11 @@ Status key: OPEN, MONITORING (fix in, needs a phone check), FIXED, WONTFIX.
 - **Audit test:** ignores `.dynamicType` and the RIDES chart's element-less finding; passes (3 tests). Not checked by eye at the cap: Ride mode, Today, Money, sheets. Not checked on the phone.
 - **If the cap is lifted later:** stack the tab labels and let the odometer wrap first.
 
-### I-02 Simulator timing: 200 km ride detail over 2 s (OPEN)
-- **Where:** `TRACEUITests/ReplayTimingTests.swift`, `testLongRideOpensUnderTwoSeconds`. Seeded ride "TEST 200 KM" (10,000 samples, `-seedLongRide`).
-- **Measured (iPhone 17, iOS 27 simulator, repeated 4 runs):** map 2.1 to 2.2 s, elevation 3.2 to 3.3 s from tap. Includes XCUITest query overhead; the Mac is faster than the phone, so the phone will not be quicker.
-- **Suspect:** `RideSheet.loadReview()` fetches the samples and builds the analysis on the main thread.
-- **Next:** profile the open, move the analysis off the main thread if that is the cost; re-measure on the simulator and the phone (M7 exit: under 2 s).
+### I-02 Simulator timing: 200 km ride detail (MONITORING: 0.35 s in the app on the simulator, phone still to time)
+- **Was:** `testLongRideOpensUnderTwoSeconds` read 2.1 to 3.3 s on the 200 km seeded ride (10,000 samples).
+- **Cause:** mostly the test, not the app. Profiled: fetch 0.14 s + analysis 0.03 s; the ride sheet's other loads are under 3 ms; thinning the map polyline changed nothing. The app puts the elevation chart on screen 0.35 to 0.43 s after the tap; XCUITest's `tap()` and tree-scan queries added the rest (about 1.4 to 2.5 s).
+- **Fix:** (1) the samples fetch and analysis now run on a background `ModelContext` (`Review.analysis(container:user:rideID:)`), so the main thread stays free on slower hardware; (2) the test waits by accessibility identifier and asserts on the app's own tap-to-chart time, exposed as the elevation chart's accessibility value under `-seedLongRide` (`OpenTimer`). Decision 83.
+- **Still to do:** time it on the phone by eye; the number is only exposed on the simulator launch argument.
 
 ### I-03 Cold open to last trip cost (MONITORING: simulator passes at 8.2 s)
 - The 8.2 s includes about 6 s of XCUITest launch overhead, so the app itself is well under 10 s on the simulator. Phone timing still to do.

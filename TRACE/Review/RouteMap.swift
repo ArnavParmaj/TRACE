@@ -45,6 +45,7 @@ struct RouteMap: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Route map, \(stops.count) stops")
+        .accessibilityIdentifier("route-map")
     }
 
     private var live: some View {
@@ -151,6 +152,7 @@ extension RideAnalysis.Point {
 /// 02 ELEVATION: smoothed GPS altitude against distance.
 struct ElevationChart: View {
     let analysis: RideAnalysis
+    @State private var openedIn: String?
 
     var body: some View {
         Chart(analysis.elevation.indices, id: \.self) { i in
@@ -170,6 +172,9 @@ struct ElevationChart: View {
         }
         .frame(height: 110)
         .accessibilityLabel(elevationLabel)
+        .accessibilityIdentifier("elevation-chart")
+        .accessibilityValue(openedIn ?? "")
+        .onAppear { if OpenTimer.enabled { openedIn = OpenTimer.seconds } }
     }
 
     /// Lowest to highest with a little headroom, so a flat ride does not look like a cliff.

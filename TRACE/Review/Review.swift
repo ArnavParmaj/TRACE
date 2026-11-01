@@ -41,6 +41,16 @@ struct Review {
         RideAnalysis(try samples.samples(of: ride.id).map(Fix.init))
     }
 
+    /// Same read on its own context, off the main thread (I-02). Models never cross contexts,
+    /// so it takes the container and returns a plain value. Owner-scoped like `Repository`.
+    nonisolated static func analysis(container: ModelContainer, user: any CurrentUser, rideID: UUID) throws -> RideAnalysis {
+        let owner = user.ownerID
+        let rows = try ModelContext(container).fetch(FetchDescriptor<RouteSample>(
+            predicate: #Predicate { $0.ownerID == owner && $0.deletedAt == nil && $0.rideID == rideID },
+            sortBy: [SortDescriptor(\.timestamp)]))
+        return RideAnalysis(rows.map(Fix.init))
+    }
+
     func stops(of ride: Ride) throws -> [StopEvent] { try stops.stops(of: ride.id) }
 
     /// Rides that never got a fastest 10 km, though long enough for one.

@@ -79,7 +79,7 @@ struct RideSheet: View {
         .sheet(item: $completing, onDismiss: reload) { DraftSheet(start: $0, capture: capture, ledger: ledger) }
         .sheet(isPresented: $odometer, onDismiss: reload) { if let bike { OdometerSheet(bike: bike, garage: garage) } }
         // Loaded after the sheet is up, so a long ride never delays it opening.
-        .task(id: detail) { if !showsRecap && analysis == nil { loadReview() } }
+        .task(id: detail) { if !showsRecap && analysis == nil { await loadReview() } }
         .alert("Name this ride", isPresented: $renaming) {
             TextField("Lonavala chai run", text: $newName)
             Button("Save") { recorder.rename(ride, to: newName) }
@@ -238,11 +238,16 @@ struct RideSheet: View {
         .disabled(recorder.ride?.id == ride.id)
     }
 
-    private func loadReview() {
+    /// The samples fetch and the analysis of a long ride cost seconds, so they run on a
+    /// background context while the sheet is already up (I-02). Stops are few: main is fine.
+    private func loadReview() async {
         let review = Review(context: context, user: LocalStubUser.load())
+        do { stops = try review.stops(of: ride) } catch { self.error = "Couldn't load the route: \(error.localizedDescription)" }
+        let container = context.container, user = LocalStubUser.load(), id = ride.id
         do {
-            stops = try review.stops(of: ride)
-            analysis = try review.analysis(of: ride)
+            analysis = try await Task.detached(priority: .userInitiated) {
+                try Review.analysis(container: container, user: user, rideID: id)
+            }.value
         } catch { self.error = "Couldn't load the route: \(error.localizedDescription)" }
     }
 
