@@ -16,7 +16,11 @@ struct TaskSheet: View {
     @State private var history: [(event: ServiceEvent, costMinor: Int?)] = []
     @State private var error: String?
     @State private var confirmRemove = false
+    @State private var pad: PadField?   // the field the 60 pt keypad is editing
+    @State private var fresh = false
     @Environment(\.dismiss) private var dismiss
+
+    private enum PadField { case km, days, odo }
 
     private var isNew: Bool { task.ownerID == .unowned }
 
@@ -49,15 +53,14 @@ struct TaskSheet: View {
                 }
                 FieldBox("NAME", text: $label, prompt: "Chain lube")
                 HStack(spacing: 12) {
-                    FieldBox("EVERY KM", text: $intervalKm, prompt: "500", numeric: true)
-                    FieldBox("OR DAYS", text: $intervalDays, prompt: "180", numeric: true)
+                    padBox("EVERY KM", intervalKm, "500", .km)
+                    padBox("OR DAYS", intervalDays, "180", .days)
                 }
-                FieldBox("LAST DONE AT KM", text: $lastOdo, prompt: String(bike.odometerKm), numeric: true)
+                padBox("LAST DONE AT KM", lastOdo, String(bike.odometerKm), .odo)
                 DatePicker("LAST DONE ON", selection: $lastDate, in: ...Date.now, displayedComponents: .date)
                     .font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
                     .frame(minHeight: minTouch)
                 if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
-                PrimaryButton(isNew ? "SAVE TASK" : "SAVE CHANGES", enabled: canSave, action: save)
                 if !history.isEmpty { historyList }
                 if !isNew {
                     TextAction("REMOVE TASK") { confirmRemove = true }
@@ -66,6 +69,9 @@ struct TaskSheet: View {
             .padding(20)
         }
         .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if pad != nil { keypadPanel } else { SaveBar(isNew ? "SAVE TASK" : "SAVE CHANGES", enabled: canSave, action: save) }
+        }
         }
         .alert("Remove \(label)?", isPresented: $confirmRemove) {
             Button("Remove") { run { try garage.remove(task); dismiss() } }
@@ -77,6 +83,45 @@ struct TaskSheet: View {
         .sheet(isPresented: $markingDone, onDismiss: loadHistory) {
             MarkDoneSheet(task: task, bike: bike, garage: garage)
         }
+    }
+
+    private func padBox(_ title: String, _ value: String, _ prompt: String, _ field: PadField) -> some View {
+        Button { pad = field; fresh = true } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title).font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
+                Text(value.isEmpty ? prompt : value).font(.oswald(22, .medium))
+                    .foregroundStyle(value.isEmpty ? Color.inkFaint : Color.ink).lineLimit(1)
+                    .padding(.horizontal, 14).frame(maxWidth: .infinity, minHeight: minTouch, alignment: .leading)
+                    .overlay { Rectangle().stroke(pad == field ? Color.accent : Color.surfaceRule, lineWidth: pad == field ? 2 : 1) }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(value.isEmpty ? "empty" : value)
+    }
+
+    private var keypadPanel: some View {
+        VStack(spacing: 8) {
+            Button { pad = nil } label: {
+                Text("DONE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
+                    .frame(maxWidth: .infinity, minHeight: minTouch).contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
+            KeypadGrid { key in
+                switch pad {
+                case .km: intervalKm = Keypad.apply(key, to: intervalKm, decimals: 0, maxWhole: 6, replacing: fresh)
+                case .days: intervalDays = Keypad.apply(key, to: intervalDays, decimals: 0, maxWhole: 4, replacing: fresh)
+                case .odo: lastOdo = Keypad.apply(key, to: lastOdo, decimals: 0, maxWhole: 7, replacing: fresh)
+                case nil: break
+                }
+                fresh = false
+            }
+        }
+        .padding(.horizontal, 20).padding(.vertical, 12)
+        .background(Color.ground)
+        .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
     }
 
     private var canSave: Bool {

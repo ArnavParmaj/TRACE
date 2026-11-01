@@ -73,7 +73,7 @@ struct SettingsView: View {
                 .padding(.vertical, 6)
                 .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
             }
-            TextAction("+ ADD BIKE") { adding = true }
+            AddAction("+ ADD BIKE") { adding = true }
         }
     }
 

@@ -98,6 +98,7 @@ struct OnboardingView: View {
             case 2:
                 PrimaryButton(firstRun ? "NEXT" : "SAVE BIKE", enabled: Int(odo) != nil) { saveBike() }
                 TextAction("I DON'T KNOW IT · SKIP") { odo = "0"; saveBike() }
+                Text("Skipping starts the odometer at 0. Set it later on BIKE.").font(.condensed(13)).foregroundStyle(Color.inkMuted)
             default:
                 PrimaryButton("START USING TRACE") { finish() }
             }
@@ -196,7 +197,7 @@ struct OnboardingView: View {
         asked.insert(p)
         switch p {
         case .location:
-            location.requestWhenInUseAuthorization()   // "Always" comes at the first ride start
+            location.requestWhenInUseAuthorization()   // when-in-use is enough: background updates continue once a ride starts in the foreground
         case .motion:
             guard CMAltimeter.isRelativeAltitudeAvailable() else { return }
             let altimeter = altimeter

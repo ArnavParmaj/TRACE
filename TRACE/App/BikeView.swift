@@ -4,6 +4,7 @@ import SwiftUI
 /// S11 Bike: odometer, trip meters, service tasks and documents, most urgent first.
 struct BikeView: View {
     @Environment(\.modelContext) private var context
+    @Environment(UndoCenter.self) private var undo
     @State private var bike: Vehicle?
     @State private var tasks: [ServiceTask] = []
     @State private var docs: [VehicleDocument] = []
@@ -21,6 +22,7 @@ struct BikeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
+                ScreenHeader(title: "BIKE")
                 if let bike { content(bike) } else {
                     Text("NO BIKE YET").font(.oswald(28, .bold, relativeTo: .largeTitle)).tracking(1.6).foregroundStyle(Color.ink)
                     Text("Add the bike your service and documents belong to.").font(.condensed(16)).foregroundStyle(Color.inkDim)
@@ -75,7 +77,7 @@ struct BikeView: View {
                 Button { task = t } label: { DueRow(label: t.label, status: garage.due(t, bike)) }
                     .buttonStyle(PressStyle())
             }
-            addButton("+ ADD TASK") { task = ServiceTask(vehicleID: bike.id, kind: .chainLube, label: ServiceKind.chainLube.label) }
+            AddAction("+ ADD TASK") { task = ServiceTask(vehicleID: bike.id, kind: .chainLube, label: ServiceKind.chainLube.label) }
         }
 
         VStack(alignment: .leading, spacing: 0) {
@@ -87,7 +89,7 @@ struct BikeView: View {
                 }
                 .buttonStyle(PressStyle())
             }
-            addButton("+ ADD DOCUMENT") {
+            AddAction("+ ADD DOCUMENT") {
                 let new = VehicleDocument(kind: .insurance, expiresOn: Calendar.current.date(byAdding: .year, value: 1, to: .now) ?? .now)
                 new.vehicleID = bike.id
                 new.reminderDaysBefore = Preferences.documentLeads
@@ -109,25 +111,23 @@ struct BikeView: View {
         .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
         .contentShape(Rectangle())
         .onLongPressGesture(minimumDuration: 1) {
-            run { try garage.resetTrip(bike, trip) }
+            reset(trip, bike)
             resets += 1
-            reload()
         }
         .accessibilityElement(children: .combine)
-        .accessibilityAction(named: "Reset") { run { try garage.resetTrip(bike, trip) }; reload() }
+        .accessibilityAction(named: "Reset") { reset(trip, bike) }
+    }
+
+    private func reset(_ trip: Trip, _ bike: Vehicle) {
+        run {
+            let before = try garage.resetTrip(bike, trip)
+            undo.show("Trip \(trip == .a ? "A" : "B") reset") { run { try garage.restoreTrip(bike, trip, to: before) }; reload() }
+        }
+        reload()
     }
 
     private func emptyLine(_ text: String) -> some View {
         Text(text).font(.condensed(16)).foregroundStyle(Color.inkDim).padding(.vertical, 8)
-    }
-
-    private func addButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title).font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
-                .frame(maxWidth: .infinity, minHeight: minTouch, alignment: .trailing)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(PressStyle())
     }
 
     private func reload() {
@@ -161,21 +161,22 @@ struct DueRow: View {
                 Text(label.uppercased()).font(.oswald(17, .semibold)).tracking(1.2).foregroundStyle(Color.ink)
                 Spacer()
                 Text(status.text).font(.oswald(15, .medium)).tracking(1).monospacedDigit()
-                    .foregroundStyle(alarm ? Color.alarmInk : soon ? Color.warn : Color.inkDim)
+                    .foregroundStyle(alarm ? Color.alarmInk : soon ? Color.accent : Color.inkDim)
             }
             if soon, let progress = status.progress {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Rectangle().fill(Color.surfaceRule)
-                        Rectangle().fill(Color.warn).frame(width: geo.size.width * min(1, progress))
+                        Rectangle().fill(Color.accent).frame(width: geo.size.width * min(1, progress))
                     }
                 }
                 .frame(height: 3)
             }
         }
-        .padding(.leading, alarm ? 14 : 0).padding(.vertical, 12)
+        .padding(.leading, alarm ? 20 : 0).padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: minTouch, alignment: .leading)
-        .overlay(alignment: .leading) { if alarm { Rectangle().fill(Color.alarm).frame(width: 4) } }
+        .overlay(alignment: .leading) { if alarm { Rectangle().fill(Color.alarm).frame(width: 10) } }   // DESIGN alarm rail: 1 px border + 10 px spine
+        .overlay { if alarm { Rectangle().stroke(Color.alarm, lineWidth: 1) } }
         .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
@@ -207,19 +208,19 @@ struct BikeEditSheet: View {
                     FieldBox("NAME", text: $name, prompt: "CB350")
                     FieldBox("REGISTRATION (OPTIONAL)", text: $registration, prompt: "MH 02 AB 1234")
                     if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
-                    PrimaryButton("SAVE CHANGES", enabled: !name.trimmingCharacters(in: .whitespaces).isEmpty) {
-                        run {
-                            let reg = registration.trimmingCharacters(in: .whitespaces)
-                            try garage.updateBike(bike, name: name.trimmingCharacters(in: .whitespaces),
-                                                  registration: reg.isEmpty ? nil : reg.uppercased())
-                            dismiss()
-                        }
-                    }
                     TextAction("REMOVE BIKE") { confirmRemove = true }
                 }
                 .padding(20)
             }
             .scrollDismissesKeyboard(.interactively)
+            .pinnedSave("SAVE CHANGES", enabled: !name.trimmingCharacters(in: .whitespaces).isEmpty) {
+                run {
+                    let reg = registration.trimmingCharacters(in: .whitespaces)
+                    try garage.updateBike(bike, name: name.trimmingCharacters(in: .whitespaces),
+                                          registration: reg.isEmpty ? nil : reg.uppercased())
+                    dismiss()
+                }
+            }
         }
         .background(Color.ground.ignoresSafeArea())
         .presentationBackground(Color.ground)
@@ -364,6 +365,52 @@ struct SheetBar: View {
         }
         .padding(.horizontal, 20)
         .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+    }
+}
+
+extension View {
+    /// SAVE sits in the same place on every form: pinned above the bottom edge, never mid-scroll (critique 8).
+    func pinnedSave(_ title: String, enabled: Bool = true, action: @escaping () -> Void) -> some View {
+        safeAreaInset(edge: .bottom, spacing: 0) { SaveBar(title, enabled: enabled, action: action) }
+    }
+}
+
+struct SaveBar: View {
+    let title: String
+    var enabled = true
+    let action: () -> Void
+
+    init(_ title: String, enabled: Bool = true, action: @escaping () -> Void) {
+        self.title = title
+        self.enabled = enabled
+        self.action = action
+    }
+
+    var body: some View {
+        PrimaryButton(title, enabled: enabled, action: action)
+            .padding(.horizontal, 20).padding(.vertical, 12)
+            .background(Color.ground)
+            .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+    }
+}
+
+/// One "add something" style everywhere: amber text, right-aligned, 60pt (critique 7).
+struct AddAction: View {
+    let title: String
+    let action: () -> Void
+
+    init(_ title: String, action: @escaping () -> Void) {
+        self.title = title
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Text(title).font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
+                .frame(maxWidth: .infinity, minHeight: minTouch, alignment: .trailing)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
     }
 }
 

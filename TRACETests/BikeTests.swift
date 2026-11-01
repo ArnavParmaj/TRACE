@@ -138,6 +138,12 @@ private func day(_ d: Int, _ hour: Int = 12) -> Date {
         #expect(try garage.tripKm(bike, .a) == 42.4)
         #expect(try garage.tripKm(bike, .b) == 12.4)
         #expect(try garage.odometerSuggestion(bike) == 1_042)
+
+        let before = try garage.resetTrip(bike, .b, at: day(6))   // UNDO restores what it returned
+        #expect(before == day(3))
+        #expect(try garage.tripKm(bike, .b) == 0)
+        try garage.restoreTrip(bike, .b, to: before)
+        #expect(try garage.tripKm(bike, .b) == 12.4)
     }
 
     @Test func markDoneLogsEventKeepsMoneyLocalAndRaisesOdo() throws {

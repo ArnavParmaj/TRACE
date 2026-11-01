@@ -12,6 +12,7 @@ struct RootView: View {
     @State private var forward = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.modelContext) private var context
+    @Environment(RideRecorder.self) private var recorder
     @AppStorage("onboarded") private var onboarded = false
     @State private var onboarding = false
 
@@ -21,6 +22,7 @@ struct RootView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
                 .undoBar()   // above the tab bar
+            if recorder.ride != nil && tab != .today { liveRideBar }
             TabBar(selection: tab) { new in
                 forward = new > tab
                 // Short and functional (decision 63): shows which way you moved, never in the way.
@@ -32,6 +34,27 @@ struct RootView: View {
         // Existing installs already have a bike, so they never see it.
         .task { onboarding = !onboarded && (try? Garage(context: context, user: LocalStubUser.load()).bike()) == nil }
         .fullScreenCover(isPresented: $onboarding) { OnboardingView(firstRun: true) }
+    }
+
+    /// A ride in progress stays visible from every tab; a tap goes back to Today, which holds the ride screen (critique 22).
+    private var liveRideBar: some View {
+        Button { withAnimation(.easeOut(duration: 0.18)) { forward = false; tab = .today } } label: {
+            TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                HStack {
+                    Text(recorder.phase == .paused ? "RIDE PAUSED" : "RIDE RECORDING").font(.oswald(13, .semibold)).tracking(2)
+                        .foregroundStyle(Color.accent)
+                    Spacer()
+                    Text(StatCell.clock(Int(recorder.elapsed(at: ctx.date)))).font(.oswald(18, .semibold)).monospacedDigit()
+                        .foregroundStyle(Color.ink)
+                    Text("›").font(.oswald(18, .semibold)).foregroundStyle(Color.accent)
+                }
+                .padding(.horizontal, 20).frame(maxWidth: .infinity, minHeight: minTouch)
+                .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+                .contentShape(Rectangle())
+            }
+        }
+        .buttonStyle(PressStyle())
+        .accessibilityLabel("Ride in progress. Opens Today.")
     }
 
     private var slide: AnyTransition {

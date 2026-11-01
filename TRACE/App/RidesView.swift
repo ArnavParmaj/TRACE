@@ -83,7 +83,7 @@ struct RidesView: View {
             .chartYAxis { AxisMarks(values: .automatic(desiredCount: 3)) { _ in
                 AxisGridLine().foregroundStyle(Color.surfaceLine)
                 AxisValueLabel().foregroundStyle(Color.inkMuted) } }
-            .frame(height: 120)
+            .frame(height: 160)   // taller plot = bigger bar targets for a gloved tap (critique 19)
             .accessibilityLabel("Distance per week for 12 weeks")
             if let w = pickedWeek {
                 Button { pickedWeek = nil } label: {

@@ -298,8 +298,10 @@ struct SectionHead: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Text(number).font(.oswald(12, .semibold)).foregroundStyle(Color.ground)
-                .padding(.horizontal, 6).padding(.vertical, 2).background(Color.inkMuted)
+            if !number.isEmpty {
+                Text(number).font(.oswald(12, .semibold)).foregroundStyle(Color.ground)
+                    .padding(.horizontal, 6).padding(.vertical, 2).background(Color.inkMuted)
+            }
             Text(title).font(.oswald(13, .medium)).tracking(2.3).foregroundStyle(Color.inkDim)
             Rectangle().fill(Color.surfaceRule).frame(height: 1)
             if let trailing = value ?? count.map(String.init) {
@@ -368,7 +370,7 @@ enum Recent: Identifiable {
     var id: UUID { switch self { case .ride(let r, _): r.id; case .expense(let e): e.id } }
     var date: Date { switch self { case .ride(let r, _): r.startedAt; case .expense(let e): e.occurredAt } }
     var amountMinor: Int? { switch self { case .ride(_, let t): t; case .expense(let e): e.amountMinor } }
-    var title: String { switch self { case .ride(let r, _): r.displayName; case .expense(let e): e.category.rawValue.capitalized } }
+    var title: String { switch self { case .ride(let r, _): r.displayName; case .expense(let e): e.category.rawValue.uppercased() } }
     var subtitle: String? {
         switch self {
         case .ride(let r, _): String(format: "%.1f km · ", Double(r.distanceM) / 1000) + StatCell.clock(r.movingDurationS) + " moving"

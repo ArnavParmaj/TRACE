@@ -42,6 +42,8 @@ struct RideSheet: View {
     @State private var analysis: RideAnalysis?
     @State private var stops: [StopEvent] = []
     @State private var confirmDelete = false
+    @State private var renaming = false
+    @State private var newName = ""
     @State private var records: [String] = []   // personal bests this ride holds (empty when none)
     @Environment(RideRecorder.self) private var recorder
 
@@ -61,7 +63,7 @@ struct RideSheet: View {
                     cost
                     if !drafts.isEmpty { draftSection }
                     if showsRecap, let bike { odometerSection(bike) }
-                    if !showsRecap { deleteButton }
+                    if !showsRecap { renameButton; deleteButton }
                     if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
                 }
                 .padding(.horizontal, 20).padding(.vertical, 8)
@@ -78,6 +80,11 @@ struct RideSheet: View {
         .sheet(isPresented: $odometer, onDismiss: reload) { if let bike { OdometerSheet(bike: bike, garage: garage) } }
         // Loaded after the sheet is up, so a long ride never delays it opening.
         .task(id: detail) { if !showsRecap && analysis == nil { loadReview() } }
+        .alert("Name this ride", isPresented: $renaming) {
+            TextField("Lonavala chai run", text: $newName)
+            Button("Save") { recorder.rename(ride, to: newName) }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Leave it blank to show the places or date.") }
         .alert("Delete this ride?", isPresented: $confirmDelete) {
             Button("Delete", role: .destructive) { recorder.delete(ride); dismiss() }
             Button("Cancel", role: .cancel) {}
@@ -143,6 +150,17 @@ struct RideSheet: View {
 
     // MARK: 02 ELEVATION · 03 SPEED · 04 SPLITS
 
+    /// Section numbers stay in sequence when ELEVATION or SPLITS are hidden (critique 24).
+    private func sectionNumber(_ a: RideAnalysis, speed: Bool = false, splits: Bool = false, cost: Bool = false) -> String {
+        var n = 2   // STATS is 01
+        if a.elevation.count > 1 && (speed || splits || cost) { n += 1 }
+        if speed { return String(format: "%02d", n) }
+        n += 1
+        if splits { return String(format: "%02d", n) }
+        if a.splits.count > 1 { n += 1 }
+        return String(format: "%02d", n)
+    }
+
     @ViewBuilder private func review(_ a: RideAnalysis) -> some View {
         if a.elevation.count > 1 {
             VStack(alignment: .leading, spacing: 12) {
@@ -151,7 +169,7 @@ struct RideSheet: View {
             }
         }
         VStack(alignment: .leading, spacing: 12) {
-            SectionHead(number: "03", title: "SPEED")
+            SectionHead(number: sectionNumber(a, speed: true), title: "SPEED")
             let total = max(1, a.bandSeconds.reduce(0, +))
             ForEach(RideAnalysis.Band.allCases, id: \.self) { band in
                 let secs = a.bandSeconds[band.rawValue]
@@ -172,7 +190,7 @@ struct RideSheet: View {
         }
         if a.splits.count > 1 {
             VStack(alignment: .leading, spacing: 0) {
-                SectionHead(number: "04", title: "SPLITS").padding(.bottom, 4)
+                SectionHead(number: sectionNumber(a, splits: true), title: "SPLITS").padding(.bottom, 4)
                 ForEach(a.splits.indices, id: \.self) { i in
                     let sp = a.splits[i]
                     let km = sp.toKm - Double(sp.fromKm)
@@ -196,6 +214,17 @@ struct RideSheet: View {
     private var stopLine: String {
         let stopped = stops.reduce(0.0) { $0 + $1.endedAt.timeIntervalSince($1.startedAt) }
         return stops.isEmpty ? "NO STOPS" : "\(stops.count) \(stops.count == 1 ? "STOP" : "STOPS") · \(StatCell.clock(Int(stopped))) STOPPED"
+    }
+
+    /// Visible rename; the long-press on the Rides list stays as a shortcut (critique 10).
+    private var renameButton: some View {
+        Button { newName = ride.title ?? ""; renaming = true } label: {
+            Text("RENAME RIDE").font(.oswald(14, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
+                .frame(maxWidth: .infinity, minHeight: minTouch)
+                .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
     }
 
     private var deleteButton: some View {
@@ -249,7 +278,7 @@ struct RideSheet: View {
                         .font(.condensed(13)).foregroundStyle(Color.inkMuted).padding(.top, 6)
                 }
             } else {
-                SectionHead(number: "05", title: "COST", value: totalMinor > 0 ? Money.format(totalMinor) : nil)
+                SectionHead(number: analysis.map { sectionNumber($0, cost: true) } ?? "02", title: "COST", value: totalMinor > 0 ? Money.format(totalMinor) : nil)
             }
             if attached.isEmpty && detached.isEmpty {
                 Text("Nothing attached to this ride.").font(.condensed(15)).foregroundStyle(Color.inkDim)

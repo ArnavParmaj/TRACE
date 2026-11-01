@@ -14,7 +14,10 @@ struct MoneyView: View {
             switch self {
             case .week:
                 let end = span.end.addingTimeInterval(-1)
-                return "\(span.start.formatted(.dateTime.day()))–\(end.formatted(.dateTime.day().month(.abbreviated)))".uppercased()
+                // "27 OCT–2 NOV" across a month edge, "19–25 OCT" inside one.
+                let sameMonth = Calendar.current.isDate(span.start, equalTo: end, toGranularity: .month)
+                let from = sameMonth ? span.start.formatted(.dateTime.day()) : span.start.formatted(.dateTime.day().month(.abbreviated))
+                return "\(from)–\(end.formatted(.dateTime.day().month(.abbreviated)))".uppercased()
             case .month:
                 let sameYear = Calendar.current.isDate(span.start, equalTo: now, toGranularity: .year)
                 return (sameYear ? span.start.formatted(.dateTime.month(.wide)) : span.start.formatted(.dateTime.month(.wide).year())).uppercased()
@@ -209,9 +212,9 @@ struct MoneyView: View {
             }
             .chartXAxis { AxisMarks(values: .stride(by: .month)) { _ in
                 AxisValueLabel(format: .dateTime.month(.narrow)).foregroundStyle(Color.inkMuted) } }
-            .chartYAxis { AxisMarks(values: .automatic(desiredCount: 3)) { _ in
+            .chartYAxis { AxisMarks(values: .automatic(desiredCount: 3)) { value in
                 AxisGridLine().foregroundStyle(Color.surfaceLine)
-                AxisValueLabel().foregroundStyle(Color.inkMuted) } }
+                AxisValueLabel { if let v = value.as(Double.self) { Text("₹\(Int(v).formatted())") } }.foregroundStyle(Color.inkMuted) } }
             .frame(height: 110)
             .accessibilityLabel("Spending per month for six months")
         }
@@ -278,7 +281,7 @@ struct ExpenseRow: View {
                     .frame(width: 52, alignment: .leading)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(expense.category.rawValue.capitalized).font(.oswald(17, .medium)).foregroundStyle(Color.ink)
+                Text(expense.category.rawValue.uppercased()).font(.oswald(17, .medium)).foregroundStyle(Color.ink)
                 if let detail { Text(detail).font(.condensed(15)).foregroundStyle(Color.inkDim).lineLimit(1) }
             }
             Spacer(minLength: 8)

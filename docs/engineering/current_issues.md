@@ -30,7 +30,7 @@ Status key: OPEN, MONITORING (fix in, needs a phone check), FIXED, WONTFIX.
 - 2026-11-01: ride mode's `‹` (top-left) became CLOSE at the far right, after PAUSE. It only leaves the screen; the ride keeps recording.
 - Left as is: onboarding's `‹ BACK` (previous step), which is "back", not "close".
 
-### I-07 Design critique 2026-10-29: 28 items (OPEN, 6 major fixed in code)
+### I-07 Design critique 2026-10-29: 28 items (MONITORING: all fixed in code except 14, 16, 19 VoiceOver; decision 82)
 - Full list: `design-critique-2026-10-29.md` (score 25/40). Rider's order: 6 major, then the undo bar everywhere, then items 7–22; polish 23–28 later.
 - Fixed in code, check on the phone (MONITORING):
   - 1 Location denied: Today shows LOCATION IS OFF · SETTINGS › instead of START RIDE; ride mode says LOCATION OFF; onboarding shows ALLOWED / SETTINGS › from iOS's real answer.
@@ -39,6 +39,7 @@ Status key: OPEN, MONITORING (fix in, needs a phone check), FIXED, WONTFIX.
   - 4 Today's DUE rows open the task or document.
   - 5 Picking a prefilled number field (edit expense, mark service done) dims it; the first key replaces it.
   - 6 Money ‹ › steps through past periods (decision 77).
+  - 2026-11-01: trip A/B reset shows the UNDO bar (`Garage.restoreTrip`); empty grey chip on TaskSheet HISTORY gone (item 17). Detach already had its own undo list on the ride sheet. Ride, expense, task, document and bike deletes keep their confirm alerts (rider's rule: every delete confirms); no undo bar there.
 - Checked: 73 unit tests pass (new: elapsed, undo restore, keypad replace, Money period). Simulator: DUE row opened PUC; Money stepped back to SEPTEMBER. The undo bar itself is not yet seen on screen.
 - Also found by the UI audit: the onboarding REGISTRATION field may clip at large text sizes (joins I-01).
 - Known gaps: location turned off mid-ride has no Settings link (ride mode only says LOCATION OFF); on a

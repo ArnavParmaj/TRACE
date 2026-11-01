@@ -97,7 +97,15 @@ struct Garage {
         try kmRidden(bike, since: (trip == .a ? bike.tripAResetAt : bike.tripBResetAt) ?? .distantPast)
     }
 
-    func resetTrip(_ bike: Vehicle, _ trip: Trip, at time: Date = .now) throws {
+    /// Returns the previous reset time so the caller can offer UNDO via `restoreTrip`.
+    @discardableResult
+    func resetTrip(_ bike: Vehicle, _ trip: Trip, at time: Date = .now) throws -> Date? {
+        let before = trip == .a ? bike.tripAResetAt : bike.tripBResetAt
+        try restoreTrip(bike, trip, to: time)
+        return before
+    }
+
+    func restoreTrip(_ bike: Vehicle, _ trip: Trip, to time: Date?) throws {
         vehicles.update(bike) { if trip == .a { $0.tripAResetAt = time } else { $0.tripBResetAt = time } }
         try vehicles.save()
     }

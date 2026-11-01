@@ -61,12 +61,12 @@ struct DocumentSheet: View {
                 }
                 attachmentRow
                 if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
-                PrimaryButton(isNew ? "SAVE DOCUMENT" : "SAVE CHANGES", action: save)
                 if !isNew { TextAction("REMOVE DOCUMENT") { confirmRemove = true } }
             }
             .padding(20)
         }
         .scrollDismissesKeyboard(.interactively)
+        .pinnedSave(isNew ? "SAVE DOCUMENT" : "SAVE CHANGES", action: save)
         }
         .alert("Remove \(kind.label)?", isPresented: $confirmRemove) {
             Button("Remove") { run { try garage.remove(doc); dismiss() } }
