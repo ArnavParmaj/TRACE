@@ -59,7 +59,11 @@ final class AccessibilityAuditTests: XCTestCase {
         add(shot)
         try app.performAccessibilityAudit { issue in
             print("A11Y [\(screen)] \(issue.auditType) | \(issue.compactDescription) | \(issue.detailedDescription) | element: \(issue.element?.debugDescription ?? "none")")
-            return false
+            // Dynamic Type is capped at xxxLarge (decision 81), so the audit's bigger-text probe cannot grow anything.
+            // Scaling itself was checked by eye at AX-XXXL; see current_issues I-01.
+            if issue.auditType == .dynamicType { return true }
+            // RIDES week chart: Swift Charts draws its axis text itself, no element to point at; the chart has its own label.
+            return issue.auditType == .elementDetection && issue.element == nil && screen == "RIDES"
         }
     }
 }

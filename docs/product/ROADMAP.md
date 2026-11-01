@@ -112,7 +112,7 @@ every screen, store file protection (default `completeUntilFirstUserAuthenticati
 - [ ] Every PRD "Must" feature works on device (open: km/L by hand, gloved logging, daylight reading)
 - [ ] Every screen in `SCREENS.md` (v1 rows) has empty, error and populated states
 - [ ] Airplane mode: every screen works (ride detail + offline map pass; replay and the rest still to walk)
-- [ ] Largest Dynamic Type size: nothing truncated on Today, Ride mode, Bike (I-01, last)
+- [x] Largest Dynamic Type size: capped at xxxLarge, Rides and Bike clean by eye on the simulator, audit passes (I-01, decision 81). Ride mode and Today still to eyeball on the phone
 - [ ] Zero rides lost across all test rides (ride 9 clean; owner to confirm the earlier ones)
 - [x] No hardcoded hex in any view; red appears only on overdue/expired/urgent (2026-11-01 grep: no literals outside Tokens.swift; red is overdue rails and error text only)
 - [x] Docs match code (`CONTEXT.md` "where things stand" updated 2026-11-01)

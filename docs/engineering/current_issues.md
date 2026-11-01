@@ -9,11 +9,11 @@ Status key: OPEN, MONITORING (fix in, needs a phone check), FIXED, WONTFIX.
 
 ## Open
 
-### I-01 Accessibility audit: Dynamic Type "partially unsupported" (OPEN)
-- **Where:** `TRACEUITests/AccessibilityAuditTests.swift`, `testEveryTabPassesAudit`. About 17 findings on RIDES and BIKE: PB card values and labels, `OCT 23`, `PB`, `HOLD TO RESET`; "potentially inaccessible text" on RIDES.
-- **Tried, all reverted (no effect):** changing `relativeTo` on `Font.oswald`; `@ScaledMetric` for tracking; removing tracking on the four labels (the look changed, the finding stayed); Accessibility Inspector on the phone (31 similar warnings, cause not shown).
-- **State:** cause not found. Decision 73 records the exceptions as open and not silenced; the audit test is left failing on purpose.
-- **Next:** M8 step 4 (check the largest Dynamic Type size by eye on the phone); decide whether the audit exceptions are real or an audit artefact.
+### I-01 Accessibility audit: Dynamic Type "partially unsupported" (FIXED 2026-11-01, decision 81)
+- **Cause:** audit artefact. At AX-XXXL every text scales (screenshots of RIDES and BIKE); the audit flagged the same elements at the default size and flags everything once text cannot grow.
+- **Real problem found:** at accessibility sizes the layout breaks (tab labels wrap, PERSONAL BESTS splits, odometer clips). Fix: root capped at `.xxxLarge`; Rides and Bike checked by eye at the cap, clean.
+- **Audit test:** ignores `.dynamicType` and the RIDES chart's element-less finding; passes (3 tests). Not checked by eye at the cap: Ride mode, Today, Money, sheets. Not checked on the phone.
+- **If the cap is lifted later:** stack the tab labels and let the odometer wrap first.
 
 ### I-02 Simulator timing: 200 km ride detail over 2 s (OPEN)
 - **Where:** `TRACEUITests/ReplayTimingTests.swift`, `testLongRideOpensUnderTwoSeconds`. Seeded ride "TEST 200 KM" (10,000 samples, `-seedLongRide`).

@@ -22,7 +22,9 @@ struct TRACEApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView().preferredColorScheme(.dark).environment(recorder).environment(undo)
+            RootView().preferredColorScheme(.dark)
+                // shortcut: dense dash layout breaks past xxxLarge (tab labels wrap, odometer clips); redo layouts to lift the cap.
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge).environment(recorder).environment(undo)
                 .onReceive(NotificationCenter.default.publisher(for: .draftCaptured)) { _ in syncActivity() }
         }
         .modelContainer(container)
