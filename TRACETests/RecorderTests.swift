@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 import SwiftData
 import Testing
@@ -269,5 +270,23 @@ private func ride(from startS: Int, seconds: Int, speed: Double, lat0: Double = 
         let relaunched = recorder(ModelContext(container))
         relaunched.start(vehicleID: UUID())
         #expect(!relaunched.isRecording)   // resolve the orphan first
+    }
+}
+
+@Suite struct FixTrustTests {
+    private func location(accuracy: Double, speedAccuracy: Double) -> CLLocation {
+        CLLocation(coordinate: .init(latitude: 19, longitude: 72.8), altitude: 0, horizontalAccuracy: accuracy,
+                   verticalAccuracy: 5, course: 0, courseAccuracy: 0, speed: 5, speedAccuracy: speedAccuracy,
+                   timestamp: t0)
+    }
+
+    @Test func coldStartSpeedIsDropped() {
+        #expect(Fix(location(accuracy: 65, speedAccuracy: 1)).speedMps == -1)    // poor position
+        #expect(Fix(location(accuracy: 8, speedAccuracy: 6)).speedMps == -1)     // loose speed
+    }
+
+    @Test func goodSpeedIsKept() {
+        #expect(Fix(location(accuracy: 8, speedAccuracy: 0.5)).speedMps == 5)
+        #expect(Fix(location(accuracy: 8, speedAccuracy: -1)).speedMps == 5)     // accuracy unreported
     }
 }

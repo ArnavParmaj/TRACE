@@ -83,7 +83,9 @@ version after.
 
 ## Where things stand
 
-**Latest (2026-10-29), M8 ship hardening in progress.** Read `docs/engineering/current_issues.md` first: it lists
+**Latest (2026-11-01), M8 ship hardening in progress.** 1 Nov: ride-mode LOG button and draft discard (decision 79); speed spikes at ride start fixed in `Fix.init` (decision 80, install and ride to confirm); ride-mode CLOSE now top-right; Today, Money and Bike errors carry RETRY, Bike SERVICE and DOCUMENTS have empty lines; phone crash logs checked, none for TRACE. Still open: Rides has no error state, I-01 Dynamic Type (do last), VoiceOver, airplane replay, ship checklist.
+
+**Earlier (2026-10-29).** Read `docs/engineering/current_issues.md` first: it lists
 every open and resolved issue. Simulator tests for M7 are in (`TRACEUITests/ReplayTimingTests.swift`): cold open 8.2 s
 and the offline map pass; the 200 km ride detail takes about 2.2 s (map) to 3.3 s (elevation) against the 2 s exit, so
 profile `RideSheet.loadReview()` (main-thread work) next. Debug launch arguments for tests only: `-seedLongRide`,

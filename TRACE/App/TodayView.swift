@@ -47,9 +47,7 @@ struct TodayView: View {
                 }
                 if week.hasData { weekSection }
                 if !recent.isEmpty { recentSection }
-                if let error {
-                    Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk)
-                }
+                if let error { ErrorLine(message: error, retry: reload) }
             }
             .padding(.horizontal, 20).padding(.bottom, 20)
             .animation(.easeOut(duration: 0.2), value: drafts.count + due.count)

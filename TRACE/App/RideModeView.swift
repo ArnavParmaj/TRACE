@@ -56,12 +56,6 @@ struct RideModeView: View {
     private func topBar(now: Date) -> some View {
         let paused = recorder.phase == .paused
         return HStack(spacing: 8) {
-            Button { dismiss() } label: {
-                Text("‹").font(.oswald(30, .medium)).foregroundStyle(Color.inkMuted)
-                    .frame(width: minTouch, height: minTouch).contentShape(Rectangle())
-            }
-            .buttonStyle(PressStyle())
-            .accessibilityLabel("Back to Today. The ride keeps recording.")
             Circle().fill(flash ? Color.ink : Color.accent).frame(width: 10, height: 10)
                 .opacity(paused ? 0.4 : 1)
             Text(paused ? "PAUSED" : "REC").font(.oswald(13, .medium)).tracking(2.6).foregroundStyle(Color.inkMuted)
@@ -73,8 +67,15 @@ struct RideModeView: View {
                     .frame(minWidth: 84, minHeight: minTouch).contentShape(Rectangle())
             }
             .buttonStyle(PressStyle(haptic: false))
+            // CLOSE far right like every sheet; it only leaves the screen, the ride keeps recording.
+            Button { dismiss() } label: {
+                Text("CLOSE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
+                    .frame(minWidth: minTouch, minHeight: minTouch).contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
+            .accessibilityLabel("Close. The ride keeps recording.")
         }
-        .padding(.trailing, 8)
+        .padding(.leading, 20).padding(.trailing, 8)
     }
 
     private func centre(now: Date) -> some View {

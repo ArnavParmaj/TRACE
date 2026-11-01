@@ -105,7 +105,7 @@ per-trip recap (S05).
 Onboarding (S01), Settings with vehicle picker (S16), empty/error states on every
 screen, Dynamic Type pass at the largest sizes, VoiceOver labels, airplane-mode test of
 every screen, store file protection (default `completeUntilFirstUserAuthentication`, decision 69), a crash-log check.
-- **Progress:** S01 onboarding and S16 settings built (decision 67); file protection settled, route samples kept and indexed (decision 69); fusion for late and re-timed expenses (decision 70); ride odometer readings (decision 71); S15 dropped (decision 72); the rest open.
+- **Progress:** S01 onboarding and S16 settings built (decision 67); file protection settled, route samples kept and indexed (decision 69); fusion for late and re-timed expenses (decision 70); ride odometer readings (decision 71); S15 dropped (decision 72); 2026-11-01: ride-mode LOG band and draft discard (79), ride-start speed filter and RETRY on error lines (80), CLOSE top-right everywhere, crash-log check clean. Open: Dynamic Type I-01 (last), VoiceOver, empty/error on Rides, airplane replay, ship checklist.
 - **Exit:** the v1 ship checklist below is all ticked.
 
 ### v1 ship checklist

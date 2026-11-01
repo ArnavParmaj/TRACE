@@ -26,7 +26,7 @@ struct BikeView: View {
                     Text("Add the bike your service and documents belong to.").font(.condensed(16)).foregroundStyle(Color.inkDim)
                     PrimaryButton("ADD YOUR BIKE") { addingBike = true }
                 }
-                if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
+                if let error { ErrorLine(message: error, retry: reload) }
             }
             .padding(20)
         }
@@ -70,6 +70,7 @@ struct BikeView: View {
 
         VStack(alignment: .leading, spacing: 0) {
             SectionHead(number: "01", title: "SERVICE").padding(.bottom, 4)
+            if tasks.isEmpty { emptyLine("No service tasks. Add one to get reminded by km or days.") }
             ForEach(tasks) { t in
                 Button { task = t } label: { DueRow(label: t.label, status: garage.due(t, bike)) }
                     .buttonStyle(PressStyle())
@@ -79,6 +80,7 @@ struct BikeView: View {
 
         VStack(alignment: .leading, spacing: 0) {
             SectionHead(number: "02", title: "DOCUMENTS").padding(.bottom, 4)
+            if docs.isEmpty { emptyLine("No documents. Add insurance or PUC to get an expiry reminder.") }
             ForEach(docs) { d in
                 Button { doc = d } label: {
                     DueRow(label: d.kind.label, status: Due.document(expiresOn: d.expiresOn, now: .now))
@@ -113,6 +115,10 @@ struct BikeView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: "Reset") { run { try garage.resetTrip(bike, trip) }; reload() }
+    }
+
+    private func emptyLine(_ text: String) -> some View {
+        Text(text).font(.condensed(16)).foregroundStyle(Color.inkDim).padding(.vertical, 8)
     }
 
     private func addButton(_ title: String, action: @escaping () -> Void) -> some View {
@@ -318,6 +324,24 @@ struct FieldBox: View {
                         }
                     }
                 }
+        }
+    }
+}
+
+/// What failed, in alarm ink, with one RETRY (SCREENS.md rule 7).
+struct ErrorLine: View {
+    let message: String
+    let retry: () -> Void
+
+    var body: some View {
+        HStack {
+            Text(message).font(.condensed(13)).foregroundStyle(Color.alarmInk)
+            Spacer()
+            Button(action: retry) {
+                Text("RETRY ›").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
+                    .frame(minWidth: minTouch, minHeight: minTouch).contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
         }
     }
 }

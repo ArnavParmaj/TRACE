@@ -74,7 +74,7 @@ struct MoneyView: View {
                 if anyEver { trend }
                 if !entries.isEmpty { entryList }
                 PrimaryButton("+ ADD EXPENSE") { adding = true }
-                if let error { Text(error).font(.condensed(13)).foregroundStyle(Color.alarmInk) }
+                if let error { ErrorLine(message: error, retry: reload) }
             }
             .padding(.horizontal, 20).padding(.bottom, 20)
             .animation(.easeOut(duration: 0.2), value: entries.map(\.id))

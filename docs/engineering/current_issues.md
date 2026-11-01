@@ -27,7 +27,8 @@ Status key: OPEN, MONITORING (fix in, needs a phone check), FIXED, WONTFIX.
 
 ### I-04 Close buttons are not in one place (FIXED in code, check on phone)
 - Every sheet now has CLOSE top-right. `SheetBar` already did this; `ExpenseSheet` was the one screen with CLOSE top-left. It now matches, with DELETE / DISCARD DRAFT moved to the far left so a gloved miss next to CLOSE cannot discard a draft.
-- Left as is: ride mode's `‹` (top-left, back to Today while the ride keeps recording) and onboarding's `‹ BACK` (previous step). Both are "back", not "close".
+- 2026-11-01: ride mode's `‹` (top-left) became CLOSE at the far right, after PAUSE. It only leaves the screen; the ride keeps recording.
+- Left as is: onboarding's `‹ BACK` (previous step), which is "back", not "close".
 
 ### I-07 Design critique 2026-10-29: 28 items (OPEN, 6 major fixed in code)
 - Full list: `design-critique-2026-10-29.md` (score 25/40). Rider's order: 6 major, then the undo bar everywhere, then items 7–22; polish 23–28 later.
@@ -44,8 +45,10 @@ Status key: OPEN, MONITORING (fix in, needs a phone check), FIXED, WONTFIX.
   field the first key replaces, ⌫ clears the whole value, not one digit.
 
 ### I-05 Phone checks not yet done (OPEN)
-- M3 real fuel pump (user expects it to work, no result yet), M4 km/L by hand on the phone, M6 handlebar mount (no mount yet), M7 timings and airplane-mode replay on the phone, PB badge and keypad check on the phone, M8 step 6 tap-through offline.
-- M5 notification: the user reports it worked.
+- Closed 2026-11-01 (user report): M3 fuel pump event recorded, M5 notification shown, keypad and PB badge fixed.
+- M6 handlebar mount: ridden, app worked and speed showed correctly. Found speed spikes of 17–18 km/h while standing at ride start, fixed in code (decision 80, MONITORING until a phone ride confirms). Gloved logging, daylight reading and stopping not yet checked.
+- Still open: M4 km/L by hand (user does not remember doing it; check at the next fill), M7 timings on the phone, airplane-mode replay (ride detail with offline map works), M8 step 6 tap-through offline.
+- Crash-log check 2026-11-01: 143 iPhone logs (2 Oct to now) hold nothing for TRACE or TRACEWidgets, no memory kills. 7 simulator-only TRACEWidgets XPC faults on the Mac, all system frames, not seen on the phone.
 
 ### I-06 Free-signing 7-day expiry (RECURRING)
 - Every ~7 days the app shows "no longer available". Fix: rebuild and reinstall over the top. Never uninstall, that deletes the ride data.

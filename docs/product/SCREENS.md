@@ -180,7 +180,7 @@ Screen kept awake while this is foregrounded (`isIdleTimerDisabled`).
 - The REC dot is amber, not red: recording is live state, not an emergency (rule 3).
 - GPS lost: speed shows `--` in `--ink-faint` and a small `NO GPS` label. Not red;
   it is not the rider's emergency.
-- Top-left `‹` (≥60pt) returns to Today without stopping the ride.
+- Top-right CLOSE (≥60pt, same spot as every sheet) returns to Today without stopping the ride.
 
 ### S04 · Ride recovery (decision 25)
 Shown on launch when a ride is still marked recording and the recorder is not running.

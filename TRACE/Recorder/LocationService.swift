@@ -64,9 +64,13 @@ final class LocationService: NSObject, RideSensors, CLLocationManagerDelegate {
 
 extension Fix {
     init(_ location: CLLocation) {
+        // Cold-start fixes carry a bogus speed (17 km/h standing). Mark it invalid (-1, CoreLocation's
+        // own convention) so the gauge, stats and analysis all skip it; the position is still stored.
+        let trusted = location.horizontalAccuracy >= 0 && location.horizontalAccuracy <= RideStats.maxAccuracyM
+            && (location.speedAccuracy < 0 || location.speedAccuracy <= RideStats.maxSpeedAccuracyMps)
         self.init(time: location.timestamp,
                   lat: location.coordinate.latitude, lon: location.coordinate.longitude,
-                  altitudeM: location.altitude, speedMps: location.speed,
+                  altitudeM: location.altitude, speedMps: trusted ? location.speed : -1,
                   accuracyM: location.horizontalAccuracy)
     }
 }

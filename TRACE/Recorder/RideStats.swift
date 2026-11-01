@@ -26,7 +26,8 @@ struct RideStats {
     static let autoCloseAfterS: TimeInterval = 1800     // decision 50 (was 10 min, decision 23)
     static let stillRadiusM = 50.0                      // moving further than this restarts the still clock
     static let maxAccuracyM = 30.0                      // worse fixes are stored but not counted
-    static let climbStepM = 2.0                         // barometer noise floor
+    static let maxSpeedAccuracyMps = 2.0                // ~7 km/h; a looser speed reading is guesswork
+    static let climbStepM = 2.0                        // barometer noise floor
 
     private(set) var distanceM = 0.0
     private(set) var stoppedS = 0.0
