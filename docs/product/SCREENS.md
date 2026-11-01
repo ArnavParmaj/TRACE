@@ -205,6 +205,7 @@ Shown once, right after a ride stops. The fusion moment.
 - List grouped by month: date, start → end place, km, duration, ₹ total if any, PB badge.
 - No search in v1 (decision 62): the chart and month groups find a ride.
 - Empty: "No rides yet. Start one from Today."
+- Error: "Couldn't load RIDES: …" with RETRY › in place of the list.
 
 ### S07 · Ride detail
 Built (M4 + M7, `RideSheet`): map, 01 STATS, 02 ELEVATION, 03 SPEED (bands, top, stops), 04 SPLITS,

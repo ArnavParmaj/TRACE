@@ -105,12 +105,12 @@ per-trip recap (S05).
 Onboarding (S01), Settings with vehicle picker (S16), empty/error states on every
 screen, Dynamic Type pass at the largest sizes, VoiceOver labels, airplane-mode test of
 every screen, store file protection (default `completeUntilFirstUserAuthentication`, decision 69), a crash-log check.
-- **Progress:** S01 onboarding and S16 settings built (decision 67); file protection settled, route samples kept and indexed (decision 69); fusion for late and re-timed expenses (decision 70); ride odometer readings (decision 71); S15 dropped (decision 72); 2026-11-01: ride-mode LOG band and draft discard (79), ride-start speed filter and RETRY on error lines (80), CLOSE top-right everywhere, crash-log check clean. Open: Dynamic Type I-01 (last), VoiceOver, empty/error on Rides, airplane replay, ship checklist.
+- **Progress:** S01 onboarding and S16 settings built (decision 67); file protection settled, route samples kept and indexed (decision 69); fusion for late and re-timed expenses (decision 70); ride odometer readings (decision 71); S15 dropped (decision 72); 2026-11-01: ride-mode LOG band and draft discard (79), ride-start speed filter and RETRY on error lines (80), CLOSE top-right everywhere, crash-log check clean. Open: Dynamic Type I-01 (last), VoiceOver, airplane replay, ship checklist.
 - **Exit:** the v1 ship checklist below is all ticked.
 
 ### v1 ship checklist
 - [ ] Every PRD "Must" feature works on device (open: km/L by hand, gloved logging, daylight reading)
-- [ ] Every screen in `SCREENS.md` (v1 rows) has empty, error and populated states (open: Rides has no error state)
+- [ ] Every screen in `SCREENS.md` (v1 rows) has empty, error and populated states
 - [ ] Airplane mode: every screen works (ride detail + offline map pass; replay and the rest still to walk)
 - [ ] Largest Dynamic Type size: nothing truncated on Today, Ride mode, Bike (I-01, last)
 - [ ] Zero rides lost across all test rides (ride 9 clean; owner to confirm the earlier ones)

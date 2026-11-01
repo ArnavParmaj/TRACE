@@ -146,6 +146,9 @@ final class RideRecorder {
     /// Closed rides for the Rides tab, newest first.
     func finishedRides() -> [Ride] { attempt { try rides.finished() } ?? [] }
 
+    /// Same list, but the failure reaches the caller, for a screen that shows an error with RETRY.
+    func loadFinishedRides() throws -> [Ride] { try rides.finished() }
+
     /// Blank clears the name back to the date.
     func rename(_ finished: Ride, to name: String) {
         let trimmed = name.trimmingCharacters(in: .whitespaces)

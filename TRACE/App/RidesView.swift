@@ -15,6 +15,7 @@ struct RidesView: View {
     @State private var deleting: Ride?
     @State private var renaming: Ride?
     @State private var newName = ""
+    @State private var error: String?
 
     private var review: Review { Review(context: context, user: LocalStubUser.load()) }
     private static let cal = Calendar(identifier: .iso8601)
@@ -29,7 +30,8 @@ struct RidesView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 28) {
                 ScreenHeader(title: "RIDES")
-                if rides.isEmpty {
+                if let error { ErrorLine(message: error, retry: reload) }
+                else if rides.isEmpty {
                     Text("No rides yet. Start one from Today.").font(.condensed(17)).foregroundStyle(Color.inkDim)
                 } else {
                     weekChart
@@ -197,8 +199,11 @@ struct RidesView: View {
     }
 
     private func reload() {
-        rides = recorder.finishedRides()
-        totals = (try? Ledger(context: context, user: LocalStubUser.load()).totalsByRide()) ?? [:]
+        do {
+            rides = try recorder.loadFinishedRides()
+            totals = try Ledger(context: context, user: LocalStubUser.load()).totalsByRide()
+            error = nil
+        } catch { self.error = "Couldn't load RIDES: \(error.localizedDescription)" }
         bests = Review.bests(rides)
         weeks = Review.weeklyKm(rides)
     }
