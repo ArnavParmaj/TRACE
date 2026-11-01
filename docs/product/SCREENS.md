@@ -144,7 +144,8 @@ TRACE                         TUE 21 OCT   ⚙
 - **Sections hide when empty** except 01. With no drafts and nothing due, Today is short.
 - 03 DUE shows overdue (alarm rail) + due-soon only; "fine" items live on the Bike tab.
 - Due-soon threshold: within 15% of interval or 14 days (tunable in Settings).
-- 02 DRAFTS shows at most 3 rows, then "ALL 14 DRAFTS ›". Completing walks the queue
+- 02 DRAFTS shows at most 3 rows, then "ALL 14 DRAFTS ›". Hold a row → Discard draft,
+  with the 5s UNDO bar (rule 8). Completing walks the queue
   draft by draft (SAVE moves to the next), so 14 drafts never means 14 round trips.
 - Location refused: 01 shows LOCATION IS OFF · SETTINGS › (opens iPhone Settings) instead of
   START RIDE, with one line on where to turn it on. A ride without location records nothing.
@@ -165,13 +166,13 @@ Screen kept awake while this is foregrounded (`isIdleTimerDisabled`).
 │                              │
 │   23.4 KM        +312 M      │  distance · climb, Oswald
 │                              │
-│      TAP ANYWHERE TO LOG     │  ink-faint
-│                              │
+│ ──────────── LOG ─────────── │  log band, 116pt, amber
 │ ─────── HOLD TO STOP ─────── │  bottom band, ≥100pt
 └──────────────────────────────┘
 ```
-- **Tap anywhere** above the stop band → writes a `CaptureDraft` tied to this ride,
-  success haptic, a 1s amber flash on the REC dot. No sheet, no confirmation.
+- **Tap the LOG band** (full width, above the stop band) → writes a `CaptureDraft` tied to
+  this ride, success haptic, the band reads DRAFT LOGGED · n for 1s. No sheet, no confirmation.
+  The gauge and stats do nothing when tapped: stray touches used to log drafts (decision 79).
 - **Hold the stop band 2s** → progress bar fills along the band → ride stops → S05.
   Release early cancels. No tap-to-stop, ever.
 - No map. A map lights the whole screen and is not readable at a glance.
@@ -346,7 +347,7 @@ Gloves on, phone locked → press Action Button → haptic → done (<2s). Later
 one was running, else unattached until a ride window covers it.
 
 **F2 · A ride, start to finish.**
-Today → START RIDE → (first time: "Always" location prompt) → Ride mode → tap to log
+Today → START RIDE → (first time: "Always" location prompt) → Ride mode → tap LOG
 drafts on the way → hold STOP 2s → Recap: attached expenses, drafts to complete,
 odometer prompt → DONE.
 
@@ -384,7 +385,7 @@ interfaces), emil-design-eng (frequency and easing rules).
 | Press feedback (every button) | constant | scale 0.97 on touch-down, ~120ms |
 | Sheets (S04, S08, S09, S14) | occasional | system sheet: drag-to-dismiss, velocity-aware, interruptible |
 | Push to detail | occasional | system navigation push |
-| Capture confirm (Ride mode tap) | per log | 1s amber "DRAFT LOGGED · n" + success haptic, same frame |
+| Capture confirm (Ride mode LOG) | per log | 1s amber "DRAFT LOGGED · n" + success haptic, same frame |
 | Hold-to-stop | per ride | fill over 2s linear while held; snaps back in 200ms on release |
 | Map replay along route | rare, opt-in | allowed; off under Reduce Motion |
 

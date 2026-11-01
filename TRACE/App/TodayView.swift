@@ -13,6 +13,7 @@ struct TodayView: View {
     @State private var openDoc: VehicleDocument?
     @State private var locationOff = false
     @Environment(\.openURL) private var openURL
+    @Environment(UndoCenter.self) private var undo
     @State private var completing: CaptureDraft?
     @State private var showRide = false
     @State private var recap: Ride?
@@ -155,6 +156,9 @@ struct TodayView: View {
             ForEach(drafts.prefix(3)) { draft in
                 Button { completing = draft } label: { draftRow(draft) }
                     .buttonStyle(PressStyle())
+                    .contextMenu {
+                        Button("Discard draft", systemImage: "trash", role: .destructive) { discard(draft) }
+                    }
             }
             if drafts.count > 3 {
                 Button { completing = drafts.first } label: {
@@ -253,6 +257,16 @@ struct TodayView: View {
 
     private func showRecap() {
         if let closed = recorder.lastClosed, closed.id != shownRecap { shownRecap = closed.id; recap = closed }
+    }
+
+    /// Hold a draft row → Discard. Soft delete, so UNDO just restores it.
+    private func discard(_ draft: CaptureDraft) {
+        do {
+            try capture.discard(draft)
+            let capture = capture
+            undo.show("Draft discarded") { try? capture.restore(draft) }   // restore posts .draftCaptured → reload
+            reload()
+        } catch { self.error = "Couldn't discard: \(error.localizedDescription)" }
     }
 
     private func reload() {

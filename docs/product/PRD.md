@@ -144,7 +144,7 @@ arrive at v2 with accounts and selective sharing.
 | One-press capture via Action Button | The product thesis. Without it this is just another form-filling app. |
 | Capture drafts (log now, complete later) | Makes capture non-blocking, which is what makes it survive gloves and queues. |
 | Ride recording: GPS route, distance, duration, barometric climb, speed | The spine. Everything else attaches to a ride. |
-| Ride mode screen (artboard F) | Mount-readable, minimal lit pixels, tap-anywhere logging. |
+| Ride mode screen (artboard F) | Mount-readable, minimal lit pixels, one full-width LOG band. |
 | Today screen (artboard E) | Single surface for live state, recent entries, due items. |
 | Expense logging with fuel detail (litres, price, full-tank flag) | Full-tank entries are the only honest basis for km/L. |
 | Automatic ride-expense fusion | The differentiator. Two lines of predicate, enormous payoff. |
@@ -293,7 +293,7 @@ arrive at v2 with accounts and selective sharing.
 | Capture drafts queue | **Must** | Incomplete entries surface on Today for completion when stopped. |
 | Quick expense entry | **Must** | Amount, category, optional note — three taps maximum. |
 | Fuel entry with full-tank flag | **Must** | Litres, price, full-tank boolean; only full fills feed km/L. |
-| Tap-anywhere logging in ride mode | **Must** | No precision target while moving. |
+| One-tap logging in ride mode | **Must** | A full-width LOG band, no precision target while moving (decision 79). |
 | Siri / Shortcuts phrase | Should | "Log fuel in Trace" as a hands-free alternative. |
 | Control Center control | Nice | Blocked on the App Groups spike; do not build until resolved. |
 

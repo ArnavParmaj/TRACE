@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// S03 Ride mode (artboard F): the handlebar screen. Lights few pixels, no precision targets.
-/// Tap anywhere above the band logs a draft; hold the band 2 s to stop. An unfinished ride
+/// The LOG band logs a draft; hold the bottom band 2 s to stop. An unfinished ride
 /// found on launch is resolved here first (S04).
 struct RideModeView: View {
     @Environment(RideRecorder.self) private var recorder
@@ -46,10 +46,8 @@ struct RideModeView: View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             VStack(spacing: 0) {
                 topBar(now: context.date)
-                Button(action: log) { centre(now: context.date) }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Log a draft")
-                    .accessibilityHint("Saves the time and place. Complete it later on Today.")
+                centre(now: context.date)
+                logButton
                 stopBand
             }
         }
@@ -101,14 +99,24 @@ struct RideModeView: View {
                 stat(String(format: "%.1f", recorder.stats.distanceM / 1000), "KM")
                 stat("+\(Int(recorder.stats.climbM))", "M CLIMB")
             }
-            Text(failed ? "COULDN'T SAVE · TAP AGAIN" : flash ? "DRAFT LOGGED · \(logged)" : "TAP ANYWHERE TO LOG")
-                .font(.oswald(15, .medium)).tracking(2.7)
-                .foregroundStyle(failed ? Color.alarmInk : flash ? Color.accent : Color.inkMuted)
-                .accessibilityHidden(true)
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(Rectangle())
+    }
+
+    /// One deliberate target: a stray tap on the gauge used to log a draft.
+    private var logButton: some View {
+        Button(action: log) {
+            Text(failed ? "COULDN'T SAVE · TAP AGAIN" : flash ? "DRAFT LOGGED · \(logged)" : "LOG")
+                .font(.oswald(failed || flash ? 18 : 28, .semibold)).tracking(failed || flash ? 2.7 : 6)
+                .foregroundStyle(failed ? Color.alarmInk : Color.accent)
+                .frame(maxWidth: .infinity, minHeight: 116)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
+        .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+        .accessibilityLabel("Log a draft")
+        .accessibilityHint("Saves the time and place. Complete it later on Today.")
     }
 
     private func stat(_ value: String, _ unit: String) -> some View {
