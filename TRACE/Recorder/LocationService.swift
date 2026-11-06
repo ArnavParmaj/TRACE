@@ -16,6 +16,8 @@ final class LocationService: NSObject, RideSensors, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     private let altimeter = CMAltimeter()
     private var onFix: (@MainActor @Sendable (Fix) -> Void)?
+    private var startedAt = Date.distantPast
+    private var lastFix: Fix?
 
     /// The rider said no (or a profile blocks it): a ride would record nothing.
     static var isDenied: Bool { [.denied, .restricted].contains(CLLocationManager().authorizationStatus) }
@@ -34,6 +36,8 @@ final class LocationService: NSObject, RideSensors, CLLocationManagerDelegate {
     func start(onFix: @escaping @MainActor @Sendable (Fix) -> Void,
                onAltitude: @escaping @MainActor @Sendable (Double) -> Void) {
         self.onFix = onFix
+        startedAt = .now
+        lastFix = nil
         // When-in-use is enough: updates started in the foreground continue in the background.
         manager.requestWhenInUseAuthorization()
         manager.allowsBackgroundLocationUpdates = true
@@ -55,22 +59,41 @@ final class LocationService: NSObject, RideSensors, CLLocationManagerDelegate {
 
     // The manager was created on the main thread, so CoreLocation calls back on it.
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let fixes = locations.map(Fix.init)
         MainActor.assumeIsolated {
-            for fix in fixes { onFix?(fix) }
+            let warm = Date.now.timeIntervalSince(startedAt) > RideStats.coldStartS
+            for location in locations {
+                var fix = Fix(location, warmedUp: warm)
+                if fix.speedMps < 0, warm, let prev = lastFix, let mps = fix.derivedSpeed(from: prev) {
+                    fix.speedMps = mps
+                }
+                lastFix = fix
+                onFix?(fix)
+            }
         }
     }
 }
 
 extension Fix {
-    init(_ location: CLLocation) {
+    init(_ location: CLLocation, warmedUp: Bool = false) {
         // Cold-start fixes carry a bogus speed (17 km/h standing). Mark it invalid (-1, CoreLocation's
         // own convention) so the gauge, stats and analysis all skip it; the position is still stored.
+        let limit = warmedUp ? RideStats.warmSpeedAccuracyMps : RideStats.maxSpeedAccuracyMps
         let trusted = location.horizontalAccuracy >= 0 && location.horizontalAccuracy <= RideStats.maxAccuracyM
-            && (location.speedAccuracy < 0 || location.speedAccuracy <= RideStats.maxSpeedAccuracyMps)
+            && (location.speedAccuracy < 0 || location.speedAccuracy <= limit)
         self.init(time: location.timestamp,
                   lat: location.coordinate.latitude, lon: location.coordinate.longitude,
                   altitudeM: location.altitude, speedMps: trusted ? location.speed : -1,
                   accuracyM: location.horizontalAccuracy)
+    }
+
+    /// Speed from the last good position when the reported one is invalid. Nil when the step is
+    /// too short to beat the position error (standing-still jitter) or the fixes are too far apart.
+    func derivedSpeed(from prev: Fix) -> Double? {
+        let dt = time.timeIntervalSince(prev.time)
+        guard dt > 0, dt <= 3, accuracyM >= 0, accuracyM <= RideStats.maxAccuracyM else { return nil }
+        let d = CLLocation(latitude: prev.lat, longitude: prev.lon)
+            .distance(from: CLLocation(latitude: lat, longitude: lon))
+        let mps = d / dt
+        return d > max(accuracyM, prev.accuracyM) && mps >= RideStats.stillBelowMps ? mps : nil
     }
 }

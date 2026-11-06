@@ -64,6 +64,10 @@ struct RideAnalysis: Sendable {
                     let joint = segments.last?.points.last
                     segments.append(Segment(band: band, points: (joint.map { [$0] } ?? []) + [p]))
                 }
+            } else if f.speedMps < 0, !segments.isEmpty {
+                // Speed unknown, position good: keep the line on the road. Skipping these drew
+                // straight chords across corners. Known-still fixes (0..<1) stay out: jitter.
+                segments[segments.count - 1].points.append(p)
             }
             cum[i] = distanceM
         }

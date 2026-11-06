@@ -285,6 +285,21 @@ private func ride(from startS: Int, seconds: Int, speed: Double, lat0: Double = 
         #expect(Fix(location(accuracy: 8, speedAccuracy: 6)).speedMps == -1)     // loose speed
     }
 
+    @Test func warmedUpRideToleratesVibrationNoise() {
+        #expect(Fix(location(accuracy: 8, speedAccuracy: 3), warmedUp: true).speedMps == 5)
+        #expect(Fix(location(accuracy: 8, speedAccuracy: 3)).speedMps == -1)    // still strict at cold start
+    }
+
+    @Test func invalidSpeedIsDerivedFromPositions() {
+        let prev = Fix(time: t0, lat: 19, lon: 72.8, accuracyM: 5)
+        let moved = Fix(time: t0.addingTimeInterval(1), lat: 19 + 10 / 111_320, lon: 72.8, speedMps: -1, accuracyM: 5)
+        #expect(abs((moved.derivedSpeed(from: prev) ?? 0) - 10) < 0.2)
+        let jitter = Fix(time: t0.addingTimeInterval(1), lat: 19 + 3 / 111_320, lon: 72.8, speedMps: -1, accuracyM: 5)
+        #expect(jitter.derivedSpeed(from: prev) == nil)                          // inside position error
+        let late = Fix(time: t0.addingTimeInterval(9), lat: 19.01, lon: 72.8, speedMps: -1, accuracyM: 5)
+        #expect(late.derivedSpeed(from: prev) == nil)                            // gap too long
+    }
+
     @Test func goodSpeedIsKept() {
         #expect(Fix(location(accuracy: 8, speedAccuracy: 0.5)).speedMps == 5)
         #expect(Fix(location(accuracy: 8, speedAccuracy: -1)).speedMps == 5)     // accuracy unreported

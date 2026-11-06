@@ -30,6 +30,12 @@ private func fixes(_ legs: [(Int, Double)], altitude: (Int) -> Double = { _ in 0
         #expect(abs(a.topSpeedKph - 90) < 0.01)
     }
 
+    @Test func unknownSpeedFixesStayOnTheLine() {
+        var f = fixes([(60, 36)])
+        for i in 20..<40 { f[i].speedMps = -1 }   // speed blanked, position still good
+        #expect(RideAnalysis(f).segments.flatMap(\.points).count == 60)
+    }
+
     /// 10 km at 36 km/h (1,000 s), then 10 km at 72 km/h (500 s): the best 10 km is the fast one.
     @Test func fastestTenKilometres() throws {
         let a = RideAnalysis(fixes([(1001, 36), (501, 72)]))
