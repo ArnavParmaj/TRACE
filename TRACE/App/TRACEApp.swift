@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct TRACEApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     let container: ModelContainer
     @State private var recorder: RideRecorder
     @State private var undo = UndoCenter()

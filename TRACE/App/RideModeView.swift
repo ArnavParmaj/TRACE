@@ -15,6 +15,11 @@ struct RideModeView: View {
     @State private var failed = false
     @State private var locationOff = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @State private var music = MusicController()
+
+    /// Phone on its side: the handlebar layout (decision 85).
+    private var landscape: Bool { verticalSizeClass == .compact }
 
     /// Above this the gauge is full. A scale, not a limit.
     static let gaugeMaxKph = 120.0
@@ -24,8 +29,17 @@ struct RideModeView: View {
             if let orphan = recorder.orphan { RecoveryView(ride: orphan) } else { riding }
         }
         .background(Color.ground.ignoresSafeArea())
-        .onAppear { UIApplication.shared.isIdleTimerDisabled = true }    // readable on the bars
-        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .background { VolumeHost(music: music).frame(width: 1, height: 1) }
+        .onAppear {
+            UIApplication.shared.isIdleTimerDisabled = true    // readable on the bars
+            OrientationLock.set(.allButUpsideDown)
+            music.start()
+        }
+        .onDisappear {
+            UIApplication.shared.isIdleTimerDisabled = false
+            OrientationLock.set(.portrait)
+            music.stop()
+        }
         .task(id: scenePhase) { locationOff = LocationService.isDenied }   // rechecked on return from Settings
         // Haptic and visual on the same frame (decision 52).
         .sensoryFeedback(.success, trigger: logged)
@@ -44,12 +58,69 @@ struct RideModeView: View {
 
     private var riding: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            VStack(spacing: 0) {
-                topBar(now: context.date)
-                centre(now: context.date)
-                logButton
+            if landscape {
+                landscapeBody(now: context.date)
+            } else {
+                VStack(spacing: 0) {
+                    topBar(now: context.date)
+                    centre(now: context.date)
+                    logButton
+                    stopBand
+                }
+            }
+        }
+    }
+
+    // MARK: Landscape
+
+    /// Gauge left; km, music and volume right; LOG, PAUSE and STOP along the bottom (artboard F, landscape).
+    private func landscapeBody(now: Date) -> some View {
+        let speed = currentKph(now)
+        let paused = recorder.phase == .paused
+        return VStack(spacing: 0) {
+            topBar(now: now)
+            HStack(spacing: 24) {
+                ZStack {
+                    Gauge(fraction: (speed ?? 0) / Self.gaugeMaxKph, size: 190)
+                    VStack(spacing: 4) {
+                        Text(speed.map { String(Int($0.rounded())) } ?? "--")
+                            .font(.oswald(88, .bold)).monospacedDigit().tracking(-2)
+                            .foregroundStyle(speed == nil ? Color.inkFaint : Color.ink)
+                            .lineLimit(1).minimumScaleFactor(0.5)
+                        Text(speed == nil ? statusLabel(nil) : "KM/H").font(.oswald(15, .medium)).tracking(3.6)
+                            .foregroundStyle(Color.inkMuted)
+                    }
+                }
+                .frame(width: 300).frame(maxHeight: .infinity)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(speed.map { "Speed \(Int($0)) kilometres per hour" } ?? statusLabel(nil))
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: 32) {
+                        stat(String(format: "%.1f", recorder.stats.distanceM / 1000), "KM")
+                        stat("+\(Int(recorder.stats.climbM))", "M CLIMB")
+                    }
+                    Spacer(minLength: 0)
+                    MusicStrip(music: music)
+                    Spacer(minLength: 0)
+                    VolumeRow(music: music)
+                }
+                .frame(maxHeight: .infinity)
+                .padding(.vertical, 6)
+            }
+            .padding(.horizontal, 16)
+            HStack(spacing: 10) {
+                CaptureButton(title: failed ? "COULDN'T SAVE · TAP AGAIN" : flash ? "DRAFT LOGGED · \(logged)" : "LOG", action: log)
+                Button { paused ? recorder.resumeFromPause() : recorder.pause() } label: {
+                    Text(paused ? "RESUME" : "PAUSE").font(.oswald(22, .semibold)).tracking(4)
+                        .foregroundStyle(paused ? Color.accent : Color.inkDim)
+                        .frame(maxWidth: .infinity, minHeight: 106)
+                        .overlay { Rectangle().stroke(paused ? Color.accent : Color.surfaceRule, lineWidth: 1) }
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(PressStyle(haptic: false))
                 stopBand
             }
+            .padding(.horizontal, 16)
         }
     }
 
@@ -61,12 +132,14 @@ struct RideModeView: View {
             Text(paused ? "PAUSED" : "REC").font(.oswald(13, .medium)).tracking(2.6).foregroundStyle(Color.inkMuted)
             Spacer()
             Text(clock(recorder.elapsed(at: now))).font(.oswald(17, .medium)).monospacedDigit().foregroundStyle(Color.inkMuted)
-            Button { paused ? recorder.resumeFromPause() : recorder.pause() } label: {
-                Text(paused ? "RESUME" : "PAUSE").font(.oswald(14, .semibold)).tracking(1.6)
-                    .foregroundStyle(paused ? Color.accent : Color.inkDim)
-                    .frame(minWidth: 84, minHeight: minTouch).contentShape(Rectangle())
+            if !landscape {   // landscape has PAUSE in the bottom row
+                Button { paused ? recorder.resumeFromPause() : recorder.pause() } label: {
+                    Text(paused ? "RESUME" : "PAUSE").font(.oswald(14, .semibold)).tracking(1.6)
+                        .foregroundStyle(paused ? Color.accent : Color.inkDim)
+                        .frame(minWidth: 84, minHeight: minTouch).contentShape(Rectangle())
+                }
+                .buttonStyle(PressStyle(haptic: false))
             }
-            .buttonStyle(PressStyle(haptic: false))
             // CLOSE far right like every sheet; it only leaves the screen, the ride keeps recording.
             Button { dismiss() } label: {
                 Text("CLOSE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
@@ -137,8 +210,11 @@ struct RideModeView: View {
                 .font(.oswald(18, .medium)).tracking(4).foregroundStyle(Color.inkDim)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(height: 116)
-        .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+        .frame(height: landscape ? 106 : 116)
+        .overlay {
+            if landscape { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
+        }
+        .overlay(alignment: .top) { if !landscape { Rectangle().fill(Color.surfaceRule).frame(height: 1) } }
         .contentShape(Rectangle())
         .onLongPressGesture(minimumDuration: 2, maximumDistance: 60) {
             stops += 1
@@ -202,6 +278,7 @@ struct RideModeView: View {
 /// 4pt stroked arc over 270°, unlit track, three ticks. Never filled (DESIGN.md).
 private struct Gauge: View {
     let fraction: Double
+    var size: CGFloat = 240
 
     var body: some View {
         ZStack {
@@ -209,11 +286,11 @@ private struct Gauge: View {
             arc.trim(from: 0, to: 0.75 * min(1, max(0, fraction))).stroke(Color.accent, lineWidth: 4)
             ForEach([0.0, 0.375, 0.75], id: \.self) { at in
                 Rectangle().fill(Color.inkFaint).frame(width: 2, height: 8)
-                    .offset(y: -128)
+                    .offset(y: -(size / 2 + 8))
                     .rotationEffect(.degrees(225 + at * 360))
             }
         }
-        .frame(width: 240, height: 240)
+        .frame(width: size, height: size)
         .accessibilityHidden(true)
     }
 

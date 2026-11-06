@@ -29,6 +29,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>TRACE controls Apple Music playback from Ride mode.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>TRACE keeps recording your ride when the screen is off or the app is in the background.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -51,6 +53,8 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 </dict>
 </plist>

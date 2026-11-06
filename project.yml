@@ -28,7 +28,9 @@ targets:
       properties:
         CFBundleDisplayName: TRACE
         UILaunchScreen: {}
-        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # The app allows landscape; OrientationLock keeps everything but Ride mode in portrait.
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        NSAppleMusicUsageDescription: TRACE controls Apple Music playback from Ride mode.
         NSLocationWhenInUseUsageDescription: TRACE records your route while you ride.
         NSLocationAlwaysAndWhenInUseUsageDescription: TRACE keeps recording your ride when the screen is off or the app is in the background.
         NSMotionUsageDescription: TRACE uses the barometer to measure climb during a ride.
