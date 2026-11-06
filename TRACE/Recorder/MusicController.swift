@@ -57,7 +57,10 @@ final class MusicController {
 
     func togglePlay() { playing ? player.pause() : player.play() }
     func next() { player.skipToNextItem() }
-    func previous() { player.skipToPreviousItem() }
+    /// Past 3 s into a song, previous restarts it; tap again to go back a track, like a normal player.
+    func previous() {
+        if player.currentPlaybackTime > 3 { player.skipToBeginning() } else { player.skipToPreviousItem() }
+    }
 
     func toggleShuffle() {
         player.shuffleMode = shuffling ? .off : .songs

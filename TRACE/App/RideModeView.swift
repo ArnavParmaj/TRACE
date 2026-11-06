@@ -17,6 +17,7 @@ struct RideModeView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var music = MusicController()
+    @State private var page: Int? = 0   // 0 telemetry, 1 music
 
     /// Phone on its side: the handlebar layout (decision 85).
     private var landscape: Bool { verticalSizeClass == .compact }
@@ -94,18 +95,7 @@ struct RideModeView: View {
                 .frame(width: 300).frame(maxHeight: .infinity)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(speed.map { "Speed \(Int($0)) kilometres per hour" } ?? statusLabel(nil))
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack(spacing: 32) {
-                        stat(String(format: "%.1f", recorder.stats.distanceM / 1000), "KM")
-                        stat("+\(Int(recorder.stats.climbM))", "M CLIMB")
-                    }
-                    Spacer(minLength: 0)
-                    MusicStrip(music: music)
-                    Spacer(minLength: 0)
-                    VolumeRow(music: music)
-                }
-                .frame(maxHeight: .infinity)
-                .padding(.vertical, 6)
+                infoPane
             }
             .padding(.horizontal, 16)
             HStack(spacing: 10) {
@@ -122,6 +112,61 @@ struct RideModeView: View {
             }
             .padding(.horizontal, 16)
         }
+    }
+
+    /// One thing at a time: swipe up or down between telemetry and music (decision 87).
+    private var infoPane: some View {
+        GeometryReader { g in
+            ScrollView(.vertical) {
+                VStack(spacing: 0) {
+                    paneTelemetry.frame(height: g.size.height).id(0)
+                    paneMusic.frame(height: g.size.height).id(1)
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $page)
+            .scrollIndicators(.hidden)
+            .overlay(alignment: .trailing) {
+                VStack(spacing: 10) {
+                    ForEach(0..<2, id: \.self) { i in
+                        Circle().fill((page ?? 0) == i ? Color.accent : Color.inkFaint).frame(width: 8, height: 8)
+                    }
+                }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+            }
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    private func paneTitle(_ text: String) -> some View {
+        Text(text).font(.oswald(13, .medium)).tracking(2.6).foregroundStyle(Color.inkMuted)
+    }
+
+    private var paneTelemetry: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            paneTitle("TELEMETRY")
+            Spacer(minLength: 0)
+            HStack(spacing: 28) {
+                stat(String(format: "%.1f", recorder.stats.distanceM / 1000), "KM")
+                stat("+\(Int(recorder.stats.climbM))", "M CLIMB")
+                stat(String(Int((recorder.stats.maxSpeedMps * 3.6).rounded())), "TOP KM/H")
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading).padding(.trailing, 20)
+    }
+
+    private var paneMusic: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            paneTitle("MUSIC")
+            Spacer(minLength: 0)
+            MusicStrip(music: music)
+            Spacer(minLength: 0)
+            VolumeRow(music: music)
+        }
+        .padding(.trailing, 20)
     }
 
     private func topBar(now: Date) -> some View {

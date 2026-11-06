@@ -300,6 +300,27 @@ private func ride(from startS: Int, seconds: Int, speed: Double, lat0: Double = 
         #expect(late.derivedSpeed(from: prev) == nil)                            // gap too long
     }
 
+    /// 6 km/h reported, positions 0.5 m apart over 4 s: the phone-on-the-seat reading from the test ride.
+    @Test func parkedDriftIsZeroed() {
+        let history = (0..<4).map { Fix(time: t0.addingTimeInterval(Double($0)), lat: 19 + Double($0) * 0.1 / 111_320, lon: 72.8, speedMps: 1.7, accuracyM: 12) }
+        let now = Fix(time: t0.addingTimeInterval(4), lat: 19 + 0.5 / 111_320, lon: 72.8, speedMps: 1.7, accuracyM: 12)
+        #expect(now.speedChecked(against: history) == 0)
+    }
+
+    @Test func realLowSpeedAndLaunchAreKept() {
+        // Crawling at 2 m/s: 8 m over 4 s backs the reading up.
+        let crawl = (0..<4).map { Fix(time: t0.addingTimeInterval(Double($0)), lat: 19 + Double($0) * 2 / 111_320, lon: 72.8, speedMps: 2, accuracyM: 12) }
+        let next = Fix(time: t0.addingTimeInterval(4), lat: 19 + 8 / 111_320, lon: 72.8, speedMps: 2, accuracyM: 12)
+        #expect(next.speedChecked(against: crawl) == 2)
+        // Pulling away from a stop: 4 m/s now, only 4 m moved in the last 2 s.
+        let stopped = [Fix(time: t0, lat: 19, lon: 72.8, speedMps: 0, accuracyM: 5)]
+        let launch = Fix(time: t0.addingTimeInterval(2), lat: 19 + 4 / 111_320, lon: 72.8, speedMps: 4, accuracyM: 5)
+        #expect(launch.speedChecked(against: stopped) == 4)
+        // Fast speeds and no history are never second-guessed.
+        #expect(Fix(time: t0, lat: 19, lon: 72.8, speedMps: 20, accuracyM: 5).speedChecked(against: crawl) == 20)
+        #expect(Fix(time: t0, lat: 19, lon: 72.8, speedMps: 1.7, accuracyM: 5).speedChecked(against: []) == 1.7)
+    }
+
     @Test func goodSpeedIsKept() {
         #expect(Fix(location(accuracy: 8, speedAccuracy: 0.5)).speedMps == 5)
         #expect(Fix(location(accuracy: 8, speedAccuracy: -1)).speedMps == 5)     // accuracy unreported

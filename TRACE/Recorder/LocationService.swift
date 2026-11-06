@@ -17,7 +17,7 @@ final class LocationService: NSObject, RideSensors, CLLocationManagerDelegate {
     private let altimeter = CMAltimeter()
     private var onFix: (@MainActor @Sendable (Fix) -> Void)?
     private var startedAt = Date.distantPast
-    private var lastFix: Fix?
+    private var recent: [Fix] = []   // last ~6 s, oldest first
 
     /// The rider said no (or a profile blocks it): a ride would record nothing.
     static var isDenied: Bool { [.denied, .restricted].contains(CLLocationManager().authorizationStatus) }
@@ -37,7 +37,7 @@ final class LocationService: NSObject, RideSensors, CLLocationManagerDelegate {
                onAltitude: @escaping @MainActor @Sendable (Double) -> Void) {
         self.onFix = onFix
         startedAt = .now
-        lastFix = nil
+        recent = []
         // When-in-use is enough: updates started in the foreground continue in the background.
         manager.requestWhenInUseAuthorization()
         manager.allowsBackgroundLocationUpdates = true
@@ -63,10 +63,12 @@ final class LocationService: NSObject, RideSensors, CLLocationManagerDelegate {
             let warm = Date.now.timeIntervalSince(startedAt) > RideStats.coldStartS
             for location in locations {
                 var fix = Fix(location, warmedUp: warm)
-                if fix.speedMps < 0, warm, let prev = lastFix, let mps = fix.derivedSpeed(from: prev) {
+                if fix.speedMps < 0, warm, let prev = recent.last, let mps = fix.derivedSpeed(from: prev) {
                     fix.speedMps = mps
                 }
-                lastFix = fix
+                fix.speedMps = fix.speedChecked(against: recent)
+                recent.removeAll { fix.time.timeIntervalSince($0.time) > 6 }
+                recent.append(fix)
                 onFix?(fix)
             }
         }
@@ -84,6 +86,17 @@ extension Fix {
                   lat: location.coordinate.latitude, lon: location.coordinate.longitude,
                   altitudeM: location.altitude, speedMps: trusted ? location.speed : -1,
                   accuracyM: location.horizontalAccuracy)
+    }
+
+    /// A low reported speed the positions don't back up is GPS drift (a parked bike read 6 km/h): zero it.
+    /// `recent` is oldest first. With under 2 s of history there is nothing to check against.
+    func speedChecked(against recent: [Fix]) -> Double {
+        guard speedMps >= 0, speedMps < RideStats.driftBelowMps,
+              let base = recent.first(where: { time.timeIntervalSince($0.time) >= 2 }) else { return speedMps }
+        let dt = time.timeIntervalSince(base.time)
+        let d = CLLocation(latitude: base.lat, longitude: base.lon)
+            .distance(from: CLLocation(latitude: lat, longitude: lon))
+        return d < RideStats.driftMovedFraction * speedMps * dt ? 0 : speedMps
     }
 
     /// Speed from the last good position when the reported one is invalid. Nil when the step is

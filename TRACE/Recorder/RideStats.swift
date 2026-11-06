@@ -29,6 +29,8 @@ struct RideStats {
     static let maxSpeedAccuracyMps = 2.0                // ~7 km/h; a looser speed reading is guesswork at cold start
     static let warmSpeedAccuracyMps = 5.0               // handlebar vibration inflates it; 2.0 blanked 28% of a ride
     static let coldStartS: TimeInterval = 15            // the strict limit only applies this long after start
+    static let driftBelowMps = 5.0                      // ~18 km/h; below this a reported speed must be backed by movement
+    static let driftMovedFraction = 0.3                 // moved less than this share of speed x time = drift (read 6 km/h parked)
     static let climbStepM = 2.0                        // barometer noise floor
 
     private(set) var distanceM = 0.0
