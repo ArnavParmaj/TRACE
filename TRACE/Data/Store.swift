@@ -19,10 +19,12 @@ enum Store {
     }()
 
     static func container(inMemory: Bool = false) throws -> ModelContainer {
-        let synced = ModelConfiguration("synced", schema: Schema(syncableModels),
-                                        isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none)
-        let local = ModelConfiguration("local", schema: Schema(localOnlyModels),
-                                       isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none)
+        // groupContainer .none: with an App Group entitlement the default moves the store into the
+        // shared container, which would open an empty store over the rider's data (decision 91).
+        let synced = ModelConfiguration("synced", schema: Schema(syncableModels), isStoredInMemoryOnly: inMemory,
+                                        groupContainer: .none, cloudKitDatabase: .none)
+        let local = ModelConfiguration("local", schema: Schema(localOnlyModels), isStoredInMemoryOnly: inMemory,
+                                       groupContainer: .none, cloudKitDatabase: .none)
         return try ModelContainer(for: Schema(syncableModels + localOnlyModels),
                                   configurations: synced, local)
     }

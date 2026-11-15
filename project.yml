@@ -23,6 +23,11 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.arnavparmaj.trace
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: NO
+    # App Group: how the app hands the widget its snapshot. Works on the free Personal Team (decision 39).
+    entitlements:
+      path: TRACE/TRACE.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.arnavparmaj.trace]
     info:
       path: TRACE/Info.plist
       properties:
@@ -40,12 +45,13 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLSchemes: [trace]
   TRACEWidgets:
-    # S18 Live Activity. Local updates only: works on the free Personal Team.
+    # S18 Live Activity and the home-screen widgets (decision 91). Local updates only: works on the free Personal Team.
     type: app-extension
     platform: iOS
     sources:
       - TRACEWidgets
       - TRACE/Shared
+      - TRACE/Bike/Due.swift
       - TRACE/Design/Tokens.swift
       - TRACE/Design/Fonts
     settings:
@@ -53,6 +59,10 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.arnavparmaj.trace.widgets
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) WIDGET_EXTENSION
         GENERATE_INFOPLIST_FILE: NO
+    entitlements:
+      path: TRACEWidgets/TRACEWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.arnavparmaj.trace]
     info:
       path: TRACEWidgets/Info.plist
       properties:

@@ -23,19 +23,31 @@ struct TRACEApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView().preferredColorScheme(.dark)
+            content.preferredColorScheme(.dark)
                 // shortcut: dense dash layout breaks past xxxLarge (tab labels wrap, odometer clips); redo layouts to lift the cap.
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge).environment(recorder).environment(undo)
-                .onReceive(NotificationCenter.default.publisher(for: .draftCaptured)) { _ in syncActivity() }
+                .onReceive(NotificationCenter.default.publisher(for: .draftCaptured)) { _ in syncActivity(); feedWidget() }
         }
         .modelContainer(container)
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { recorder.saveNow() }   // a swipe-kill follows backgrounding
+            if phase != .active { feedWidget() }   // whatever was edited in the app reaches the widget
         }
+        .onChange(of: recorder.phase) { feedWidget() }
         // S18 Live Activity: on start, pause, stop, each 100 m and each draft.
         .onChange(of: recorder.phase) { syncActivity() }
         .onChange(of: Int(recorder.stats.distanceM / 100)) { syncActivity() }
     }
+
+    @ViewBuilder private var content: some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-widgetGallery") { WidgetGallery() } else { RootView() }   // simulator screenshots only
+        #else
+        RootView()
+        #endif
+    }
+
+    @MainActor private func feedWidget() { WidgetFeed.refresh(context: container.mainContext, recorder: recorder) }
 
     @MainActor private func syncActivity() {
         RideActivityController.sync(recorder, capture: Capture(context: container.mainContext, user: LocalStubUser.load()))

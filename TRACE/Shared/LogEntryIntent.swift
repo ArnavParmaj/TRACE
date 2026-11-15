@@ -19,6 +19,7 @@ struct LogEntryIntent: LiveActivityIntent {
         let place = CLLocationManager().location?.coordinate
         try Capture(context: Store.shared.mainContext, user: LocalStubUser.load())
             .log(lat: place?.latitude, lon: place?.longitude)
+        WidgetFeed.refresh(context: Store.shared.mainContext, recorder: nil)   // the widget's log count
         #endif
         return .result()   // no dialog: it adds a Done tap; the system ✓ is the confirmation
     }

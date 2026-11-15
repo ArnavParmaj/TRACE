@@ -3,6 +3,8 @@ import SwiftUI
 
 /// S02 Today: 01 RIDE, 02 DRAFTS, 03 DUE, 04 THIS WEEK, 05 RECENT. Empty sections hide, except 01.
 struct TodayView: View {
+    /// A widget or Live Activity tap, set by RootView; cleared once handled.
+    @Binding var link: URL?
     @Environment(RideRecorder.self) private var recorder
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
@@ -54,8 +56,14 @@ struct TodayView: View {
         }
         .task(id: scenePhase) { if scenePhase == .active { reload() } }
         .onReceive(NotificationCenter.default.publisher(for: .draftCaptured)) { _ in reload() }
-        // The Live Activity opens Ride mode (S18).
-        .onOpenURL { url in if url.host == "ride", recorder.phase != .idle { showRide = true } }
+        // The Live Activity opens Ride mode (S18); the widget's START RIDE starts one first (decision 91).
+        // `initial`: Today may not be on screen yet when the link arrives.
+        .onChange(of: link, initial: true) {
+            guard let host = link?.host else { return }
+            link = nil
+            if host == WidgetLink.start.rawValue, recorder.phase == .idle, !LocationService.isDenied { startRide() }
+            else if [WidgetLink.start.rawValue, WidgetLink.ride.rawValue].contains(host), recorder.phase != .idle { showRide = true }
+        }
         .sheet(item: $completing, onDismiss: reload) { DraftSheet(start: $0, capture: capture, ledger: ledger) }
         .sheet(item: $recap, onDismiss: reload) { RideSheet(ride: $0, isRecap: true) }
         .sheet(item: $openRide, onDismiss: reload) { RideSheet(ride: $0) }
@@ -101,12 +109,7 @@ struct TodayView: View {
                 Text("Rides need location for the route and distance. Settings › TRACE › Location › While Using.")
                     .font(.condensed(15)).foregroundStyle(Color.inkDim).fixedSize(horizontal: false, vertical: true)
             } else if recorder.phase == .idle {
-                CaptureButton(title: "START RIDE", subtitle: bikeLine) {
-                    // No bike added yet: the ride still records, against no vehicle.
-                    let bike = try? garage.bike()
-                    recorder.start(vehicleID: bike?.id ?? .unowned, odoStartKm: bike.flatMap { try? garage.startReading($0) })
-                    showRide = true   // straight to the live numbers
-                }
+                CaptureButton(title: "START RIDE", subtitle: bikeLine, action: startRide)
                 if drafts.isEmpty && due.isEmpty && recent.isEmpty {
                     Text("Press the Action Button any time to log. Start a ride here.")
                         .font(.condensed(15)).foregroundStyle(Color.inkDim)
@@ -144,6 +147,13 @@ struct TodayView: View {
     }
 
     private var rideScreen: some View { RideModeView().environment(recorder) }
+
+    private func startRide() {
+        // No bike added yet: the ride still records, against no vehicle.
+        let bike = try? garage.bike()
+        recorder.start(vehicleID: bike?.id ?? .unowned, odoStartKm: bike.flatMap { try? garage.startReading($0) })
+        if recorder.phase != .idle { showRide = true }   // straight to the live numbers; an unfinished ride blocks a new one
+    }
 
     // MARK: 02 DRAFTS
 

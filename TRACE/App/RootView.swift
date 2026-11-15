@@ -15,6 +15,7 @@ struct RootView: View {
     @Environment(RideRecorder.self) private var recorder
     @AppStorage("onboarded") private var onboarded = false
     @State private var onboarding = false
+    @State private var link: URL?   // a widget or Live Activity tap, handed to Today
 
     var body: some View {
         VStack(spacing: 0) {
@@ -34,6 +35,11 @@ struct RootView: View {
         // Existing installs already have a bike, so they never see it.
         .task { onboarding = !onboarded && (try? Garage(context: context, user: LocalStubUser.load()).bike()) == nil }
         .fullScreenCover(isPresented: $onboarding) { OnboardingView(firstRun: true) }
+        // trace://bike opens the Bike tab; start, ride and today go to Today, which owns the ride screen.
+        .onOpenURL { url in
+            tab = url.host == WidgetLink.bike.rawValue ? .bike : .today
+            link = url
+        }
     }
 
     /// A ride in progress stays visible from every tab; a tap goes back to Today, which holds the ride screen (critique 22).
@@ -66,7 +72,7 @@ struct RootView: View {
 
     @ViewBuilder private var screen: some View {
             if tab == .today {
-                TodayView()
+                TodayView(link: $link)
             } else if tab == .rides {
                 RidesView()
             } else if tab == .bike {

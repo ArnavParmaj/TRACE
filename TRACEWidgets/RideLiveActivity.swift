@@ -4,7 +4,11 @@ import WidgetKit
 
 @main
 struct TRACEWidgets: WidgetBundle {
-    var body: some Widget { RideLiveActivity() }
+    var body: some Widget {
+        RideLiveActivity()
+        HomeWidget()
+        StartWidget()
+    }
 }
 
 /// S18: elapsed, distance, REC dot and one LOG button (same intent as the Action Button).
