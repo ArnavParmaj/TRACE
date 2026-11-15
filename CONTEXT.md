@@ -83,7 +83,9 @@ version after.
 
 ## Where things stand
 
-**Latest (2026-11-01), M8 ship hardening in progress.** 1 Nov: ride-mode LOG button and draft discard (decision 79); speed spikes at ride start fixed in `Fix.init` (decision 80, install and ride to confirm); ride-mode CLOSE now top-right; Today, Money, Bike and Rides errors carry RETRY, Bike SERVICE and DOCUMENTS have empty lines; phone crash logs checked, none for TRACE. VoiceOver pass done (I-08). Still open: I-01 Dynamic Type (do last), airplane replay, phone checks, ship checklist ticks.
+**Latest (2026-11-15), Ride mode on the handlebar.** Since 7 Nov: ride speed and map-line fixes (decisions 84, 87), landscape Ride mode with Apple Music controls (85), no backend for now (86). 15 Nov: LOCK button turns the screen off in-app, hold 1 s to wake (88); top bar is LOCK and CLOSE only, PAUSE sits beside HOLD TO STOP (89); portrait has the telemetry / music swipe pane too (90). The rider's mount covers the hardware buttons: every control must be on screen. Phone is now the new iPhone (see memory `device-run`). Next: home-screen widget, one widget in small and medium, 8 states by priority (mocks on the design canvas). Not yet checked on the phone: lock brightness and heat, music page fit in portrait, parked speed reading 0.
+
+**Earlier (2026-11-01), M8 ship hardening in progress.** 1 Nov: ride-mode LOG button and draft discard (decision 79); speed spikes at ride start fixed in `Fix.init` (decision 80, install and ride to confirm); ride-mode CLOSE now top-right; Today, Money, Bike and Rides errors carry RETRY, Bike SERVICE and DOCUMENTS have empty lines; phone crash logs checked, none for TRACE. VoiceOver pass done (I-08). Still open: I-01 Dynamic Type (do last), airplane replay, phone checks, ship checklist ticks.
 
 **Earlier (2026-10-29).** Read `docs/engineering/current_issues.md` first: it lists
 every open and resolved issue. Simulator tests for M7 are in (`TRACEUITests/ReplayTimingTests.swift`): cold open 8.2 s

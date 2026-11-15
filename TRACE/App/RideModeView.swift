@@ -18,6 +18,9 @@ struct RideModeView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var music = MusicController()
     @State private var page: Int? = 0   // 0 telemetry, 1 music
+    @State private var dark = false     // screen-off mode (decision 88)
+    @State private var waking = false
+    @State private var brightness: CGFloat?
 
     /// Phone on its side: the handlebar layout (decision 85).
     private var landscape: Bool { verticalSizeClass == .compact }
@@ -27,9 +30,15 @@ struct RideModeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if let orphan = recorder.orphan { RecoveryView(ride: orphan) } else { riding }
+            if let orphan = recorder.orphan { RecoveryView(ride: orphan) } else if dark { blackout } else { riding }
         }
         .background(Color.ground.ignoresSafeArea())
+        .statusBarHidden(dark)
+        .persistentSystemOverlays(dark ? .hidden : .automatic)
+        // Never leave the phone dimmed: wake when the app goes back, the ride changes state, or the screen closes.
+        .onChange(of: scenePhase) { _, phase in if phase != .active { setDark(false) } }
+        .onChange(of: recorder.phase) { setDark(false) }
+        .sensoryFeedback(.impact(weight: .light), trigger: dark)
         .background { VolumeHost(music: music).frame(width: 1, height: 1) }
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true    // readable on the bars
@@ -38,6 +47,7 @@ struct RideModeView: View {
         }
         .onDisappear {
             UIApplication.shared.isIdleTimerDisabled = false
+            setDark(false)
             OrientationLock.set(.portrait)
             music.stop()
         }
@@ -66,10 +76,45 @@ struct RideModeView: View {
                     topBar(now: context.date)
                     centre(now: context.date)
                     logButton
-                    stopBand
+                    HStack(spacing: 0) {
+                        pauseBand
+                        stopBand
+                    }
                 }
             }
         }
+    }
+
+    // MARK: Screen off
+
+    /// iOS has no call to lock the phone. Black pixels at zero brightness is the nearest thing:
+    /// the OLED is off, touches do nothing, the ride keeps recording. Hold 1 s to wake.
+    private var blackout: some View {
+        Color.ground.ignoresSafeArea()
+            .overlay {
+                if waking {
+                    Text("KEEP HOLDING").font(.oswald(18, .medium)).tracking(4).foregroundStyle(Color.inkMuted)
+                }
+            }
+            .contentShape(Rectangle())
+            .onLongPressGesture(minimumDuration: 1, maximumDistance: 60) { setDark(false) } onPressingChanged: { waking = $0 }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Screen off. The ride is recording.")
+            .accessibilityHint("Hold for one second to wake.")
+            .accessibilityAction { setDark(false) }
+    }
+
+    private func setDark(_ on: Bool) {
+        guard on != dark else { return }
+        if on {
+            brightness = UIScreen.main.brightness
+            UIScreen.main.brightness = 0
+        } else if let was = brightness {
+            UIScreen.main.brightness = was
+            brightness = nil
+        }
+        waking = false
+        dark = on
     }
 
     // MARK: Landscape
@@ -171,37 +216,55 @@ struct RideModeView: View {
 
     private func topBar(now: Date) -> some View {
         let paused = recorder.phase == .paused
+        // Two buttons only, one per corner: a gloved thumb can't hit the wrong one (decision 89).
         return HStack(spacing: 8) {
+            Button { setDark(true) } label: {
+                Text("LOCK").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
+                    .frame(minWidth: 96, minHeight: minTouch)
+                    .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle(haptic: false))
+            .accessibilityLabel("Screen off")
+            .accessibilityHint("Turns the screen black. The ride keeps recording. Hold one second to wake.")
+            Spacer()
             Circle().fill(flash ? Color.ink : Color.accent).frame(width: 10, height: 10)
                 .opacity(paused ? 0.4 : 1)
             Text(paused ? "PAUSED" : "REC").font(.oswald(13, .medium)).tracking(2.6).foregroundStyle(Color.inkMuted)
-            Spacer()
             Text(clock(recorder.elapsed(at: now))).font(.oswald(17, .medium)).monospacedDigit().foregroundStyle(Color.inkMuted)
-            if !landscape {   // landscape has PAUSE in the bottom row
-                Button { paused ? recorder.resumeFromPause() : recorder.pause() } label: {
-                    Text(paused ? "RESUME" : "PAUSE").font(.oswald(14, .semibold)).tracking(1.6)
-                        .foregroundStyle(paused ? Color.accent : Color.inkDim)
-                        .frame(minWidth: 84, minHeight: minTouch).contentShape(Rectangle())
-                }
-                .buttonStyle(PressStyle(haptic: false))
-            }
+            Spacer()
             // CLOSE far right like every sheet; it only leaves the screen, the ride keeps recording.
             Button { dismiss() } label: {
                 Text("CLOSE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)
-                    .frame(minWidth: minTouch, minHeight: minTouch).contentShape(Rectangle())
+                    .frame(minWidth: 96, minHeight: minTouch)
+                    .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
+                    .contentShape(Rectangle())
             }
             .buttonStyle(PressStyle())
             .accessibilityLabel("Close. The ride keeps recording.")
         }
-        .padding(.leading, 20).padding(.trailing, 8)
+        .padding(.horizontal, 16)
+    }
+
+    /// Portrait PAUSE: a full-height band left of HOLD TO STOP, off the top bar.
+    private var pauseBand: some View {
+        let paused = recorder.phase == .paused
+        return Button { paused ? recorder.resumeFromPause() : recorder.pause() } label: {
+            Text(paused ? "RESUME" : "PAUSE").font(.oswald(18, .medium)).tracking(4)
+                .foregroundStyle(paused ? Color.accent : Color.inkDim)
+                .frame(width: 140, height: 116)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle(haptic: false))
+        .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+        .overlay(alignment: .trailing) { Rectangle().fill(Color.surfaceRule).frame(width: 1) }
     }
 
     private func centre(now: Date) -> some View {
         let speed = currentKph(now)
-        return VStack(spacing: 18) {
-            Spacer(minLength: 0)
+        return VStack(spacing: 8) {
             ZStack {
-                Gauge(fraction: (speed ?? 0) / Self.gaugeMaxKph)
+                Gauge(fraction: (speed ?? 0) / Self.gaugeMaxKph, size: 216)   // smaller: the pane below needs the room
                 VStack(spacing: 6) {
                     Text(speed.map { String(Int($0.rounded())) } ?? "--")
                         .font(.oswald(120, .bold)).monospacedDigit().tracking(-2)
@@ -211,15 +274,13 @@ struct RideModeView: View {
                 }
                 .padding(.top, 12)
             }
-            .frame(width: 300, height: 264)
+            .frame(width: 300, height: 240)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(speed.map { "Speed \(Int($0)) kilometres per hour" } ?? statusLabel(nil))
-            HStack(spacing: 40) {
-                stat(String(format: "%.1f", recorder.stats.distanceM / 1000), "KM")
-                stat("+\(Int(recorder.stats.climbM))", "M CLIMB")
-            }
-            Spacer(minLength: 0)
+            // Same swipe pane as landscape: the mount covers the hardware buttons (decision 90).
+            infoPane.padding(.leading, 20).padding(.trailing, 12).padding(.bottom, 8)
         }
+        .padding(.top, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
