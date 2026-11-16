@@ -25,6 +25,15 @@ struct WidgetStateTests {
         #expect(state(WidgetSnapshot(hasBike: true)) == .empty("ALL CLEAR"))
     }
 
+    @Test func snoozedTaskLeavesTheWidgetUntilMidnightOfItsLastDay() {
+        var s = base
+        s.odometerKm = 1942                                                    // chain lube overdue
+        s.tasks[0].snoozedUntil = now.addingTimeInterval(3 * day)
+        #expect(!s.dueLines(at: now, calendar: utc).contains { $0.label == "CHAIN LUBE" })
+        s.tasks[0].snoozedUntil = now.addingTimeInterval(-1)
+        #expect(s.dueLines(at: now, calendar: utc).first?.label == "CHAIN LUBE")
+    }
+
     @Test func everythingTrueAtOnceFollowsTheLadder() {
         var s = base
         s.odometerKm = 1942                                                    // chain lube 40 km over

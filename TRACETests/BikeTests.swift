@@ -82,6 +82,15 @@ private func day(_ d: Int, _ hour: Int = 12) -> Date {
         let plan = Reminders.plan(documents: [], tasks: [task], now: day(1), calendar: cal)
         #expect(plan.map(\.body) == ["Chain lube due in 2 days", "Chain lube overdue"])
     }
+
+    @Test func snoozeSilencesRemindersUntilItEnds() {
+        let task = ServiceTask(vehicleID: UUID(), kind: .chainLube, label: "Chain lube")
+        task.intervalDays = 10
+        task.lastDoneAt = day(1)
+        task.snoozedUntil = day(15)   // past both the soon (day 9) and overdue (day 12) reminders
+        let plan = Reminders.plan(documents: [], tasks: [task], now: day(2), calendar: cal)
+        #expect(plan.map(\.body) == ["Chain lube was snoozed, check it"])
+    }
 }
 
 @MainActor
@@ -169,5 +178,22 @@ private func day(_ d: Int, _ hour: Int = 12) -> Date {
         try garage.save(VehicleDocument(kind: .insurance, expiresOn: .now.addingTimeInterval(86_400 * 10)))
         try garage.save(VehicleDocument(kind: .rc, expiresOn: .now.addingTimeInterval(86_400 * 3_000)))
         #expect(try garage.dueItems().map(\.label) == ["Chain lube", "Insurance"])
+    }
+
+    @Test func snoozeHidesFromDueItemsButNotFromStatus() throws {
+        let bike = try garage.addBike(name: "CB350", registration: nil, odometerKm: 12_600)
+        let chain = ServiceTask(vehicleID: bike.id, kind: .chainLube, label: "Chain lube")
+        chain.intervalKm = 500
+        chain.lastDoneOdoKm = 12_000
+        try garage.save(chain, for: bike)
+        #expect(try garage.dueItems().map(\.label) == ["Chain lube"])
+        garage.snooze(chain, days: 7)
+        #expect(try garage.dueItems().isEmpty)
+        #expect(garage.due(chain, bike).urgency == .overdue)   // computed, never stored (invariant 6)
+        garage.snooze(chain, days: nil)
+        #expect(try garage.dueItems().count == 1)
+        garage.snooze(chain, days: 7)
+        _ = try garage.markDone(chain, bike: bike, odometerKm: 12_600)
+        #expect(chain.snoozedUntil == nil)
     }
 }

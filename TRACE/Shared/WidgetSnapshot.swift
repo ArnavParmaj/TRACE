@@ -11,6 +11,7 @@ struct WidgetSnapshot: Codable, Equatable, Sendable {
         var lastDoneAt: Date?
         var intervalKm: Int?
         var intervalDays: Int?
+        var snoozedUntil: Date?
     }
     struct Doc: Codable, Equatable, Sendable {
         var id: UUID?
@@ -91,7 +92,7 @@ extension WidgetSnapshot {
     func dueLines(at now: Date, calendar: Calendar = .current) -> [DueLine] {
         func unit(_ n: Int) -> String { n == 1 ? "DAY" : "DAYS" }
         var lines: [DueLine] = []
-        for t in tasks {
+        for t in tasks where !(t.snoozedUntil.map { $0 > now } ?? false) {
             let status = Due.service(lastDoneOdoKm: t.lastDoneOdoKm, lastDoneAt: t.lastDoneAt, intervalKm: t.intervalKm,
                                      intervalDays: t.intervalDays, odometerKm: odometerKm, now: now,
                                      soonShare: soonShare, calendar: calendar)

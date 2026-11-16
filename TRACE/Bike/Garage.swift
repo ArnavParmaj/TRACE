@@ -150,7 +150,7 @@ struct Garage {
         event.taskID = task.id
         event.notes = notes
         events.insert(event)
-        tasks.update(task) { $0.lastDoneOdoKm = odometerKm; $0.lastDoneAt = time }
+        tasks.update(task) { $0.lastDoneOdoKm = odometerKm; $0.lastDoneAt = time; $0.snoozedUntil = nil }
         if odometerKm > bike.odometerKm {
             vehicles.update(bike) { $0.odometerKm = odometerKm; $0.odometerUpdatedAt = time }
         }
@@ -192,6 +192,12 @@ struct Garage {
         try docs.save()
     }
 
+    /// Quiet until the end of the day, `days` from today; nil clears it. Midnight, so the widget's day change ends it.
+    func snooze(_ task: ServiceTask, days: Int?, now: Date = .now, calendar: Calendar = .current) {
+        let until = days.flatMap { calendar.date(byAdding: .day, value: $0, to: calendar.startOfDay(for: now)) }
+        tasks.update(task) { $0.snoozedUntil = until }
+    }
+
     // MARK: Today's 03 DUE
 
     /// One 03 DUE row and what a tap on it opens (S12 or S13).
@@ -206,7 +212,7 @@ struct Garage {
     /// Overdue and due-soon tasks and documents, most urgent first.
     func dueItems(now: Date = .now) throws -> [DueItem] {
         guard let bike = try bike() else { return [] }
-        let service = try tasks(bike, now: now).map { DueItem(label: $0.label, status: due($0, bike, now: now), task: $0) }
+        let service = try tasks(bike, now: now).filter { !$0.isSnoozed(at: now) }.map { DueItem(label: $0.label, status: due($0, bike, now: now), task: $0) }
         let papers = try documents(bike).map { DueItem(label: $0.kind.label, status: Due.document(expiresOn: $0.expiresOn, now: now), doc: $0) }
         return (service + papers).filter { $0.status.urgency <= .soon }.sorted { $0.status.urgency < $1.status.urgency }
     }

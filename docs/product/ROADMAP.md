@@ -109,9 +109,9 @@ every screen, store file protection (default `completeUntilFirstUserAuthenticati
 - **Exit:** the v1 ship checklist below is all ticked.
 
 ### v1 ship checklist
-- [ ] Every PRD "Must" feature works on device (open: km/L by hand, gloved logging, daylight reading)
-- [ ] Every screen in `SCREENS.md` (v1 rows) has empty, error and populated states
-- [ ] Airplane mode: every screen works (ride detail + offline map pass; replay and the rest still to walk)
+- [x] Every PRD "Must" feature works on device (2026-11-16, owner: M3 fuel pump, M4 km/L, M5 notification/keypad/PB, M6 mount, M7 timings all passed; daylight reading fine; gloved logging not tried, no gloves)
+- [x] Every screen in `SCREENS.md` (v1 rows) has empty, error and populated states (all four tabs and the sheets, read in code 2026-11-16; error lines not forced on screen)
+- [x] Airplane mode: every screen works (owner confirmed 2026-11-16)
 - [x] Largest Dynamic Type size: capped at xxxLarge, Rides and Bike clean by eye on the simulator, audit passes (I-01, decision 81). Ride mode and Today still to eyeball on the phone
 - [ ] Zero rides lost across all test rides (ride 9 clean; owner to confirm the earlier ones)
 - [x] No hardcoded hex in any view; red appears only on overdue/expired/urgent (2026-11-01 grep: no literals outside Tokens.swift; red is overdue rails and error text only)

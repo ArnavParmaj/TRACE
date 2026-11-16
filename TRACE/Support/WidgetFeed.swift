@@ -19,7 +19,7 @@ enum WidgetFeed {
             new.odometerKm = bike.odometerKm
             new.tasks = ((try? garage.tasks(bike, now: now)) ?? []).map {
                 .init(id: $0.id, label: $0.label, lastDoneOdoKm: $0.lastDoneOdoKm, lastDoneAt: $0.lastDoneAt,
-                      intervalKm: $0.intervalKm, intervalDays: $0.intervalDays)
+                      intervalKm: $0.intervalKm, intervalDays: $0.intervalDays, snoozedUntil: $0.snoozedUntil)
             }
             new.docs = ((try? garage.documents(bike)) ?? []).map { .init(id: $0.id, label: $0.kind.label, expiresOn: $0.expiresOn) }
         }

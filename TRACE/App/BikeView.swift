@@ -367,6 +367,7 @@ struct SheetBar: View {
     var body: some View {
         HStack {
             Text(title).font(.oswald(15, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
+                .accessibilityAddTraits(.isHeader)
             Spacer()
             Button { dismiss() } label: {
                 Text("CLOSE").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.inkDim)

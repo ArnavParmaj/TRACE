@@ -63,12 +63,16 @@ final class ServiceTask: SyncRecord {
     var lastDoneOdoKm: Int?
     var lastDoneAt: Date?
     var isActive = true
+    /// Hides the task from Today, the widget and reminders until then. The user's choice, not a due date: due state stays computed (decision 97).
+    var snoozedUntil: Date?
 
     init(vehicleID: UUID, kind: ServiceKind, label: String) {
         self.vehicleID = vehicleID
         self.kind = kind
         self.label = label
     }
+
+    func isSnoozed(at now: Date = .now) -> Bool { snoozedUntil.map { $0 > now } ?? false }
 }
 
 /// Syncs, so it holds no money (invariant 1). A cost lives in a local-only Expense

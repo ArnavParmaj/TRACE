@@ -177,6 +177,7 @@ struct TaskDetailSheet: View {
     @State private var history: [(event: ServiceEvent, costMinor: Int?)] = []
     @State private var saved = 0
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
 
     private var schedule: String {
         [task.intervalKm.map { "EVERY \($0.formatted()) KM" }, task.intervalDays.map { "EVERY \($0) DAYS" }]
@@ -190,6 +191,23 @@ struct TaskDetailSheet: View {
         return parts.isEmpty ? "NEVER" : parts.joined(separator: " · ")
     }
 
+    private func snooze(_ days: Int?) {
+        garage.snooze(task, days: days)
+        Reminders.refresh(garage)
+        WidgetFeed.refresh(context: context, recorder: nil)
+        saved += 1
+    }
+
+    /// Quiet for 7 days: hides it from Today, the widget and reminders. The status above stays true (decision 97).
+    @ViewBuilder private var snoozeRow: some View {
+        if let until = task.snoozedUntil, task.isSnoozed() {
+            line("SNOOZED UNTIL", until.formatted(.dateTime.day().month(.abbreviated)).uppercased())
+            TextAction("END SNOOZE") { snooze(nil) }
+        } else if garage.due(task, bike).urgency <= .soon {
+            TextAction("SNOOZE 7 DAYS") { snooze(7) }
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             SheetBar(title: "SERVICE TASK")
@@ -197,8 +215,10 @@ struct TaskDetailSheet: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(task.label.uppercased())
                         .font(.oswald(28, .bold, relativeTo: .largeTitle)).tracking(1.6).foregroundStyle(Color.ink)
+                        .accessibilityAddTraits(.isHeader)
                     DueRow(label: "STATUS", status: garage.due(task, bike))
                     PrimaryButton("MARK DONE") { markingDone = true }
+                    snoozeRow
                     line("SCHEDULE", schedule)
                     line("LAST DONE", lastDone)
                     if !history.isEmpty {
@@ -212,6 +232,7 @@ struct TaskDetailSheet: View {
                             .font(.oswald(15, .medium)).foregroundStyle(Color.ink).monospacedDigit()
                             .frame(minHeight: 44)
                             .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
+                            .accessibilityElement(children: .combine)
                         }
                     }
                     TextAction("EDIT TASK") { editing = true }
@@ -236,6 +257,7 @@ struct TaskDetailSheet: View {
             Text(value).font(.oswald(20, .medium)).foregroundStyle(Color.ink)
         }
         .frame(maxWidth: .infinity, minHeight: minTouch, alignment: .leading)
+        .accessibilityElement(children: .combine)   // "SCHEDULE, every 500 km", not two stops
     }
 }
 

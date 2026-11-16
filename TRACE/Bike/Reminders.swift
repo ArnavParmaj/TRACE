@@ -32,12 +32,16 @@ enum Reminders {
             }
         }
         for task in tasks where task.isActive {
+            if let until = task.snoozedUntil, let at = nineAM(until, plus: 0), at > now {
+                out.append(Planned(id: "task-\(task.id)-snooze", fireAt: at, body: "\(task.label) was snoozed, check it"))
+            }
             guard let interval = task.intervalDays, interval > 0, let last = task.lastDoneAt else { continue }
             let soon = Due.soonDays(interval, share: soonShare)
-            if let at = nineAM(last, plus: interval - soon) {
+            let quietUntil = task.snoozedUntil ?? .distantPast   // no reminder inside a snooze
+            if let at = nineAM(last, plus: interval - soon), at >= quietUntil {
                 out.append(Planned(id: "task-\(task.id)-soon", fireAt: at, body: "\(task.label) due in \(days(soon))"))
             }
-            if let at = nineAM(last, plus: interval + 1) {
+            if let at = nineAM(last, plus: interval + 1), at >= quietUntil {
                 out.append(Planned(id: "task-\(task.id)-over", fireAt: at, body: "\(task.label) overdue"))
             }
         }
