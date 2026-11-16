@@ -8,17 +8,36 @@ struct WidgetPanel: View {
     let snapshot: WidgetSnapshot
     let now: Date
     var small = false
+    /// Medium only: the head and the bottom line are two links, each to what it shows (decision 93).
+    /// A small widget takes one link for the whole square, set by the widget itself.
+    var links = false
 
     var body: some View {
         let state = snapshot.state(at: now)
+        // The bottom line names the next thing due unless the head already does.
+        let next: DueLine? = if case .due = state { nil } else { snapshot.dueLines(at: now).first }
         VStack(alignment: .leading, spacing: 0) {
-            head(state)
-            Spacer(minLength: 4)
+            linked(WidgetLink.panel(state)) {
+                VStack(alignment: .leading, spacing: 0) {
+                    head(state)
+                    Spacer(minLength: 4)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .contentShape(Rectangle())   // the gaps are part of the link too, or a tap there opens the app nowhere
+                .accessibilityElement(children: .combine)
+            }
             Rectangle().fill(Color.surfaceRule).frame(height: 1)
-            footer(state).padding(.top, 8)
+            linked(next?.target.flatMap { URL(string: "trace://\($0)") } ?? WidgetLink.url(.bike)) {
+                footer(next?.label).padding(.top, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .accessibilityElement(children: .combine)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder private func linked<V: View>(_ url: URL, @ViewBuilder _ content: () -> V) -> some View {
+        if links { Link(destination: url, label: content) } else { content() }
     }
 
     // MARK: Head
@@ -89,8 +108,7 @@ struct WidgetPanel: View {
 
     // MARK: Footer
 
-    @ViewBuilder private func footer(_ state: WidgetState) -> some View {
-        let next: String? = if case .due = state { nil } else { snapshot.dueLines(at: now).first?.label }
+    @ViewBuilder private func footer(_ next: String?) -> some View {
         if let next {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 if !small { label("NEXT DUE") }
@@ -136,6 +154,8 @@ struct WidgetPanel: View {
 /// START RIDE (OPEN RIDE while one is on) and LOG. Each 65 pt tall: gloves (invariant 10).
 struct WidgetActions: View {
     let riding: Bool
+    /// True for a few seconds after a log: the button itself says it worked.
+    var logged = false
 
     var body: some View {
         VStack(spacing: 8) {
@@ -150,8 +170,9 @@ struct WidgetActions: View {
                 .contentShape(Rectangle())
             }
             // The capture button (DESIGN.md): black, 2 pt amber border, 10 pt spine. Runs in place.
-            Button(intent: LogEntryIntent()) {
-                Text("LOG").font(.oswald(22, .semibold)).tracking(5).foregroundStyle(Color.accent)
+            Button(intent: LogEntryIntent(confirm: true)) {
+                Text(logged ? "LOGGED" : "LOG").font(.oswald(logged ? 17 : 22, .semibold)).tracking(logged ? 2.5 : 5)
+                    .foregroundStyle(logged ? Color.ink : Color.accent)
                     .padding(.leading, 26)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                     .overlay(alignment: .leading) { Rectangle().fill(Color.accent).frame(width: 10) }
@@ -187,19 +208,31 @@ struct WidgetStartTile: View {
     }
 }
 
-/// Where a tap on the widget lands in the app.
+/// Where a tap on the widget lands in the app. `task`, `doc` and `trip` carry an id: trace://task/<id>.
 enum WidgetLink: String {
-    case start, ride, today, bike
+    case start, ride, today, bike, drafts, task, doc, trip
 
     static func url(_ link: WidgetLink) -> URL { URL(string: "trace://\(link.rawValue)")! }
 
-    /// Due things open the Bike tab; a ride opens Ride mode; the rest open Today.
+    /// The screen that matches what the panel shows: the task or document itself, the draft to
+    /// complete, the ride just done or holding the best, Ride mode while riding.
     static func panel(_ state: WidgetState) -> URL {
-        switch state {
+        func trip(_ id: UUID?) -> URL { id.flatMap { URL(string: "trace://trip/\($0)") } ?? url(.today) }
+        return switch state {
         case .riding: url(.ride)
-        case .due, .empty: url(.bike)
-        default: url(.today)
+        case .due(let line): line.target.flatMap { URL(string: "trace://\($0)") } ?? url(.bike)
+        case .drafts: url(.drafts)
+        case .recap(let ride): trip(ride.id)
+        case .best(let best): trip(best.rideID)
+        case .parked: url(.today)
+        case .empty: url(.bike)
         }
+    }
+
+    /// The link's kind and the record it names, if any.
+    static func parse(_ url: URL) -> (link: WidgetLink, id: UUID?)? {
+        guard let link = url.host.flatMap(WidgetLink.init) else { return nil }
+        return (link, UUID(uuidString: url.lastPathComponent))
     }
 }
 
@@ -232,8 +265,8 @@ struct WidgetGallery: View {
                 ForEach(Self.samples, id: \.0) { name, snapshot in
                     Text(name).font(.oswald(11, .medium)).tracking(2.2).foregroundStyle(Color.inkMuted)
                     HStack(spacing: 16) {
-                        WidgetPanel(snapshot: snapshot, now: Self.now)
-                        WidgetActions(riding: snapshot.live != nil)
+                        WidgetPanel(snapshot: snapshot, now: Self.now, links: true)
+                        WidgetActions(riding: snapshot.live != nil, logged: snapshot.justLogged(at: Self.now))
                     }
                     .padding(16).frame(width: 364, height: 170).overlay { RoundedRectangle(cornerRadius: 22).stroke(Color.surfaceRule) }
                     HStack(spacing: 12) {

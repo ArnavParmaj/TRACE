@@ -166,6 +166,79 @@ struct TaskSheet: View {
     }
 }
 
+/// Read-only view of one task, opened from the widget (decision 94): status, schedule, history,
+/// MARK DONE first and EDIT behind it. The form stays for changing the task.
+struct TaskDetailSheet: View {
+    let task: ServiceTask
+    let bike: Vehicle
+    let garage: Garage
+    @State private var markingDone = false
+    @State private var editing = false
+    @State private var history: [(event: ServiceEvent, costMinor: Int?)] = []
+    @State private var saved = 0
+    @Environment(\.dismiss) private var dismiss
+
+    private var schedule: String {
+        [task.intervalKm.map { "EVERY \($0.formatted()) KM" }, task.intervalDays.map { "EVERY \($0) DAYS" }]
+            .compactMap { $0 }.joined(separator: " OR ")
+    }
+
+    private var lastDone: String {
+        var parts: [String] = []
+        if let km = task.lastDoneOdoKm { parts.append("\(km.formatted()) KM") }
+        if let at = task.lastDoneAt { parts.append(at.formatted(.dateTime.day().month(.abbreviated).year()).uppercased()) }
+        return parts.isEmpty ? "NEVER" : parts.joined(separator: " · ")
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SheetBar(title: "SERVICE TASK")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(task.label.uppercased())
+                        .font(.oswald(28, .bold, relativeTo: .largeTitle)).tracking(1.6).foregroundStyle(Color.ink)
+                    DueRow(label: "STATUS", status: garage.due(task, bike))
+                    PrimaryButton("MARK DONE") { markingDone = true }
+                    line("SCHEDULE", schedule)
+                    line("LAST DONE", lastDone)
+                    if !history.isEmpty {
+                        SectionHead(number: "", title: "HISTORY").padding(.top, 4)
+                        ForEach(history, id: \.event.id) { item in
+                            HStack {
+                                Text(item.event.performedAt.formatted(.dateTime.day().month(.abbreviated).year()).uppercased())
+                                Text("\(item.event.odometerKm.formatted()) KM").foregroundStyle(Color.inkDim)
+                                Spacer()
+                            }
+                            .font(.oswald(15, .medium)).foregroundStyle(Color.ink).monospacedDigit()
+                            .frame(minHeight: 44)
+                            .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
+                        }
+                    }
+                    TextAction("EDIT TASK") { editing = true }
+                }
+                .padding(20)
+            }
+        }
+        .background(Color.ground.ignoresSafeArea())
+        .presentationBackground(Color.ground)
+        .task { history = (try? garage.history(task)) ?? [] }
+        .sensoryFeedback(.success, trigger: saved)
+        .sheet(isPresented: $markingDone, onDismiss: {
+            history = (try? garage.history(task)) ?? []
+            saved += 1
+        }) { MarkDoneSheet(task: task, bike: bike, garage: garage) }
+        .sheet(isPresented: $editing, onDismiss: { dismiss() }) { TaskSheet(task: task, bike: bike, garage: garage) }
+    }
+
+    private func line(_ title: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
+            Text(value).font(.oswald(20, .medium)).foregroundStyle(Color.ink)
+        }
+        .frame(maxWidth: .infinity, minHeight: minTouch, alignment: .leading)
+    }
+}
+
 /// S09: odometer (prefilled) and an optional cost, on the glove keypad.
 private struct MarkDoneSheet: View {
     enum Field { case odo, cost }

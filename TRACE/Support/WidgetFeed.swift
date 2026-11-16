@@ -8,7 +8,7 @@ enum WidgetFeed {
     static let minRideM = 500
 
     /// `recorder` nil (the capture intent, which has none): the ride part is kept as it was.
-    static func refresh(context: ModelContext, recorder: RideRecorder?, now: Date = .now) {
+    static func refresh(context: ModelContext, recorder: RideRecorder?, logged: Bool = false, now: Date = .now) {
         let user = LocalStubUser.load()
         let old = WidgetSnapshot.load()
         var new = WidgetSnapshot(soonShare: Preferences.soonShare)
@@ -18,10 +18,10 @@ enum WidgetFeed {
             new.hasBike = true
             new.odometerKm = bike.odometerKm
             new.tasks = ((try? garage.tasks(bike, now: now)) ?? []).map {
-                .init(label: $0.label, lastDoneOdoKm: $0.lastDoneOdoKm, lastDoneAt: $0.lastDoneAt,
+                .init(id: $0.id, label: $0.label, lastDoneOdoKm: $0.lastDoneOdoKm, lastDoneAt: $0.lastDoneAt,
                       intervalKm: $0.intervalKm, intervalDays: $0.intervalDays)
             }
-            new.docs = ((try? garage.documents(bike)) ?? []).map { .init(label: $0.kind.label, expiresOn: $0.expiresOn) }
+            new.docs = ((try? garage.documents(bike)) ?? []).map { .init(id: $0.id, label: $0.kind.label, expiresOn: $0.expiresOn) }
         }
         new.drafts = (try? Capture(context: context, user: user).pending().count) ?? 0
 
@@ -44,25 +44,27 @@ enum WidgetFeed {
             new.live = old.live
         }
 
+        new.loggedAt = logged ? now : old.loggedAt
+
         guard new != old else { return }
         new.save()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
     private static func lite(_ ride: Ride) -> WidgetSnapshot.RideLite {
-        .init(endedAt: ride.endedAt ?? ride.startedAt, km: Double(ride.distanceM) / 1000,
+        .init(id: ride.id, endedAt: ride.endedAt ?? ride.startedAt, km: Double(ride.distanceM) / 1000,
               minutes: ride.movingDurationS / 60, topKph: Int(ride.maxSpeedKph.rounded()))
     }
 
     private static func best(_ record: String, _ ride: Ride) -> WidgetSnapshot.Best {
         let at = ride.endedAt ?? ride.startedAt
         switch record {
-        case "TOP SPEED": return .init(title: "TOP SPEED", value: "\(Int(ride.maxSpeedKph.rounded()))", unit: "KM/H", at: at)
-        case "CLIMB": return .init(title: "BIGGEST CLIMB", value: "\(ride.climbM)", unit: "M", at: at)
+        case "TOP SPEED": return .init(title: "TOP SPEED", value: "\(Int(ride.maxSpeedKph.rounded()))", unit: "KM/H", at: at, rideID: ride.id)
+        case "CLIMB": return .init(title: "BIGGEST CLIMB", value: "\(ride.climbM)", unit: "M", at: at, rideID: ride.id)
         case "10 KM":
             let s = ride.fastest10kS ?? 0
-            return .init(title: "FASTEST 10 KM", value: String(format: "%d:%02d", s / 60, s % 60), unit: "MIN", at: at)
-        default: return .init(title: "LONGEST RIDE", value: "\(Int((Double(ride.distanceM) / 1000).rounded()))", unit: "KM", at: at)
+            return .init(title: "FASTEST 10 KM", value: String(format: "%d:%02d", s / 60, s % 60), unit: "MIN", at: at, rideID: ride.id)
+        default: return .init(title: "LONGEST RIDE", value: "\(Int((Double(ride.distanceM) / 1000).rounded()))", unit: "KM", at: at, rideID: ride.id)
         }
     }
 }

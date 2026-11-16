@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 @main
 struct TRACEApp: App {
@@ -34,6 +35,10 @@ struct TRACEApp: App {
             if phase != .active { feedWidget() }   // whatever was edited in the app reaches the widget
         }
         .onChange(of: recorder.phase) { feedWidget() }
+        // Asked once, so the widget's LOG can confirm with a notification (decision 93).
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            if phase == .active { UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in } }
+        }
         // S18 Live Activity: on start, pause, stop, each 100 m and each draft.
         .onChange(of: recorder.phase) { syncActivity() }
         .onChange(of: Int(recorder.stats.distanceM / 100)) { syncActivity() }

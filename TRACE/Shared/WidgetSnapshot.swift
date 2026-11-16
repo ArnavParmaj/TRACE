@@ -5,6 +5,7 @@ import Foundation
 /// No money in here, ever (invariant 1): a widget is on show to anyone who sees the phone.
 struct WidgetSnapshot: Codable, Equatable, Sendable {
     struct Task: Codable, Equatable, Sendable {
+        var id: UUID?   // what a tap opens
         var label: String
         var lastDoneOdoKm: Int?
         var lastDoneAt: Date?
@@ -12,10 +13,12 @@ struct WidgetSnapshot: Codable, Equatable, Sendable {
         var intervalDays: Int?
     }
     struct Doc: Codable, Equatable, Sendable {
+        var id: UUID?
         var label: String
         var expiresOn: Date
     }
     struct RideLite: Codable, Equatable, Sendable {
+        var id: UUID?
         var endedAt: Date
         var km: Double
         var minutes: Int
@@ -26,6 +29,7 @@ struct WidgetSnapshot: Codable, Equatable, Sendable {
         var value: String
         var unit: String
         var at: Date
+        var rideID: UUID?
     }
     struct Live: Codable, Equatable, Sendable {
         var startedAt: Date
@@ -45,6 +49,8 @@ struct WidgetSnapshot: Codable, Equatable, Sendable {
     var rides: [RideLite] = []
     var best: Best?
     var live: Live?
+    /// When the widget's LOG last ran, so its button can say LOGGED for a moment.
+    var loggedAt: Date?
 }
 
 /// One service task or document, as the widget words it: "CHAIN LUBE · 120 KM LEFT".
@@ -54,6 +60,8 @@ struct DueLine: Equatable, Sendable {
     var amount: Int
     var unit: String
     var progress = 0.0
+    /// Where a tap goes, as a link path: "task/<id>" or "doc/<id>".
+    var target: String?
 }
 
 /// The one thing the widget's panel shows. `WidgetSnapshot.state(at:)` picks it.
@@ -72,6 +80,11 @@ extension WidgetSnapshot {
     static let recapForS: TimeInterval = 3 * 3600
     static let bestForS: TimeInterval = 24 * 3600
     static let parkedAfterDays = 7
+    static let loggedForS: TimeInterval = 5
+
+    func justLogged(at now: Date) -> Bool {
+        loggedAt.map { (0..<Self.loggedForS).contains(now.timeIntervalSince($0)) } ?? false
+    }
 
     /// Every active task and document, most urgent first. Urgency comes from `Due`, the same
     /// rule the Bike tab uses.
@@ -98,12 +111,13 @@ extension WidgetSnapshot {
             }
             let left = byKm ? kmLeft ?? 0 : daysLeft ?? 0
             lines.append(DueLine(label: t.label.uppercased(), urgency: status.urgency, amount: abs(left),
-                                 unit: byKm ? "KM" : unit(abs(left)), progress: status.progress ?? 0))
+                                 unit: byKm ? "KM" : unit(abs(left)), progress: status.progress ?? 0,
+                                 target: t.id.map { "task/\($0)" }))
         }
         for d in docs {
             let left = Due.days(from: now, to: d.expiresOn, calendar: calendar)
             lines.append(DueLine(label: d.label.uppercased(), urgency: Due.document(expiresOn: d.expiresOn, now: now, calendar: calendar).urgency,
-                                 amount: abs(left), unit: unit(abs(left))))
+                                 amount: abs(left), unit: unit(abs(left)), target: d.id.map { "doc/\($0)" }))
         }
         // Within one urgency: the task furthest through its interval, then the document expiring first.
         return lines.sorted { ($0.urgency, -$0.progress, $0.amount) < ($1.urgency, -$1.progress, $1.amount) }
@@ -134,6 +148,7 @@ extension WidgetSnapshot {
         var dates: [Date] = []
         if let last = rides.first { dates.append(last.endedAt.addingTimeInterval(Self.recapForS)) }
         if let best { dates.append(best.at.addingTimeInterval(Self.bestForS)) }
+        if let loggedAt { dates.append(loggedAt.addingTimeInterval(Self.loggedForS)) }
         let today = calendar.startOfDay(for: now)
         dates += (1...7).compactMap { calendar.date(byAdding: .day, value: $0, to: today) }
         return dates.filter { $0 > now }.sorted()

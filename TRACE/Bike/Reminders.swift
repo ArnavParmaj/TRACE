@@ -61,6 +61,15 @@ enum Reminders {
         }
     }
 
+    /// The widget's LOG confirmation (decision 93). Silent, and one at a time: a second log replaces the first.
+    /// Shows only once notifications are allowed; the widget's own LOGGED label does not depend on it.
+    static func confirmLogged(at time: Date = .now) {
+        let content = UNMutableNotificationContent()
+        content.title = "Logged"
+        content.body = "Draft saved at \(time.formatted(date: .omitted, time: .shortened)). Complete it in TRACE."
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "log-confirm", content: content, trigger: nil))
+    }
+
     /// Re-plans from the store. Call after any task or document change, and on launch.
     @MainActor
     static func refresh(_ garage: Garage) {

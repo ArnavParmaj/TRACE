@@ -3,6 +3,8 @@ import SwiftUI
 
 /// S11 Bike: odometer, trip meters, service tasks and documents, most urgent first.
 struct BikeView: View {
+    /// A widget tap naming a task or document, set by RootView; cleared once handled.
+    @Binding var link: URL?
     @Environment(\.modelContext) private var context
     @Environment(UndoCenter.self) private var undo
     @State private var bike: Vehicle?
@@ -13,6 +15,7 @@ struct BikeView: View {
     @State private var editingBike = false
     @State private var addingBike = false
     @State private var task: ServiceTask?
+    @State private var viewing: ServiceTask?   // read-only view, opened from the widget
     @State private var doc: VehicleDocument?
     @State private var resets = 0
     @State private var error: String?
@@ -33,11 +36,20 @@ struct BikeView: View {
             .padding(20)
         }
         .task { reload() }
+        // `initial`: the Bike tab may only now be coming on screen.
+        .onChange(of: link, initial: true) {
+            guard let target = link.flatMap(WidgetLink.parse), [.bike, .task, .doc].contains(target.link) else { return }
+            link = nil
+            reload()
+            if target.link == .task { viewing = tasks.first { $0.id == target.id } }
+            if target.link == .doc { doc = docs.first { $0.id == target.id } }
+        }
         .sheet(isPresented: $editingOdo, onDismiss: reload) { if let bike { OdometerSheet(bike: bike, garage: garage) } }
         .fullScreenCover(isPresented: $addingBike, onDismiss: reload) { OnboardingView() }
         .sheet(isPresented: $editingBike, onDismiss: reload) { if let bike { BikeEditSheet(bike: bike, garage: garage) } }
         .animation(.easeOut(duration: 0.2), value: tasks.map(\.id) + docs.map(\.id))
         .sheet(item: $task, onDismiss: reload) { TaskSheet(task: $0, bike: bike!, garage: garage) }
+        .sheet(item: $viewing, onDismiss: reload) { TaskDetailSheet(task: $0, bike: bike!, garage: garage) }
         .sheet(item: $doc, onDismiss: reload) { DocumentSheet(doc: $0, garage: garage) }
         .sensoryFeedback(.success, trigger: resets)
     }

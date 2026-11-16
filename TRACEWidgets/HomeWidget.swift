@@ -46,9 +46,10 @@ private struct HomeWidgetView: View {
             WidgetPanel(snapshot: entry.snapshot, now: entry.date, small: true).widgetURL(link)
         } else {
             HStack(spacing: 16) {
-                Link(destination: link) { WidgetPanel(snapshot: entry.snapshot, now: entry.date) }
-                WidgetActions(riding: entry.snapshot.live != nil)
+                WidgetPanel(snapshot: entry.snapshot, now: entry.date, links: true)
+                WidgetActions(riding: entry.snapshot.live != nil, logged: entry.snapshot.justLogged(at: entry.date))
             }
+            .widgetURL(link)   // a tap in the margins goes where the panel goes
         }
     }
 }

@@ -4,6 +4,8 @@ import SwiftUI
 /// S06 Rides: distance per week (tap a bar to filter), personal bests, rides by month.
 /// Tap a ride for S07; hold it to rename or delete.
 struct RidesView: View {
+    /// A widget tap naming a ride, set by RootView; cleared once handled.
+    @Binding var link: URL?
     @Environment(RideRecorder.self) private var recorder
     @Environment(\.modelContext) private var context
     @State private var rides: [Ride] = []
@@ -49,6 +51,11 @@ struct RidesView: View {
             reload()
         }
         .sheet(item: $open, onDismiss: reload) { RideSheet(ride: $0) }
+        .onChange(of: link, initial: true) {
+            guard let target = link.flatMap(WidgetLink.parse), target.link == .trip else { return }
+            link = nil
+            open = recorder.finishedRides().first { $0.id == target.id }
+        }
         .animation(.easeOut(duration: 0.2), value: shown.map(\.id))
         .alert("Delete this ride?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
             Button("Delete", role: .destructive) {

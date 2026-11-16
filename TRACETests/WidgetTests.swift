@@ -67,4 +67,30 @@ struct WidgetStateTests {
                    .init(endedAt: now.addingTimeInterval(-8 * day), km: 50, minutes: 60, topKph: 70)]
         #expect(s.weekKm(at: now) == 20)
     }
+
+    @Test func aTapOpensTheScreenThePanelShows() {
+        let task = UUID(), ride = UUID()
+        var s = base
+        s.tasks[0].id = task
+        s.rides[0].id = ride
+        #expect(WidgetLink.panel(state(s)).absoluteString == "trace://task/\(task)")
+        s.drafts = 1
+        #expect(WidgetLink.panel(state(s)).absoluteString == "trace://drafts")
+        s.drafts = 0
+        s.rides[0].endedAt = now.addingTimeInterval(-600)
+        #expect(WidgetLink.panel(state(s)).absoluteString == "trace://trip/\(ride)")
+
+        let parsed = WidgetLink.parse(URL(string: "trace://task/\(task)")!)
+        #expect(parsed?.link == .task && parsed?.id == task)
+        #expect(WidgetLink.parse(URL(string: "trace://start")!)?.id == nil)
+        #expect(WidgetLink.parse(URL(string: "trace://nonsense")!) == nil)
+    }
+
+    @Test func logButtonSaysLoggedForAFewSeconds() {
+        var s = base
+        s.loggedAt = now
+        #expect(s.justLogged(at: now.addingTimeInterval(2)))
+        #expect(!s.justLogged(at: now.addingTimeInterval(WidgetSnapshot.loggedForS)))
+        #expect(s.changeDates(after: now, calendar: utc).contains(now.addingTimeInterval(WidgetSnapshot.loggedForS)))
+    }
 }

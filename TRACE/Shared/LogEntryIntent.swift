@@ -12,6 +12,13 @@ struct LogEntryIntent: LiveActivityIntent {
     static let openAppWhenRun = false
     static let authenticationPolicy = IntentAuthenticationPolicy.alwaysAllowed
 
+    /// The home-screen widget's LOG asks for a notification: nothing else on the home screen says it worked.
+    /// The Action Button has the system tick and the Live Activity its count, so they leave it off.
+    @Parameter(title: "Confirm with a notification", default: false) var confirm: Bool
+
+    init() {}
+    init(confirm: Bool) { self.confirm = confirm }
+
     @MainActor
     func perform() async throws -> some IntentResult {
         #if !WIDGET_EXTENSION
@@ -19,7 +26,8 @@ struct LogEntryIntent: LiveActivityIntent {
         let place = CLLocationManager().location?.coordinate
         try Capture(context: Store.shared.mainContext, user: LocalStubUser.load())
             .log(lat: place?.latitude, lon: place?.longitude)
-        WidgetFeed.refresh(context: Store.shared.mainContext, recorder: nil)   // the widget's log count
+        WidgetFeed.refresh(context: Store.shared.mainContext, recorder: nil, logged: confirm)   // the widget's log count
+        if confirm { Reminders.confirmLogged() }
         #endif
         return .result()   // no dialog: it adds a Done tap; the system ✓ is the confirmation
     }

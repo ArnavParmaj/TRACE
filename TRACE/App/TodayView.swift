@@ -59,10 +59,16 @@ struct TodayView: View {
         // The Live Activity opens Ride mode (S18); the widget's START RIDE starts one first (decision 91).
         // `initial`: Today may not be on screen yet when the link arrives.
         .onChange(of: link, initial: true) {
-            guard let host = link?.host else { return }
+            guard let target = link.flatMap(WidgetLink.parse), [.start, .ride, .drafts, .today].contains(target.link) else { return }
             link = nil
-            if host == WidgetLink.start.rawValue, recorder.phase == .idle, !LocationService.isDenied { startRide() }
-            else if [WidgetLink.start.rawValue, WidgetLink.ride.rawValue].contains(host), recorder.phase != .idle { showRide = true }
+            switch target.link {
+            case .start where recorder.phase == .idle && !LocationService.isDenied: startRide()
+            case .start, .ride: if recorder.phase != .idle { showRide = true }
+            case .drafts:
+                reload()
+                completing = drafts.first   // newest first
+            default: break
+            }
         }
         .sheet(item: $completing, onDismiss: reload) { DraftSheet(start: $0, capture: capture, ledger: ledger) }
         .sheet(item: $recap, onDismiss: reload) { RideSheet(ride: $0, isRecap: true) }

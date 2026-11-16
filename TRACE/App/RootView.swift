@@ -35,9 +35,15 @@ struct RootView: View {
         // Existing installs already have a bike, so they never see it.
         .task { onboarding = !onboarded && (try? Garage(context: context, user: LocalStubUser.load()).bike()) == nil }
         .fullScreenCover(isPresented: $onboarding) { OnboardingView(firstRun: true) }
-        // trace://bike opens the Bike tab; start, ride and today go to Today, which owns the ride screen.
+        // A widget tap lands on the screen that matches it (decision 92): the tab switches here,
+        // then the tab's own view opens the task, document, ride or draft the link names.
         .onOpenURL { url in
-            tab = url.host == WidgetLink.bike.rawValue ? .bike : .today
+            guard let target = WidgetLink.parse(url) else { return }
+            tab = switch target.link {
+            case .bike, .task, .doc: .bike
+            case .trip: .rides
+            default: .today
+            }
             link = url
         }
     }
@@ -74,9 +80,9 @@ struct RootView: View {
             if tab == .today {
                 TodayView(link: $link)
             } else if tab == .rides {
-                RidesView()
+                RidesView(link: $link)
             } else if tab == .bike {
-                BikeView()
+                BikeView(link: $link)
             } else {
                 MoneyView()
             }
