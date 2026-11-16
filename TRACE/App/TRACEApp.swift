@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UIKit
 import UserNotifications
 
 @main
@@ -37,11 +38,23 @@ struct TRACEApp: App {
         .onChange(of: recorder.phase) { feedWidget() }
         // Asked once, so the widget's LOG can confirm with a notification (decision 93).
         .onChange(of: scenePhase, initial: true) { _, phase in
+            if phase == .active { capTypeSize() }
             if phase == .active { UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in } }
         }
         // S18 Live Activity: on start, pause, stop, each 100 m and each draft.
         .onChange(of: recorder.phase) { syncActivity() }
         .onChange(of: Int(recorder.stats.distanceM / 100)) { syncActivity() }
+    }
+
+    /// The root's `.dynamicTypeSize` cap does not reach sheets and full-screen covers, so cap the window too (decision 96).
+    private func capTypeSize() {
+        let cap = UIContentSizeCategory.extraExtraExtraLarge
+        for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+            for w in scene.windows {
+                if UIApplication.shared.preferredContentSizeCategory > cap { w.traitOverrides.preferredContentSizeCategory = cap }
+                else { w.traitOverrides.remove(UITraitPreferredContentSizeCategory.self) }
+            }
+        }
     }
 
     @ViewBuilder private var content: some View {

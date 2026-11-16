@@ -62,6 +62,8 @@ final class AccessibilityAuditTests: XCTestCase {
             // Dynamic Type is capped at xxxLarge (decision 81), so the audit's bigger-text probe cannot grow anything.
             // Scaling itself was checked by eye at AX-XXXL; see current_issues I-01.
             if issue.auditType == .dynamicType { return true }
+            // Same cap, same artefact: a one-line text field cannot clip at a size the app never reaches (decision 95).
+            if issue.auditType == .textClipped && issue.element?.elementType == .textField { return true }
             // RIDES week chart: Swift Charts draws its axis text itself, no element to point at; the chart has its own label.
             return issue.auditType == .elementDetection && issue.element == nil && screen == "RIDES"
         }
