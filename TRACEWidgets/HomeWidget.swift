@@ -31,8 +31,8 @@ struct HomeWidget: Widget {
             HomeWidgetView(entry: entry).containerBackground(Color.ground, for: .widget)
         }
         .configurationDisplayName("TRACE")
-        .description("What your bike needs now. The wide one adds START RIDE and LOG.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .description("What your bike needs now. The wide one adds START RIDE and LOG; the lock screen gets a short line.")
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }
 
@@ -42,7 +42,9 @@ private struct HomeWidgetView: View {
 
     var body: some View {
         let link = WidgetLink.panel(entry.snapshot.state(at: entry.date))
-        if family == .systemSmall {
+        if [.accessoryCircular, .accessoryRectangular, .accessoryInline].contains(family) {
+            LockWidgetView(snapshot: entry.snapshot, now: entry.date)
+        } else if family == .systemSmall {
             WidgetPanel(snapshot: entry.snapshot, now: entry.date, small: true).widgetURL(link)
         } else {
             HStack(spacing: 16) {

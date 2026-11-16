@@ -59,7 +59,9 @@ struct TRACEApp: App {
 
     @ViewBuilder private var content: some View {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-widgetGallery") { WidgetGallery() } else { RootView() }   // simulator screenshots only
+        if ProcessInfo.processInfo.arguments.contains("-widgetGallery") { WidgetGallery() }
+        else if let i = ProcessInfo.processInfo.arguments.firstIndex(of: "-lockGallery") { LockGallery(page: Int(ProcessInfo.processInfo.arguments[i + 1]) ?? 0) }
+        else { RootView() }   // simulator screenshots only
         #else
         RootView()
         #endif

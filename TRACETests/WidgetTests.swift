@@ -34,6 +34,17 @@ struct WidgetStateTests {
         #expect(s.dueLines(at: now, calendar: utc).first?.label == "CHAIN LUBE")
     }
 
+    @Test func lockScreenLinesNameTheStateInWords() {
+        var s = base
+        #expect(LockLines(state(s)) == LockLines(.due(DueLine(label: "CHAIN LUBE", urgency: .ok, amount: 120, unit: "KM"))))
+        #expect(LockLines(state(s)).kicker == "NEXT DUE" && LockLines(state(s)).detail == "120 KM LEFT" && LockLines(state(s)).big == "120")
+        s.odometerKm = 1942
+        #expect(LockLines(state(s)).kicker == "OVERDUE" && LockLines(state(s)).detail == "40 KM OVER")   // told in words: the lock screen has no red
+        s.drafts = 2
+        s.tasks[0].snoozedUntil = now.addingTimeInterval(day)   // snoozed: the overdue task steps aside for the logs
+        #expect(LockLines(state(s)).big == "2" && LockLines(state(s)).unit == "LOGS")
+    }
+
     @Test func everythingTrueAtOnceFollowsTheLadder() {
         var s = base
         s.odometerKm = 1942                                                    // chain lube 40 km over

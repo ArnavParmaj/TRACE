@@ -1,5 +1,6 @@
 import AppIntents
 import SwiftUI
+import WidgetKit
 
 /// The home-screen widget's drawing (decision 91), shared with the app so the debug gallery
 /// shows exactly what the widget shows. Medium: panel left, START RIDE and LOG right.
@@ -275,11 +276,43 @@ struct WidgetGallery: View {
                         WidgetStartTile(snapshot: snapshot)
                             .frame(width: 170, height: 170).overlay { RoundedRectangle(cornerRadius: 22).stroke(Color.surfaceRule) }
                     }
+                    // Lock screen shapes, drawn on a grey so the tint-free look reads as the system's (decision 99).
+                    HStack(spacing: 10) {
+                        LockWidgetView(snapshot: snapshot, now: Self.now, shape: .accessoryCircular).frame(width: 72, height: 72)
+                        LockWidgetView(snapshot: snapshot, now: Self.now, shape: .accessoryRectangular).frame(width: 160, height: 72)
+                        LockWidgetView(snapshot: snapshot, now: Self.now, shape: .accessoryInline).frame(width: 130)
+                    }
+                    .padding(8).background(Color.inkMuted.opacity(0.35), in: RoundedRectangle(cornerRadius: 16))
                 }
             }
             .padding(14)
         }
         .background(Color.ground.ignoresSafeArea())
+    }
+}
+
+/// Lock-screen shapes for every state, on a wallpaper-like grey, five per page (`-lockGallery 0|1`).
+struct LockGallery: View {
+    let page: Int
+
+    var body: some View {
+        let all = WidgetGallery.samples
+        let rows = Array(all[(page * 5)..<min(all.count, page * 5 + 5)])
+        VStack(alignment: .leading, spacing: 18) {
+            ForEach(rows, id: \.0) { name, snap in
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(name).font(.oswald(11, .medium)).tracking(2.2).foregroundStyle(Color.white.opacity(0.8))
+                    HStack(spacing: 10) {
+                        LockWidgetView(snapshot: snap, now: WidgetGallery.now, shape: .accessoryCircular).frame(width: 72, height: 72)
+                        LockWidgetView(snapshot: snap, now: WidgetGallery.now, shape: .accessoryRectangular).frame(width: 160, height: 72)
+                    }
+                    LockWidgetView(snapshot: snap, now: WidgetGallery.now, shape: .accessoryInline).frame(width: 240, alignment: .leading)
+                }
+            }
+        }
+        .foregroundStyle(Color.white)
+        .padding(20).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(LinearGradient(colors: [Color(red: 0.16, green: 0.22, blue: 0.34), Color(red: 0.05, green: 0.07, blue: 0.12)], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
     }
 }
 #endif

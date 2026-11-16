@@ -132,7 +132,7 @@ capture rate ≥85%, fuel logged within 60s ≥90%, used 5 of 7 days in week 8.
 - Gear and modifications log
 - CSV / JSON export (rides and service; money export stays on-device)
 - Richer trends
-- Map navigation: a MAP page in Ride mode (position + trail, built and parked on the local branch `future/ride-map`, decision 98), then a destination, then a hand-off to Apple Maps for directions. Lock-screen widgets sit alongside it.
+- Map navigation: a MAP page in Ride mode (position + trail, built and parked on the local branch `future/ride-map`, decision 98), then a destination, then a hand-off to Apple Maps for directions. 
 
 ## v2 — needs the $99/yr Apple Developer Program
 Trigger is open (PRD Q7): a date, or when the friend trial demands it.
