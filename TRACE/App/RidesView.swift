@@ -28,21 +28,26 @@ struct RidesView: View {
         return rides.filter { span.contains($0.startedAt) }
     }
 
+    /// First open this launch plays the screen-open sequence; later returns don't (decision 101).
+    @State private var ignite = Ignition.claim("rides")
+    @State private var grown = false
+
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 28) {
-                ScreenHeader(title: "RIDES")
+                ScreenHeader(title: "RIDES").reveal(0)
                 if let error { ErrorLine(message: error, retry: reload) }
                 else if rides.isEmpty {
-                    Text("No rides yet. Start one from Today.").font(.condensed(17)).foregroundStyle(Color.inkDim)
+                    EmptyNote(kicker: "ZERO KM.", line: "No rides yet. Start one from Today.").reveal(1)
                 } else {
-                    weekChart
-                    bestsCard
-                    list
+                    weekChart.reveal(1)
+                    bestsCard.reveal(2)
+                    list.reveal(3)
                 }
             }
             .padding(.horizontal, 20).padding(.bottom, 20)
         }
+        .environment(\.ignite, ignite)
         // Reload on open and whenever a ride starts or ends while this tab is showing.
         .task(id: recorder.phase) {
             reload()
@@ -81,7 +86,8 @@ struct RidesView: View {
             SectionHead(number: "01", title: "12 WEEKS",
                         value: String(format: "%.0f KM", weeks.reduce(0) { $0 + $1.km }))
             Chart(weeks, id: \.week) { w in
-                BarMark(x: .value("Week", w.week, unit: .weekOfYear), y: .value("km", w.km))
+                // On ignition the bars spring up from the baseline (decision 101).
+                BarMark(x: .value("Week", w.week, unit: .weekOfYear), y: .value("km", ignite && !grown ? 0 : w.km))
                     .foregroundStyle(isPicked(w.week) ? Color.accent : Color.inkDim)
             }
             .chartXSelection(value: Binding(get: { pickedWeek }, set: { if let d = $0 { pick(d) } }))
@@ -91,6 +97,7 @@ struct RidesView: View {
                 AxisGridLine().foregroundStyle(Color.surfaceLine)
                 AxisValueLabel().foregroundStyle(Color.inkMuted) } }
             .frame(height: 160)   // taller plot = bigger bar targets for a gloved tap (critique 19)
+            .onAppear { if ignite { withAnimation(Motion.snap.delay(0.3)) { grown = true } } }
             .accessibilityLabel("Distance per week for 12 weeks")
             if let w = pickedWeek {
                 Button { pickedWeek = nil } label: {

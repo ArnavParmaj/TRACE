@@ -52,6 +52,25 @@ Text that must be red uses `--alarm-ink`.
 - **Progress**: 3px bar, unlit track, accent fill.
 - **Alarm rail**: 1px red border with 10px red left spine. Only for expired/overdue.
 
+## Motion (decision 101)
+Motion is how the app answers back, never decoration. Tokens live in `TRACE/Design/Motion.swift`.
+- **Only unlit structure moves**: outlines, arcs, hairlines, Oswald figures. No filled slab lights up.
+- **Ignition**: the first time a tab opens each launch, its blocks rise in (0.5 s, 60 ms stagger,
+  8 steps at most) and section rules extend. Returning to a tab shows it at rest.
+- **Rolling numbers**: Oswald figures roll digit by digit when they change (`.numericText`).
+- **Confirmations**: a save shows an amber outlined stamp (LOGGED, SAVED, DONE · km), an outline
+  ring, and the success haptic, all on one frame. The sheet holds 0.55 s so the stamp is seen.
+- **Fusion**: on a ride's page its expenses fly in and snap onto the ride, one after another.
+- **Progress**: service bars fill to their interval on ignition; an overdue rail glows twice, then rests.
+- **Rides chart**: bars spring up from the baseline on ignition.
+- **Tab bar**: one amber underline springs between tabs, with a selection tick instead of a press tap.
+- **Ride mode**: the gauge eases between readings, self-tests on open (to the end of the dial and back),
+  nine ticks sit outside the band, the REC dot breathes once every 4 s. Nothing animates continuously.
+- **Red** moves only for overdue or expired.
+- **Reduce Motion**: every move becomes a 0.2 s fade or nothing. Haptics stay.
+- **Voice**: empty sections get a short amber kicker and still say what to do. No slogans about
+  privacy or the product: the storage fact is one faint line at the bottom of Settings.
+
 ## Accessibility
 - Touch targets >= 60pt everywhere (gloves), not the 44pt minimum.
 - Ride mode: tap-anywhere capture, no precision targets.

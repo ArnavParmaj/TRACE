@@ -275,6 +275,7 @@ private struct MarkDoneSheet: View {
     @State private var saved = 0
     @State private var error: String?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(task: ServiceTask, bike: Vehicle, garage: Garage) {
         self.task = task
@@ -298,13 +299,20 @@ private struct MarkDoneSheet: View {
                 }
                 fresh = false
             }
-            PrimaryButton("SAVE", enabled: Int(odo) != nil) {
+            PrimaryButton("SAVE", enabled: Int(odo) != nil && saved == 0) {
                 guard let km = Int(odo) else { return }
                 do {
                     try garage.markDone(task, bike: bike, odometerKm: km, costMinor: Money.paise(fromRupees: cost))
-                    saved += 1
-                    dismiss()
+                    saved += 1   // stamp, ring and haptic on one frame; the sheet holds to show it (decision 101)
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(reduceMotion ? 250 : 550))
+                        dismiss()
+                    }
                 } catch { self.error = "Couldn't save: \(error.localizedDescription)" }
+            }
+            .fireRing(saved)
+            .overlay(alignment: .topTrailing) {
+                if saved > 0 { Stamp("DONE · \(odo) KM").offset(x: -12, y: -12) }
             }
         }
         .padding(20)

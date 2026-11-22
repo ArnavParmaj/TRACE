@@ -27,6 +27,8 @@ struct TodayView: View {
     @State private var editing: Expense?
     @State private var settings = false
     @State private var error: String?
+    /// First open this launch plays the screen-open sequence; later returns don't (decision 101).
+    @State private var ignite = Ignition.claim("today")
 
     private var capture: Capture { Capture(context: context, user: LocalStubUser.load()) }
     private var garage: Garage { Garage(context: context, user: LocalStubUser.load()) }
@@ -35,9 +37,9 @@ struct TodayView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                header
-                rideSection
-                if !drafts.isEmpty { draftSection }
+                header.reveal(0)
+                rideSection.reveal(1)
+                if !drafts.isEmpty { draftSection.reveal(2) }
                 if !due.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
                         SectionHead(number: "03", title: "DUE").padding(.bottom, 4)
@@ -46,14 +48,16 @@ struct TodayView: View {
                                 .buttonStyle(PressStyle())
                         }
                     }
+                    .reveal(3)
                 }
-                if week.hasData { weekSection }
-                if !recent.isEmpty { recentSection }
+                if week.hasData { weekSection.reveal(4) }
+                if !recent.isEmpty { recentSection.reveal(5) }
                 if let error { ErrorLine(message: error, retry: reload) }
             }
             .padding(.horizontal, 20).padding(.bottom, 20)
             .animation(.easeOut(duration: 0.2), value: drafts.count + due.count)
         }
+        .environment(\.ignite, ignite)
         .task(id: scenePhase) { if scenePhase == .active { reload() } }
         .onReceive(NotificationCenter.default.publisher(for: .draftCaptured)) { _ in reload() }
         // The Live Activity opens Ride mode (S18); the widget's START RIDE starts one first (decision 91).
@@ -117,8 +121,7 @@ struct TodayView: View {
             } else if recorder.phase == .idle {
                 CaptureButton(title: "START RIDE", subtitle: bikeLine, action: startRide)
                 if drafts.isEmpty && due.isEmpty && recent.isEmpty {
-                    Text("Press the Action Button any time to log. Start a ride here.")
-                        .font(.condensed(15)).foregroundStyle(Color.inkDim)
+                    EmptyNote(kicker: "FRESH START.", line: "Press the Action Button any time to log. Start a ride here.")
                 }
             } else {
                 // Ticks every second, pauses taken out: the same clock as Ride mode.
@@ -229,6 +232,7 @@ struct TodayView: View {
             Text([String(format: week.km < 100 ? "%.1f KM" : "%.0f KM", week.km), Money.format(week.spentMinor),
                   week.kmPerL.map { String(format: "%.1f KM/L", $0) } ?? "— KM/L"].joined(separator: "  ·  "))
                 .font(.oswald(22, .semibold)).monospacedDigit().foregroundStyle(Color.ink)
+                .rolling(week.km + Double(week.spentMinor))
             if week.kmPerL == nil {
                 Text("km/L needs two full-tank fills in a row.").font(.condensed(13)).foregroundStyle(Color.inkMuted)
             }
@@ -311,6 +315,9 @@ struct SectionHead: View {
     let title: String
     var count: Int?
     var value: String?
+    @Environment(\.ignite) private var ignite
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var ruled = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -319,7 +326,10 @@ struct SectionHead: View {
                     .padding(.horizontal, 6).padding(.vertical, 2).background(Color.inkMuted)
             }
             Text(title).font(.oswald(13, .medium)).tracking(2.3).foregroundStyle(Color.inkDim)
+            // On ignition the rule extends from the label to the edge (decision 101).
             Rectangle().fill(Color.surfaceRule).frame(height: 1)
+                .scaleEffect(x: ignite && !ruled && !reduceMotion ? 0 : 1, anchor: .leading)
+                .onAppear { if ignite { withAnimation(Motion.extend.delay(0.25)) { ruled = true } } }
             if let trailing = value ?? count.map(String.init) {
                 Text(trailing).font(.oswald(15, .semibold)).monospacedDigit().foregroundStyle(Color.accent)
             }

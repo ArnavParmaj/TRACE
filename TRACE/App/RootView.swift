@@ -93,6 +93,8 @@ struct RootView: View {
 struct TabBar: View {
     let selection: AppTab
     let onSelect: (AppTab) -> Void
+    @Namespace private var underline
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 0) {
@@ -100,7 +102,14 @@ struct TabBar: View {
                 let isOn = tab == selection
                 Button { if tab != selection { onSelect(tab) } } label: {
                     VStack(spacing: 6) {
-                        Rectangle().fill(isOn ? Color.accent : .clear).frame(width: 28, height: 2)
+                        // One amber underline that springs to the new tab (decision 101).
+                        ZStack {
+                            Color.clear.frame(width: 28, height: 2)
+                            if isOn {
+                                Rectangle().fill(Color.accent).frame(width: 28, height: 2)
+                                    .matchedGeometryEffect(id: "underline", in: underline)
+                            }
+                        }
                         Text(tab.title)
                             .font(.oswald(13, .medium, relativeTo: .caption))
                             .tracking(2)
@@ -109,10 +118,12 @@ struct TabBar: View {
                     .frame(maxWidth: .infinity, minHeight: minTouch)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(PressStyle())
+                .buttonStyle(PressStyle(haptic: false))   // the selection tick below is the haptic
                 .accessibilityAddTraits(isOn ? .isSelected : [])
             }
         }
+        .animation(reduceMotion ? Motion.reduced : Motion.snap, value: selection)
+        .sensoryFeedback(.selection, trigger: selection)
         .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
         .background(Color.ground)
     }

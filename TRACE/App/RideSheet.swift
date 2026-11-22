@@ -289,11 +289,12 @@ struct RideSheet: View {
                 Text("Nothing attached to this ride.").font(.condensed(15)).foregroundStyle(Color.inkDim)
                     .frame(minHeight: minTouch, alignment: .leading)
             }
-            ForEach(attached) { e in
+            ForEach(Array(attached.enumerated()), id: \.element.id) { i, e in
                 HStack(spacing: 8) {
                     Button { editing = e } label: { ExpenseRow(expense: e) }.buttonStyle(PressStyle())
                     smallButton("DETACH", lit: false) { run { try ledger.detach(e); detached.append(e) } }
                 }
+                .flyIn(i)   // the ride's cost assembling itself (decision 101)
             }
             ForEach(detached) { e in
                 HStack(spacing: 8) {
