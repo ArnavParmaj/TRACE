@@ -85,10 +85,10 @@ version after.
 
 **Latest (2026-11-15), Ride mode on the handlebar.** Since 7 Nov: ride speed and map-line fixes (decisions 84, 87), landscape Ride mode with Apple Music controls (85), no backend for now (86). 15 Nov: LOCK button turns the screen off in-app, hold 1 s to wake (88); top bar is LOCK and CLOSE only, PAUSE sits beside HOLD TO STOP (89); portrait has the telemetry / music swipe pane too (90). The rider's mount covers the hardware buttons: every control must be on screen. Phone is now the new iPhone (see memory `device-run`). Home-screen widgets built (decision 91): `TRACEHome` small and medium with 8 states by priority, `TRACEStart` tile; `-widgetGallery` launch argument shows every state in the simulator. Widget taps open the screen each state shows, LOG confirms with a LOGGED label and a notification, and NEXT DUE opens a read-only task page with MARK DONE (decisions 92–94); snooze built (decision 97: a stored quiet period, due state stays computed). Dynamic Type capped at the window so sheets hold it (95–96). Lock-screen widgets added (decision 99: the same widget in circular, rectangular and inline). Map navigation is parked on branch `future/ride-map` (decision 98). Phone checks M3–M7 passed (owner, 2026-11-16; M7 = a 200 km ride opens fast, last trip cost shows from a cold open). Not yet checked on the phone's home screen. Not yet checked on the phone: lock brightness and heat, music page fit in portrait, parked speed reading 0.
 
-**Earlier (2026-11-01), M8 ship hardening in progress.** 1 Nov: ride-mode LOG button and draft discard (decision 79); speed spikes at ride start fixed in `Fix.init` (decision 80, install and ride to confirm); ride-mode CLOSE now top-right; Today, Money, Bike and Rides errors carry RETRY, Bike SERVICE and DOCUMENTS have empty lines; phone crash logs checked, none for TRACE. VoiceOver pass done (I-08). Still open: I-01 Dynamic Type (do last), airplane replay, phone checks, ship checklist ticks.
+**Earlier (2026-11-01), M8 ship hardening in progress.** 1 Nov: ride-mode LOG button and draft discard (decision 79); speed spikes at ride start fixed in `Fix.init` (decision 80, install and ride to confirm); ride-mode CLOSE now top-right; Today, Money, Bike and Rides errors carry RETRY, Bike SERVICE and DOCUMENTS have empty lines; phone crash logs checked, none for TRACE. VoiceOver pass done (I-08). Superseded 2026-11-16: Dynamic Type (decisions 81, 95, 96), airplane replay and the phone checks are all closed; see Latest.
 
 **Earlier (2026-10-29).** Read `docs/engineering/current_issues.md` first: it lists
-every open and resolved issue. Simulator tests for M7 are in (`TRACEUITests/ReplayTimingTests.swift`): cold open 8.2 s
+every open and resolved issue. The "Next session" plan below is historic: every item on it is done (see Latest, 2026-11-16). Simulator tests for M7 are in (`TRACEUITests/ReplayTimingTests.swift`): cold open 8.2 s
 and the offline map pass; the 200 km ride detail takes about 2.2 s (map) to 3.3 s (elevation) against the 2 s exit, so
 profile `RideSheet.loadReview()` (main-thread work) next. Debug launch arguments for tests only: `-seedLongRide`,
 `-forceOffline`, `-restoreFrom <dir>` with `-localStubOwnerID <uuid>` (`TRACE/Support/DebugSeed.swift`).
@@ -111,17 +111,16 @@ recovery), a debug screen on the TODAY tab with haptics, and a plain ride list o
 force-kill recovered with ≤6 s lost, GPS 1 Hz throughout, battery 6.9%/h (decision 55).
 Known: barometric climb reads high (252 m on a route spanning ~60 m), tune before M7's
 elevation profile. Planned additions: speed-coloured route (M7), trip meters A/B (M5).
-**M3 code is done and the Action Button works on the iPhone; the real-pump exit test is
-pending.** `TRACE/Capture/`: `Capture` + `LogEntryIntent` (decisions 57–59).
+**M3 is DONE: the Action Button works on the iPhone and the real-pump test passed (event recorded 2026-11-01, owner confirmed 2026-11-16).** `TRACE/Capture/`: `Capture` + `LogEntryIntent` (decisions 57–59).
 
-**M5 code is done (2026-10-23), exit test pending.** `TRACE/Bike/`: `Due` (computed due
+**M5 is DONE (code 2026-10-23; notification shown 2026-11-01, phone check passed 2026-11-16).** `TRACE/Bike/`: `Due` (computed due
 state), `Garage` (bike, odometer, trip meters A/B, tasks, mark done, documents),
 `Reminders` (local notifications). Bike tab (S11) with add-bike, odometer sheet (S14),
 task sheet + mark done (S12/S09), document sheet with attachment (S13); Today gained
 03 DUE. Service cost no longer lives on the syncable `ServiceEvent` (decision 60).
 51 tests green.
 
-**M4 code is done (2026-10-24), exit test pending.** `TRACE/Money/Ledger.swift`: fusion
+**M4 is DONE (code 2026-10-24; km/L by hand passed on the phone 2026-11-16).** `TRACE/Money/Ledger.swift`: fusion
 on ride close, attach / detach, km/L between consecutive full fills with odometer
 (decision 64). One S08 editor for drafts, new and existing expenses (`ExpenseSheet`),
 Money tab (S10: period total, by category, km/L chart, entries), `RideSheet` as the
@@ -130,19 +129,17 @@ Design-match pass (decision 65): hotter P3 amber, visible diagonals, chip sectio
 outlined primary buttons, Today 04 THIS WEEK + 05 RECENT, Money / recap / ride view per
 the prototype canvas.
 
-**M7 code is done (2026-10-24), exit test pending.** `TRACE/Review/`: ride analysis, personal
+**M7 is DONE (code 2026-10-24; phone timings passed 2026-11-16).** `TRACE/Review/`: ride analysis, personal
 bests, place names, route map with offline fallback. RIDES is now S06 (12-week chart, PBs, month
 list); a ride opens S07 (map, elevation, speed bands, stops, splits, cost, delete). Checked on a
 copy of the real 31 km ride. 63 tests green. Simulator run 2026-10-29: cold open 8.2 s, offline map OK, 200 km ride detail 2.2 s map / 3.3 s elevation (over 2 s, I-02 in `docs/engineering/current_issues.md`); M4 rules covered by `LedgerTests`; M5 notification worked per the user. Climb left as is (decision 66). S15 dropped (decision 72).
-**Next: on the iPhone, ride with two expenses logged during it and check both attach
-with the right total, detach one; log two full fills with odometer and check km/L by
-hand. Still open: M3 real-pump test, M5 notification test.**
+The simulator timings above are historic; the phone timings (a 200 km ride opens fast, last trip cost shows from a cold open) passed 2026-11-16.
 
-**M6 code is done (2026-10-24), exit test pending.** `RideModeView` is S03 (gauge, tap to log,
+**M6 is DONE (code 2026-10-24; handlebar mount check passed 2026-11-16, daylight reading fine; gloved logging not tried).** `RideModeView` is S03 (gauge, tap to log,
 hold to stop, pause, S04 recovery); the debug screen is gone. `TRACEWidgets` is the S18 Live
 Activity with a LOG button running `LogEntryIntent` (decision 68). Signed device build passes.
 
-**M8 in progress (2026-10-24).** All 18 screens mocked on the "TRACE v1 Screens" canvas and
+**M8 ship hardening (started 2026-10-24; only the ship checklist item "zero rides lost" is open, see ROADMAP).** All 18 screens mocked on the "TRACE v1 Screens" canvas and
 approved. Done so far:
 - S01 onboarding (`OnboardingView`, also the add-bike flow) and S16 settings (`SettingsView`,
   ⚙ on Today): primary-bike picker, due-soon share, document lead defaults
@@ -155,8 +152,7 @@ approved. Done so far:
 67 tests green.
 
 **M8 plan, remaining steps (agreed 2026-10-24, do one at a time):**
-Step 3 is in progress: `TRACEUITests` exists and the audit tab test still fails on Rides and Bike
-Dynamic Type findings. Open and recorded as decision 73; the cause is not found yet.
+Steps 3 to 8 are DONE as of 2026-11-16 (audit passes after decisions 81, 95, 96; airplane mode confirmed by the owner; crash logs clean).
 3. Automated accessibility audit: a UI-test target that taps through every screen and runs
    `performAccessibilityAudit` (labels, Dynamic Type clipping, contrast, hit size); fix findings.
 4. Dynamic Type at the largest size: render Today, Ride mode, Bike in tests and fix truncation
@@ -167,10 +163,7 @@ Dynamic Type findings. Open and recorded as decision 73; the cause is not found 
 8. Tick the v1 ship checklist in ROADMAP with evidence.
 Decided 2026-10-24 (decision 72): S15 weekly summary dropped; no Money prev/next arrows.
 
-**Still to check on the phone (none done yet):** M3 real fuel pump (gloves, locked phone, one
-press); M4 two expenses during a ride + km/L by hand; M6 handlebar mount (the UI worked on the
-phone; readability, gloved taps, hold-to-stop and Live Activity LOG are open until the mount is
-fitted); M5 9:00 document notification; M7 exit timings and airplane-mode replay.
+**Phone checks:** M3 to M7 passed 2026-11-16 (owner). Not tried: gloved logging (no gloves). Not yet checked: widgets on the home and lock screen, lock brightness and heat, music page fit in portrait, parked speed reading 0, Ride mode and Today at the largest text size.
 
 Build order puts ride recording first, deliberately. Everything else in v1 is CRUD,
 and CRUD does not surprise anyone at 2am; background location does.
