@@ -58,8 +58,10 @@ Ride recording comes first deliberately: background location is the only part th
 can genuinely surprise us. Everything else is CRUD.
 
 ## Open items — raise these, do not silently decide them
-- Widget / Control Center control: technically unblocked (decision 39) but not in v1
-  scope. Scheduling either is a scope decision; ask first.
+- Control Center control: technically unblocked (decision 39) but not in v1 scope.
+  Scheduling it is a scope decision; ask first. Home and lock screen widgets are
+  built (decisions 91-99: `TRACEHome`, `TRACEStart`, lock-screen shapes), so
+  widget changes are ordinary work; a new widget kind is still a scope question.
 - App name. "TRACE" is a placeholder.
 - v1.5+ features (segments, gear log) are out of scope — do not build ahead.
 
