@@ -28,21 +28,25 @@ struct RidesView: View {
         return rides.filter { span.contains($0.startedAt) }
     }
 
+    /// First open this launch plays the screen-open sequence; later returns don't (decision 101).
+    @State private var ignite = Ignition.claim("rides")
+
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 28) {
-                ScreenHeader(title: "RIDES")
+                ScreenHeader(title: "RIDES").reveal(0)
                 if let error { ErrorLine(message: error, retry: reload) }
                 else if rides.isEmpty {
-                    Text("No rides yet. Start one from Today.").font(.condensed(17)).foregroundStyle(Color.inkDim)
+                    EmptyNote(kicker: "ZERO KM.", line: "No rides yet. Start one from Today.").reveal(1)
                 } else {
-                    weekChart
-                    bestsCard
-                    list
+                    weekChart.reveal(1)
+                    bestsCard.reveal(2)
+                    list.reveal(3)
                 }
             }
             .padding(.horizontal, 20).padding(.bottom, 20)
         }
+        .environment(\.ignite, ignite)
         // Reload on open and whenever a ride starts or ends while this tab is showing.
         .task(id: recorder.phase) {
             reload()

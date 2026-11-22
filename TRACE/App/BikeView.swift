@@ -21,11 +21,13 @@ struct BikeView: View {
     @State private var error: String?
 
     private var garage: Garage { Garage(context: context, user: LocalStubUser.load()) }
+    /// First open this launch plays the screen-open sequence; later returns don't (decision 101).
+    @State private var ignite = Ignition.claim("bike")
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                ScreenHeader(title: "BIKE")
+                ScreenHeader(title: "BIKE").reveal(0)
                 if let bike { content(bike) } else {
                     Text("NO BIKE YET").font(.oswald(28, .bold, relativeTo: .largeTitle)).tracking(1.6).foregroundStyle(Color.ink)
                     Text("Add the bike your service and documents belong to.").font(.condensed(16)).foregroundStyle(Color.inkDim)
@@ -35,6 +37,7 @@ struct BikeView: View {
             }
             .padding(20)
         }
+        .environment(\.ignite, ignite)
         .task { reload() }
         // `initial`: the Bike tab may only now be coming on screen.
         .onChange(of: link, initial: true) {
@@ -70,6 +73,7 @@ struct BikeView: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text("ODO").font(.oswald(13, .medium)).tracking(2).foregroundStyle(Color.inkMuted)
                     Text("\(bike.odometerKm.formatted()) KM").font(.oswald(26, .semibold)).monospacedDigit().foregroundStyle(Color.ink)
+                        .rolling(Double(bike.odometerKm))
                     Spacer()
                     Text("UPDATE ›").font(.oswald(15, .semibold)).tracking(1.5).foregroundStyle(Color.accent)
                 }
@@ -81,6 +85,7 @@ struct BikeView: View {
                 tripMeter("TRIP B", trips.b, .b, bike)
             }
         }
+        .reveal(1)
 
         VStack(alignment: .leading, spacing: 0) {
             SectionHead(number: "01", title: "SERVICE").padding(.bottom, 4)
@@ -91,6 +96,7 @@ struct BikeView: View {
             }
             AddAction("+ ADD TASK") { task = ServiceTask(vehicleID: bike.id, kind: .chainLube, label: ServiceKind.chainLube.label) }
         }
+        .reveal(2)
 
         VStack(alignment: .leading, spacing: 0) {
             SectionHead(number: "02", title: "DOCUMENTS").padding(.bottom, 4)
@@ -108,6 +114,7 @@ struct BikeView: View {
                 doc = new
             }
         }
+        .reveal(3)
     }
 
     /// Hold to reset, so a gloved brush can't wipe it (S11).

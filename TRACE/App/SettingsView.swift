@@ -131,19 +131,18 @@ struct SettingsView: View {
     private var aboutSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHead(number: "04", title: "ABOUT")
-            VStack(alignment: .leading, spacing: 4) {
-                Text("NOTHING LEAVES THIS PHONE").font(.oswald(15, .semibold)).tracking(2).foregroundStyle(Color.ink)
-                Text("No account, no cloud, no analytics. Money is never shared, even in later versions.")
-                    .font(.condensed(15)).foregroundStyle(Color.inkDim).fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-            .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
             HStack {
                 Text("Version").font(.condensed(16)).foregroundStyle(Color.ink)
                 Spacer()
                 Text(Self.version).font(.oswald(16, .medium)).foregroundStyle(Color.inkMuted)
             }
             .frame(minHeight: minTouch)
+            // A fact, stated once and quietly (decision 101). Not a slogan.
+            Text("Data is stored on this iPhone only.")
+                .font(.condensed(13)).foregroundStyle(Color.inkFaint)
+                .frame(maxWidth: .infinity).multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 16)
         }
     }
 

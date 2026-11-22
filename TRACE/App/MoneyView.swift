@@ -53,35 +53,39 @@ struct MoneyView: View {
     private var capture: Capture { Capture(context: context, user: LocalStubUser.load()) }
     private var total: Int { entries.reduce(0) { $0 + $1.amountMinor } }
 
+    /// First open this launch plays the screen-open sequence; later returns don't (decision 101).
+    @State private var ignite = Ignition.claim("money")
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 VStack(alignment: .leading, spacing: 16) {
-                    ScreenHeader(title: "MONEY") {
-                        Text("ON THIS PHONE ONLY").font(.oswald(12, .medium)).tracking(1.7).foregroundStyle(Color.inkMuted)
-                            .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)   // wraps at large sizes instead of clipping
-                    }
+                    ScreenHeader(title: "MONEY")
                     periodPicker
                     periodStepper
                 }
+                .reveal(0)
+                // Switching week / month / year rolls the total in place (decision 101).
                 Text(Money.format(total)).font(.oswald(48, .bold, relativeTo: .largeTitle))
                     .monospacedDigit().foregroundStyle(Color.ink).lineLimit(1).minimumScaleFactor(0.6)
+                    .rolling(Double(total))
+                    .reveal(1)
                 if !anyEver {
-                    Text("Nothing logged. Press the Action Button at your next fill.")
-                        .font(.condensed(17)).foregroundStyle(Color.inkDim)
+                    EmptyNote(kicker: "₹0 SO FAR.", line: "Nothing logged. Press the Action Button at your next fill.").reveal(2)
                 } else if entries.isEmpty {
-                    Text("Nothing logged in this \(period.rawValue).").font(.condensed(17)).foregroundStyle(Color.inkDim)
+                    EmptyNote(kicker: "QUIET \(period.rawValue.uppercased()).", line: "Nothing logged in this \(period.rawValue).").reveal(2)
                 }
-                if !entries.isEmpty { byCategory }
-                if anyEver { fuelEconomy }
-                if anyEver { trend }
-                if !entries.isEmpty { entryList }
-                PrimaryButton("+ ADD EXPENSE") { adding = true }
+                if !entries.isEmpty { byCategory.reveal(3) }
+                if anyEver { fuelEconomy.reveal(4) }
+                if anyEver { trend.reveal(5) }
+                if !entries.isEmpty { entryList.reveal(6) }
+                PrimaryButton("+ ADD EXPENSE") { adding = true }.reveal(7)
                 if let error { ErrorLine(message: error, retry: reload) }
             }
             .padding(.horizontal, 20).padding(.bottom, 20)
             .animation(.easeOut(duration: 0.2), value: entries.map(\.id))
         }
+        .environment(\.ignite, ignite)
         .onChange(of: period) { offset = 0 }   // a new period type starts from now
         .task(id: "\(period)\(offset)") { reload() }
         .task(id: scenePhase) { if scenePhase == .active { reload() } }

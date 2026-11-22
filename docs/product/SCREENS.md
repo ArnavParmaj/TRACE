@@ -111,8 +111,8 @@ Three steps, one question each, a ≥60pt NEXT at the bottom.
 2. **Odometer** — current reading, numeric keypad, big Oswald display.
 3. **Permissions** — explains *why* before asking: location "While Using" first, then
    "Always" is requested at the first ride start (iOS shows it contextually), motion,
-   notifications. Also states plainly: *no account, no cloud backup, data stays on this
-   phone* (PRD §3).
+   notifications. Also states plainly that there is no backup, so deleting the app
+   deletes the data (PRD §3). One quiet line, not a boxed slogan (decision 101).
 - Skippable except step 1. Lands on Today.
 - Each permission button shows what iOS answered: ALLOW (not asked), ALLOWED, or SETTINGS › when
   refused, which opens iPhone Settings.

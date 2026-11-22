@@ -160,15 +160,10 @@ struct OnboardingView: View {
             .padding(.vertical, 12)
             .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
         }
-        VStack(alignment: .leading, spacing: 4) {
-            Text("NO ACCOUNT. NO CLOUD.").font(.oswald(15, .semibold)).tracking(2).foregroundStyle(Color.ink)
-            Text("Everything stays on this phone. There is no backup, so deleting the app deletes your data.")
-                .font(.condensed(15)).foregroundStyle(Color.inkDim).fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .overlay { Rectangle().stroke(Color.surfaceRule, lineWidth: 1) }
-        .padding(.top, 8)
+        // The data-loss fact stays: the rider must know it before logging. The slogan went (decision 101).
+        Text("There is no backup. Deleting the app deletes your data.")
+            .font(.condensed(14)).foregroundStyle(Color.inkMuted).fixedSize(horizontal: false, vertical: true)
+            .padding(.top, 8)
     }
 
     private func title(_ text: String) -> some View {

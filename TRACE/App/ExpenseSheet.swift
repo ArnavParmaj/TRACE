@@ -6,7 +6,6 @@ struct DraftSheet: View {
     let capture: Capture
     let ledger: Ledger
     @State private var draft: CaptureDraft
-    @State private var saves = 0
     @Environment(\.dismiss) private var dismiss
 
     init(start: CaptureDraft, capture: Capture, ledger: Ledger) {
@@ -21,11 +20,9 @@ struct DraftSheet: View {
             .undoBar()      // DISCARD DRAFT offers UNDO while the queue stays open
             .background(Color.ground.ignoresSafeArea())
             .presentationBackground(Color.ground)
-            .sensoryFeedback(.success, trigger: saves)
     }
 
     private func advance(saved: Bool) {
-        if saved { saves += 1 }
         if let next = try? capture.pending().first { draft = next } else { dismiss() }
     }
 }
@@ -35,17 +32,12 @@ struct ExpenseSheet: View {
     let expense: Expense?
     let capture: Capture
     let ledger: Ledger
-    @State private var saves = 0
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ExpenseForm(subject: .expense(expense), capture: capture, ledger: ledger) { saved in
-            if saved { saves += 1 }
-            dismiss()
-        }
+        ExpenseForm(subject: .expense(expense), capture: capture, ledger: ledger) { _ in dismiss() }
         .background(Color.ground.ignoresSafeArea())
         .presentationBackground(Color.ground)
-        .sensoryFeedback(.success, trigger: saves)
     }
 }
 
@@ -72,6 +64,8 @@ private struct ExpenseForm: View {
     @FocusState private var noteFocused: Bool
     @State private var keypadOpen = false   // opens on an amount tap, closes on DONE or a note
     @State private var fresh = false        // next key replaces the picked field's value
+    @State private var stamped = 0          // LOGGED stamp + ring + success haptic, one frame (decision 101)
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(UndoCenter.self) private var undo
 
@@ -295,9 +289,29 @@ private struct ExpenseForm: View {
     }
 
     private var saveBar: some View {
-        PrimaryButton("SAVE", enabled: amountMinor != nil, action: save)
+        PrimaryButton("SAVE", enabled: amountMinor != nil && stamped == 0, action: save)
+            .fireRing(stamped)
+            .overlay(alignment: .topTrailing) {
+                if stamped > 0 { Stamp(isNew ? "LOGGED" : "SAVED").offset(x: -12, y: -12) }
+            }
             .padding(.horizontal, 20).padding(.vertical, 12)
             .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
+            .sensoryFeedback(.success, trigger: stamped) { _, n in n > 0 }
+    }
+
+    /// An edit is SAVED; a draft or a new expense is LOGGED.
+    private var isNew: Bool {
+        if case .expense(.some) = subject { return false }
+        return true
+    }
+
+    /// The row is already stored; this only holds the sheet long enough to see the stamp land.
+    private func stampThenDone() {
+        stamped += 1
+        Task {
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 250 : 550))
+            onDone(true)
+        }
     }
 
     private func press(_ key: String) {
@@ -325,7 +339,7 @@ private struct ExpenseForm: View {
                 try ledger.update(e, category: category, amountMinor: amountMinor, at: time, litres: litresValue,
                                   isFullTank: fullTank, odometerKm: Int(odometer), note: text)
             }
-            onDone(true)
+            stampThenDone()
         }
     }
 

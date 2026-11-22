@@ -21,6 +21,7 @@ struct RideModeView: View {
     @State private var dark = false     // screen-off mode (decision 88)
     @State private var waking = false
     @State private var brightness: CGFloat?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Phone on its side: the handlebar layout (decision 85).
     private var landscape: Bool { verticalSizeClass == .compact }
@@ -133,6 +134,7 @@ struct RideModeView: View {
                             .font(.oswald(88, .bold)).monospacedDigit().tracking(-2)
                             .foregroundStyle(speed == nil ? Color.inkFaint : Color.ink)
                             .lineLimit(1).minimumScaleFactor(0.5)
+                            .rolling((speed ?? 0).rounded())
                         Text(speed == nil ? statusLabel(nil) : "KM/H").font(.oswald(15, .medium)).tracking(3.6)
                             .foregroundStyle(Color.inkMuted)
                     }
@@ -145,6 +147,7 @@ struct RideModeView: View {
             .padding(.horizontal, 16)
             HStack(spacing: 10) {
                 CaptureButton(title: failed ? "COULDN'T SAVE · TAP AGAIN" : flash ? "DRAFT LOGGED · \(logged)" : "LOG", action: log)
+                    .fireRing(logged)
                 Button { paused ? recorder.resumeFromPause() : recorder.pause() } label: {
                     Text(paused ? "RESUME" : "PAUSE").font(.oswald(22, .semibold)).tracking(4)
                         .foregroundStyle(paused ? Color.accent : Color.inkDim)
@@ -228,8 +231,12 @@ struct RideModeView: View {
             .accessibilityLabel("Screen off")
             .accessibilityHint("Turns the screen black. The ride keeps recording. Hold one second to wake.")
             Spacer()
+            // Breathes once every 4 s while recording: alive, but idle between beats for the battery (decision 101).
+            let beat = !paused && !reduceMotion && Int(now.timeIntervalSinceReferenceDate) % 4 == 0
             Circle().fill(flash ? Color.ink : Color.accent).frame(width: 10, height: 10)
                 .opacity(paused ? 0.4 : 1)
+                .scaleEffect(beat ? 1.35 : 1)
+                .animation(.easeInOut(duration: 0.5), value: beat)
             Text(paused ? "PAUSED" : "REC").font(.oswald(13, .medium)).tracking(2.6).foregroundStyle(Color.inkMuted)
             Text(clock(recorder.elapsed(at: now))).font(.oswald(17, .medium)).monospacedDigit().foregroundStyle(Color.inkMuted)
             Spacer()
@@ -270,6 +277,7 @@ struct RideModeView: View {
                         .font(.oswald(120, .bold)).monospacedDigit().tracking(-2)
                         .foregroundStyle(speed == nil ? Color.inkFaint : Color.ink)
                         .lineLimit(1).minimumScaleFactor(0.5)
+                        .rolling((speed ?? 0).rounded())
                     Text(statusLabel(speed)).font(.oswald(15, .medium)).tracking(3.6).foregroundStyle(Color.inkMuted)
                 }
                 .padding(.top, 12)
@@ -294,6 +302,7 @@ struct RideModeView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(PressStyle())
+        .fireRing(logged)
         .overlay(alignment: .top) { Rectangle().fill(Color.surfaceRule).frame(height: 1) }
         .accessibilityLabel("Log a draft")
         .accessibilityHint("Saves the time and place. Complete it later on Today.")
@@ -381,23 +390,47 @@ struct RideModeView: View {
     }
 }
 
-/// 4pt stroked arc over 270°, unlit track, three ticks. Never filled (DESIGN.md).
+/// 4pt stroked arc over 270°, unlit track, nine ticks outside the band (three major). Never filled (DESIGN.md).
+/// The arc eases between readings instead of jumping, and self-tests on open (decision 101).
 private struct Gauge: View {
     let fraction: Double
     var size: CGFloat = 240
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Set only during the self-test: full sweep to the end of the dial and back, like a cluster at ignition.
+    @State private var test: Double?
+    /// Once per Ride mode open, not again when the phone turns and the gauge is rebuilt.
+    private static var lastTest = Date.distantPast
 
     var body: some View {
+        let shown = min(1, max(0, test ?? fraction))
         ZStack {
             arc.trim(from: 0, to: 0.75).stroke(Color.surfaceLine, lineWidth: 4)
-            arc.trim(from: 0, to: 0.75 * min(1, max(0, fraction))).stroke(Color.accent, lineWidth: 4)
-            ForEach([0.0, 0.375, 0.75], id: \.self) { at in
-                Rectangle().fill(Color.inkFaint).frame(width: 2, height: 8)
-                    .offset(y: -(size / 2 + 8))
-                    .rotationEffect(.degrees(225 + at * 360))
+            arc.trim(from: 0, to: 0.75 * shown).stroke(Color.accent, lineWidth: 4)
+                .animation(reduceMotion ? nil : (test == nil ? Motion.sweep : Motion.ignition), value: shown)
+            // Placed by angle (rotate in place, then move out), so every tick sits exactly on the arc's radius, 4pt clear of the band.
+            ForEach(0...8, id: \.self) { i in
+                let major = i % 4 == 0
+                let length: CGFloat = major ? 10 : 6
+                let angle = Angle.degrees(135 + Double(i) / 8 * 270)
+                let r = size / 2 + 6 + length / 2
+                Rectangle().fill(major ? Color.inkMuted : Color.inkFaint).frame(width: 2, height: length)
+                    .rotationEffect(angle + .degrees(90))
+                    .offset(x: r * cos(angle.radians), y: r * sin(angle.radians))
             }
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)
+        .task {
+            guard !reduceMotion, Date.now.timeIntervalSince(Self.lastTest) > 30 else { return }
+            Self.lastTest = .now
+            test = 0
+            try? await Task.sleep(for: .milliseconds(150))
+            test = 1                                            // slow, to the very end of the dial
+            try? await Task.sleep(for: .milliseconds(2000))    // 1.6s sweep + a beat at full
+            test = 0
+            try? await Task.sleep(for: .milliseconds(1500))
+            test = nil
+        }
     }
 
     /// Starts bottom-left, runs clockwise over the top.
