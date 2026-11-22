@@ -132,6 +132,31 @@ struct Stamp: View {
     }
 }
 
+/// Fusion made visible: an expense flies in and snaps onto its ride, `index` in list order.
+/// Plays whenever the row first appears, so attaching one later lands the same way.
+private struct FlyIn: ViewModifier {
+    let index: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var landed = false
+
+    func body(content: Content) -> some View {
+        let away = !landed && !reduceMotion
+        content
+            .offset(x: away ? 60 : 0, y: away ? -24 : 0)
+            .rotationEffect(.degrees(away ? 6 : 0))
+            .opacity(landed ? 1 : 0)
+            .onAppear {
+                guard !landed else { return }
+                let delay = 0.5 + Double(min(index, 6)) * 0.14
+                withAnimation((reduceMotion ? Motion.reduced : Motion.stamp).delay(delay)) { landed = true }
+            }
+    }
+}
+
+extension View {
+    func flyIn(_ index: Int) -> some View { modifier(FlyIn(index: index)) }
+}
+
 // MARK: Empty states
 
 /// An empty section: a short amber line in Oswald caps, then what to do (SCREENS rule 7).

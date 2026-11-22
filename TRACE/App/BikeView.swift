@@ -171,6 +171,10 @@ struct BikeView: View {
 struct DueRow: View {
     let label: String
     let status: DueStatus
+    @Environment(\.ignite) private var ignite
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var filled = false
+    @State private var pulses = 0
 
     var body: some View {
         let alarm = status.urgency == .overdue
@@ -186,7 +190,9 @@ struct DueRow: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Rectangle().fill(Color.surfaceRule)
-                        Rectangle().fill(Color.accent).frame(width: geo.size.width * min(1, progress))
+                        // Fills to how far through its interval the task is, on ignition (decision 101).
+                        Rectangle().fill(Color.accent)
+                            .frame(width: geo.size.width * min(1, progress) * (ignite && !filled && !reduceMotion ? 0 : 1))
                     }
                 }
                 .frame(height: 3)
@@ -196,9 +202,29 @@ struct DueRow: View {
         .frame(maxWidth: .infinity, minHeight: minTouch, alignment: .leading)
         .overlay(alignment: .leading) { if alarm { Rectangle().fill(Color.alarm).frame(width: 10) } }   // DESIGN alarm rail: 1 px border + 10 px spine
         .overlay { if alarm { Rectangle().stroke(Color.alarm, lineWidth: 1) } }
+        .overlay {
+            // Overdue only: the rail glows twice on ignition, then rests. Red never moves for anything else.
+            if alarm && !reduceMotion {
+                Rectangle().stroke(Color.alarm, lineWidth: 3).padding(-2)
+                    .keyframeAnimator(initialValue: 0.0, trigger: pulses) { glow, o in glow.opacity(o) } keyframes: { _ in
+                        KeyframeTrack {
+                            CubicKeyframe(0.45, duration: 0.5)
+                            CubicKeyframe(0, duration: 0.6)
+                            CubicKeyframe(0.45, duration: 0.5)
+                            CubicKeyframe(0, duration: 0.6)
+                        }
+                    }
+                    .allowsHitTesting(false)
+            }
+        }
         .overlay(alignment: .bottom) { Rectangle().fill(Color.surfaceLine).frame(height: 1) }
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+        .onAppear {
+            guard ignite else { return }
+            withAnimation(Motion.extend.delay(0.35)) { filled = true }
+            if alarm { pulses += 1 }
+        }
     }
 }
 

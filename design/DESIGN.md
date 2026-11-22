@@ -60,6 +60,9 @@ Motion is how the app answers back, never decoration. Tokens live in `TRACE/Desi
 - **Rolling numbers**: Oswald figures roll digit by digit when they change (`.numericText`).
 - **Confirmations**: a save shows an amber outlined stamp (LOGGED, SAVED, DONE · km), an outline
   ring, and the success haptic, all on one frame. The sheet holds 0.55 s so the stamp is seen.
+- **Fusion**: on a ride's page its expenses fly in and snap onto the ride, one after another.
+- **Progress**: service bars fill to their interval on ignition; an overdue rail glows twice, then rests.
+- **Rides chart**: bars spring up from the baseline on ignition.
 - **Tab bar**: one amber underline springs between tabs, with a selection tick instead of a press tap.
 - **Ride mode**: the gauge eases between readings, self-tests on open (to the end of the dial and back),
   nine ticks sit outside the band, the REC dot breathes once every 4 s. Nothing animates continuously.
